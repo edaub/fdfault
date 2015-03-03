@@ -26,6 +26,7 @@ public:
     double get_cs() const;
     double get_zp() const;
     double get_zs() const;
+    double get_dx(const int index) const;
     void calc_df(const double dt, fields& f, fd_type& fd);
     void set_boundaries(const double dt, fields& f);
 //    void calc_plastic(const double dt);

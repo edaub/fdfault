@@ -239,9 +239,16 @@ double block::get_zp() const {
     return mat.get_zp();
 }
 
-double get_zs() const {
+double block::get_zs() const {
     // returns block shear impedance
     return mat.get_zs();
+}
+
+double bloc::get_dx(const int index) {
+    // returns grid spacing on transformed grid for index
+    assert(index >=0 && index < 3);
+    
+    return dx[index];
 }
 
 void block::calc_df(const double dt, fields& f, fd_type& fd) {
