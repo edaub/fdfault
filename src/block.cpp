@@ -244,7 +244,7 @@ double block::get_zs() const {
     return mat.get_zs();
 }
 
-double bloc::get_dx(const int index) {
+double block::get_dx(const int index) const {
     // returns grid spacing on transformed grid for index
     assert(index >=0 && index < 3);
     
