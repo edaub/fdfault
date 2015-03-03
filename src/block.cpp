@@ -224,6 +224,18 @@ int block::get_xp_loc(const int index) const {
     return c.get_xp_loc(index);
 }
 
+int block::get_xm_ghost(const int index) const {
+    // returns maximum x index
+    assert(index >= 0 && index < ndim);
+    return c.get_xm_ghost(index);
+}
+
+int block::get_xp_ghost(const int index) const {
+    // returns maximum x index for local process
+    assert(index >= 0 && index < ndim);
+    return c.get_xp_ghost(index);
+}
+
 double block::get_cp() const {
     // returns block p-wave speed
     return mat.get_cp();

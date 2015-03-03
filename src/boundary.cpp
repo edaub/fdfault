@@ -143,7 +143,7 @@ boundary::boundary(const int ndim_in, const int mode_in, const int location_in, 
     
     // allocate memory for arrays for normal vectors and grid spacing
     
-    allocate_normals(c,dx,f,surf,fd);
+    allocate_normals(dx,f,surf,fd);
 
 }
 
@@ -155,7 +155,7 @@ boundary::~boundary() {
     deallocate_normals();
 }
 
-void boundary::allocate_normals(const coord c, const double dx[3], fields& f, surface& surf, fd_type& fd) {
+void boundary::allocate_normals(const double dx[3], fields& f, surface& surf, fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];

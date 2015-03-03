@@ -10,7 +10,7 @@ class fields
 {
     friend class block;
     friend class boundary;
-    friend class grid;
+    friend class interface;
 public:
     fields(const int ndim_in, const int mode, const std::string material, cartesian& cart);
 	~fields();

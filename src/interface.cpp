@@ -4,12 +4,13 @@
 #include "block.hpp"
 #include "boundary.hpp"
 #include "cartesian.hpp"
+#include "coord.hpp"
 #include "fields.hpp"
 #include "interface.hpp"
 #include "surface.hpp"
 
 interface::interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                     surface& surf, fields& f, cartesian& cart, fd_type& fd) {
+                     const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in == 3);
@@ -169,9 +170,44 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     zp2 = b2.get_zp();
     zs2 = b2.get_zs();
     
+    // create surface for interface
+    
+    coord c;
+    
+    if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
+        // use block 1 data
+        for (int i=0; i<3; i++) {
+            c.set_nx(i,b1.get_nx(i));
+            c.set_nx_loc(i,b1.get_nx_loc(i));
+            c.set_xm(i,b1.get_xm(i));
+            c.set_xm_loc(i,b1.get_xm_loc(i));
+            c.set_xm_ghost(i,b1.get_xm_ghost(i));
+            c.set_xp_ghost(i,b1.get_xp_ghost(i));
+        }
+    } else {
+        // use block 2 data
+        for (int i=0; i<3; i++) {
+            c.set_nx(i,b1.get_nx(i));
+            c.set_nx_loc(i,b1.get_nx_loc(i));
+            c.set_xm(i,b1.get_xm(i));
+            c.set_xm_loc(i,b1.get_xm_loc(i));
+            c.set_xm_ghost(i,b1.get_xm_ghost(i));
+            c.set_xp_ghost(i,b1.get_xp_ghost(i));
+        }
+    }
+    
+    surface surf(ndim,c,direction,1.,x_block, l_block, true);
+    
     // allocate memory for arrays for normal vectors and grid spacing
     
-    allocate_normals(b1,b2,f,surf,fd);
+    double dx1[3], dx2[3];
+    
+    for (int i=0; i<3; i++) {
+        dx1[i] = b1.get_dx(i);
+        dx2[i] = b2.get_dx(i);
+    }
+    
+    allocate_normals(dx1,dx2,f,surf,fd);
 
 }
 
@@ -205,7 +241,7 @@ interface& interface:: operator=(const interface& assignint) {
 	return *this;
 }*/
 
-void interface::allocate_normals(block& b1, block& b2, fields& f, surface& surf, fd_type& fd) {
+void interface::allocate_normals(const double dx1[3], const double dx2[3], fields& f, surface& surf, fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];
@@ -251,22 +287,22 @@ void interface::allocate_normals(block& b1, block& b2, fields& f, surface& surf,
                     dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                 }
-                dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(0);
-                dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(0);
+                dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx2[0];
+                dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
             } else if (direction == 1) {
                 for (int k=0; k<ndim; k++) {
                     dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
                 }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(1);
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(1);
+                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
+                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
             } else { // direction == 2
                 for (int k=0; k<ndim; k++) {
                     dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]+1,2);
                 }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(2);
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(2);
+                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
+                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
             }
         }
     }

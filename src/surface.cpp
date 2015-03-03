@@ -113,7 +113,7 @@ surface::surface(const int ndim_in, const coord c, const int direction, const do
 surface::surface(const int ndim_in, const coord c, const int direction, const double normal, const double x_in[3], const double l_in[2], const bool local) {
 	// constructor for a flat surface in a given normal direction with lower left coordinate x_in and lengths l_in
 	
-	assert(fabs(fabs(normal)-1.) < 1.e-15);
+	assert(fabs(fabs(normal)-1.) < 1.e-14);
 	assert(l_in[0] >= 0.);
 	assert(l_in[1] >= 0.);
     assert(direction >= 0 && direction < ndim_in);

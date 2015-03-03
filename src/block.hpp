@@ -22,6 +22,8 @@ public:
     int get_xm_loc(const int index) const;
 	int get_xp(const int index) const;
     int get_xp_loc(const int index) const;
+    int get_xm_ghost(const int index) const;
+    int get_xp_ghost(const int index) const;
     double get_cp() const;
     double get_cs() const;
     double get_zp() const;

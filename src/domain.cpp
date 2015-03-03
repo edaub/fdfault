@@ -7,13 +7,15 @@
 #include "fd.hpp"
 #include "fields.hpp"
 //#include "friction.hpp"
-//#include "interface.hpp"
+#include "interface.hpp"
 #include "rk.hpp"
 #include <mpi.h>
 
 using namespace std;
 
-domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block, int** xm_block, double**** x_block, double**** l_block, const int sbporder) {
+domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block,
+               int** xm_block, double**** x_block, double**** l_block, const int nifaces_in, int** blockm,
+               int** blockp, int* direction, const int sbporder) {
     // constructor, no default as need to allocate memory
     
 	assert(ndim_in == 2 || ndim_in == 3);
@@ -31,6 +33,7 @@ domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int 
 	}
 	
 	nblockstot = nblocks[0]*nblocks[1]*nblocks[2];
+    nifaces = nifaces_in;
 	
     // allocate memory for fd coefficients
     
@@ -45,6 +48,10 @@ domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int 
     // allocate memory and create blocks
     
     allocate_blocks(nx_block, xm_block, x_block, l_block);
+    
+    // allocate memory and create interfaces
+    
+    allocate_interfaces(blockm, blockp, direction, x_block, l_block);
 
     // exchange neighbors to fill in ghost cells
     
@@ -58,6 +65,8 @@ domain::~domain() {
     // destructor, no default as need to deallocate memory
     
     deallocate_blocks();
+    
+    deallocate_interfaces();
     
     delete fd;
 	
@@ -86,7 +95,7 @@ void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
     
     f->scale_df(rk.get_A(stage));
     
-    // calculate df
+    // calculate df for blocks
     
     for (int i=0; i<nblocks[0]; i++) {
         for (int j=0; j<nblocks[1]; j++) {
@@ -95,6 +104,12 @@ void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
                 blocks[i][j][k]->set_boundaries(dt,*f);
             }
         }
+    }
+    
+    // apply interface conditions
+    
+    for (int i=0; i<nifaces; i++) {
+        interfaces[i]->apply_bcs(dt,*f);
     }
     
     // update fields
@@ -145,6 +160,21 @@ void domain::allocate_blocks(int** nx_block, int** xm_block, double**** x_block,
 
 }
 
+void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, double**** x_block, double**** l_block) {
+    // allocate memory for interfaces
+    
+    interfaces = new interface* [nifaces];
+    
+    for (int i=0; i<nifaces; i++) {
+        interfaces[i] = new interface(ndim, mode, direction[i],
+                                      *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
+                                      *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
+                                      x_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
+                                      l_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
+                                      *f, *cart, *fd);
+    }
+}
+
 void domain::deallocate_blocks() {
     // deallocate memory for blocks
 
@@ -168,4 +198,14 @@ void domain::deallocate_blocks() {
     
     delete[] blocks;
 
+}
+
+void domain::deallocate_interfaces() {
+    // deallocate memory for interfaces
+    
+    for (int i=0; i<nifaces; i++) {
+        delete interfaces[i];
+    }
+    
+    delete[] interfaces;
 }

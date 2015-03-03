@@ -76,7 +76,21 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
         }
     }
     
-    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, 4);
+    int nifaces = 0;
+    int** blockm;
+    int** blockp;
+    int* direction;
+    
+    blockm = new int* [nifaces];
+    blockp = new int* [nifaces];
+    direction = new int [nifaces];
+    
+    for (int i=0; i<nifaces; i++) {
+        blockm[i] = new int [3];
+        blockp[i] = new int [3];
+    }
+    
+    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, nifaces, blockm, blockp, direction, 4);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
@@ -109,6 +123,16 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     
     delete[] x_block;
     delete[] l_block;
+    
+    for (int i=0; i<nifaces; i++) {
+        delete[] blockm[i];
+        delete[] blockp[i];
+    }
+    
+    delete[] blockm;
+    delete[] blockp;
+    
+    delete[] direction;
 	
 	out = new outputlist();
     

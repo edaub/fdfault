@@ -46,7 +46,7 @@ private:
     double*** nx;
     double** dl;
     double r;
-    void allocate_normals(const coord c, const double dx[3], fields& f, surface& surf, fd_type& fd);
+    void allocate_normals(const double dx[3], fields& f, surface& surf, fd_type& fd);
     void deallocate_normals();
     boundchar calc_hat(const boundchar b, const double z);
 };
