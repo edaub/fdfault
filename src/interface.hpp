@@ -8,19 +8,26 @@
 #include "surface.hpp"
 
 struct iffields {
-    double v11, v12, v13, s111, s112, s113, s122, s123, s133;
-    double v21, v22, v23, s211, s212, s213, s222, s223, s233;
-}
+    double v11, v12, v13, s11, s12, s13;
+    double v21, v22, v23, s21, s22, s23;
+};
 
-class interface:
+struct ifchar {
+    double v1, v2, s1, s2;
+};
+
+class interface
 {
 public:
     interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
               surface& surf, fields& f, cartesian& cart, fd_type& fd);
     ~interface();
 //    interface(const interface& otherint);
-//	interface& operator=(const interface& assignint);
-    virtual void apply_bcs(const double dt, fields&f);
+	interface& operator=(const interface& assignint);
+    void apply_bcs(const double dt, fields&f);
+    virtual void scale_df(const double A);
+    virtual void calc_df(const double dt);
+    virtual void update(const double B);
 protected:
     int ndim;
     int mode;
@@ -45,7 +52,8 @@ protected:
     bool no_data;
     void allocate_normals(block& b1, block& b2, fields& f, surface& surf, fd_type& fd);
     void deallocate_normals();
-    iffields solve_interface(const boundfields b1, const boundfields b2);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2);
+    ifchar calc_hat(const ifchar ifc, const double z1, const double z2, const bool isz=false);
 };
 
 #endif

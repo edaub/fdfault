@@ -29,17 +29,17 @@ boundary::boundary(const int ndim_in, const int mode_in, const int location_in, 
     
     no_data = true;
     
-    if (location == 0 && c.get_xm(0) == c.get_xm_loc(0)) {
+    if (location == 0 && (c.get_nx_loc(0) != 0 && c.get_xm(0) == c.get_xm_loc(0))) {
         no_data = false;
-    } else if (location == 1 && c.get_xp(0) == c.get_xp_loc(0)) {
+    } else if (location == 1 && (c.get_nx_loc(0) != 0 && c.get_xp(0) == c.get_xp_loc(0))) {
         no_data = false;
-    } else if (location == 2 && c.get_xm(1) == c.get_xm_loc(1)) {
+    } else if (location == 2 && (c.get_nx_loc(1) != 0 && c.get_xm(1) == c.get_xm_loc(1))) {
         no_data = false;
-    } else if (location == 3 && c.get_xp(1) == c.get_xp_loc(1)) {
+    } else if (location == 3 && (c.get_nx_loc(1) != 0 && c.get_xp(1) == c.get_xp_loc(1))) {
         no_data = false;
-    } else if (location == 4 && c.get_xm(2) == c.get_xm_loc(2)) {
+    } else if (location == 4 && (c.get_nx_loc(2) != 0 && c.get_xm(2) == c.get_xm_loc(2))) {
         no_data = false;
-    } else if (location == 5 && c.get_xp(2) == c.get_xp_loc(2)) {
+    } else if (location == 5 && (c.get_nx_loc(2) != 0 && c.get_xp(2) == c.get_xp_loc(2))) {
         no_data = false;
     }
     
@@ -273,16 +273,16 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 
                 if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
                     t1[2] = 0.;
-                    t1[1] = 1./sqrt(1.+pow(nn[1]/nn[0],2));
-                    t1[0] = sqrt(1.-t1[1]);
+                    t1[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    t1[0] = -nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
                 } else if (fabs(nn[1]) > fabs(nn[2])) {
                     t1[2] = 0.;
-                    t1[0] = 1./sqrt(1.+pow(nn[0]/nn[1],2));
-                    t1[1] = sqrt(1.-t1[0]);
+                    t1[0] = nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    t1[1] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
                 } else {
                     t1[1] = 0.;
-                    t1[0] = 1./sqrt(1.+pow(nn[0]/nn[2],2));
-                    t1[2] = sqrt(1.-t1[0]);
+                    t1[0] = nn[2]/sqrt(pow(nn[0],2)+pow(nn[2],2));
+                    t1[2] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[2],2));
                 }
                 t2[0] = nn[1]*t1[2]-nn[2]*t1[1];
                 t2[1] = nn[2]*t1[0]-nn[0]*t1[2];
@@ -445,6 +445,17 @@ void boundary::apply_bcs(const double dt, fields& f) {
     }
 
 }
+            
+boundchar boundary::calc_hat(const boundchar b, const double z) {
+   // calculate target values for a given characteristic
+   
+   boundchar b_out;
+   
+   b_out.s = (r+1.)*0.5*(b.s-z*b.v);
+   b_out.v = (r-1.)*0.5*(b.s/z-b.v);
+   
+   return b_out;
+}
 
 boundfields rotate_xy_nt(const boundfields b, const double nn[3], const double t1[3],
                                    const double t2[3]) {
@@ -508,16 +519,5 @@ boundfields rotate_nt_xy(const boundfields b, const double nn[3], const double t
                  t2[2]*(b.s13*nn[2]+b.s23*t1[2]+b.s33*t2[2]));
 
     
-    return b_out;
-}
-
-boundchar boundary::calc_hat(const boundchar b, const double z) {
-    // calculate target values for a given characteristic
-
-    boundchar b_out;
-
-    b_out.s = (r+1.)*0.5*(b.s-z*b.v);
-    b_out.v = (r-1.)*0.5*(b.s/z-b.v);
-
     return b_out;
 }

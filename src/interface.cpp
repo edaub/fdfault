@@ -1,10 +1,12 @@
 #include <iostream>
 #include <cassert>
+#include <cmath>
 #include "block.hpp"
 #include "boundary.hpp"
 #include "cartesian.hpp"
 #include "fields.hpp"
 #include "interface.hpp"
+#include "surface.hpp"
 
 interface::interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
                      surface& surf, fields& f, cartesian& cart, fd_type& fd) {
@@ -20,7 +22,7 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     
     // check if interface has point in this process
     
-    no_data == true;
+    no_data = true;
     
     if ((b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) ||
          (b2.get_nx_loc(direction) != 0 && b2.get_xm(direction) == b2.get_xm_loc(direction))) {
@@ -169,7 +171,7 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     
     // allocate memory for arrays for normal vectors and grid spacing
     
-    allocate_normals(c,dx,f,surf,fd);
+    allocate_normals(b1,b2,f,surf,fd);
 
 }
 
@@ -203,12 +205,7 @@ interface& interface:: operator=(const interface& assignint) {
 	return *this;
 }*/
 
-int interface::get_direction() const {
-    // returns direction
-    return direction;
-}
-
-void interface::allocate_normals(const coord c, const double dx[3], fields& f, surface& surf, fd_type& fd) {
+void interface::allocate_normals(block& b1, block& b2, fields& f, surface& surf, fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];
@@ -254,22 +251,22 @@ void interface::allocate_normals(const coord c, const double dx[3], fields& f, s
                     dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                 }
-                dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx[0];
-                dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx[0];
+                dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(0);
+                dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(0);
             } else if (direction == 1) {
                 for (int k=0; k<ndim; k++) {
-                    d1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
+                    dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
                 }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx[1];
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx[1];
-            } else { // location == 4 or location == 5
+                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(1);
+                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(1);
+            } else { // direction == 2
                 for (int k=0; k<ndim; k++) {
                     dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
                     dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]+1,2);
                 }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx[2];
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/dx[2];
+                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/b1.get_dx(2);
+                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/b2.get_dx(2);
             }
         }
     }
@@ -317,7 +314,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 // find max dimension of normal vector for constructing tangent vectors
                 
                 for (int l=0; l<ndim; l++) {
-                    switch (location) {
+                    switch (direction) {
                         case 0:
                             nn1[l] = nx[l][j-mlb[1]][k-mlb[2]];
                             nn2[l] = -nn1[l];
@@ -338,22 +335,22 @@ void interface::apply_bcs(const double dt, fields& f) {
                     }
                 }
                 
-                if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
+                if (fabs(nn1[0]) > fabs(nn1[1]) && fabs(nn1[0]) > fabs(nn1[2])) {
                     t11[2] = 0.;
-                    t11[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
-                    t11[0] = -nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
-                } else if (fabs(nn[1]) > fabs(nn[2])) {
+                    t11[1] = nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
+                    t11[0] = -nn1[1]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
+                } else if (fabs(nn1[1]) > fabs(nn1[2])) {
                     t11[2] = 0.;
-                    t11[0] = nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
-                    t11[1] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    t11[0] = nn1[1]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
+                    t11[1] = -nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
                 } else {
                     t11[1] = 0.;
-                    t11[0] = nn[2]/sqrt(pow(nn[0],2)+pow(nn[2],2));
-                    t11[2] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[2],2));
+                    t11[0] = nn1[2]/sqrt(pow(nn1[0],2)+pow(nn1[2],2));
+                    t11[2] = -nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[2],2));
                 }
-                t12[0] = nn[1]*t1[2]-nn[2]*t1[1];
-                t12[1] = nn[2]*t1[0]-nn[0]*t1[2];
-                t12[2] = nn[0]*t1[1]-nn[1]*t1[0];
+                t12[0] = nn1[1]*t11[2]-nn1[2]*t11[1];
+                t12[1] = nn1[2]*t11[0]-nn1[0]*t11[2];
+                t12[2] = nn1[0]*t11[1]-nn1[1]*t11[0];
                 
                 // set second block tangents (t21 = -t11, t22 = t12 based on sign conventions)
                 
@@ -450,7 +447,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 b_rot1.v1 -= iffhat.v11;
                 b_rot1.v2 = 0.;
                 b_rot1.v3 = 0.;
-                b_rot1.s11 -= iffhat.s111;
+                b_rot1.s11 -= iffhat.s11;
                 b_rot1.s12 = 0.;
                 b_rot1.s13 = 0.;
                 b_rot1.s22 = 0.;
@@ -459,7 +456,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 b_rot2.v1 -= iffhat.v21;
                 b_rot2.v2 = 0.;
                 b_rot2.v3 = 0.;
-                b_rot2.s11 -= iffhat.s211;
+                b_rot2.s11 -= iffhat.s21;
                 b_rot2.s12 = 0.;
                 b_rot2.s13 = 0.;
                 b_rot2.s22 = 0.;
@@ -467,7 +464,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 b_rot2.s33 = 0.;
                 
                 b1 = rotate_nt_xy(b_rot1,nn1,t11,t12);
-                b1 = rotate_nt_xy(b_rot2,nn2,t21,t22);
+                b2 = rotate_nt_xy(b_rot2,nn2,t21,t22);
                 
                 // add SAT term for normal characteristics
                 
@@ -511,20 +508,20 @@ void interface::apply_bcs(const double dt, fields& f) {
                 // rotate tangential characteristics back to xyz
                 
                 b_rots1.v1 = 0.;
-                b_rots1.v2 -= ifhat.v12;
-                b_rots1.v3 -= ifhat.v13;
+                b_rots1.v2 -= iffhat.v12;
+                b_rots1.v3 -= iffhat.v13;
                 b_rots1.s11 = 0.;
-                b_rots1.s12 -= ifhat.s112;
-                b_rots1.s13 -= ifhat.s113;
+                b_rots1.s12 -= iffhat.s12;
+                b_rots1.s13 -= iffhat.s13;
                 b_rots1.s22 = 0.;
                 b_rots1.s23 = 0.;
                 b_rots1.s33 = 0.;
                 b_rots2.v1 = 0.;
-                b_rots2.v2 -= ifhat.v22;
-                b_rots2.v3 -= ifhat.v23;
+                b_rots2.v2 -= iffhat.v22;
+                b_rots2.v3 -= iffhat.v23;
                 b_rots2.s11 = 0.;
-                b_rots2.s12 -= ifhat.s212;
-                b_rots2.s13 -= ufhat.s213;
+                b_rots2.s12 -= iffhat.s22;
+                b_rots2.s13 -= iffhat.s23;
                 b_rots2.s22 = 0.;
                 b_rots2.s23 = 0.;
                 b_rots2.s33 = 0.;
@@ -589,6 +586,82 @@ void interface::apply_bcs(const double dt, fields& f) {
 
 iffields interface::solve_interface(const boundfields b1, const boundfields b2) {
     // solves boundary condition for a locked interface
+    
+    ifchar ifcp, ifcs1, ifcs2, ifchatp, ifchats1, ifchats2;
+    
+    ifcp.v1 = b1.v1;
+    ifcp.v2 = b2.v1;
+    ifcp.s1 = b1.s11;
+    ifcp.s2 = b2.s11;
+    
+    ifchatp = calc_hat(ifcp,zp1,zp2);
+    
+    ifcs1.v1 = b1.v2;
+    ifcs1.v2 = b2.v2;
+    ifcs1.s1 = b1.s12;
+    ifcs1.s2 = b2.s12;
+    
+    ifchats1 = calc_hat(ifcs1,zs1,zs2);
+    
+    ifcs2.v1 = b1.v3;
+    ifcs2.v2 = b2.v3;
+    ifcs2.s1 = b1.s13;
+    ifcs2.s2 = b2.s13;
+    
+    ifchats2 = calc_hat(ifcs2,zs1,zs2,true); // t2 fields ("z" normal vector) have a different sign convention
+    
+    iffields iffout;
+    
+    iffout.v11 = ifchatp.v1;
+    iffout.v21 = ifchatp.v2;
+    iffout.s11 = ifchatp.s1;
+    iffout.s21 = ifchatp.s2;
+    iffout.v12 = ifchats1.v1;
+    iffout.v22 = ifchats1.v2;
+    iffout.s12 = ifchats1.s1;
+    iffout.s22 = ifchats1.s2;
+    iffout.v13 = ifchats2.v1;
+    iffout.v23 = ifchats2.v2;
+    iffout.s13 = ifchats2.s1;
+    iffout.s23 = ifchats2.s2;
+    
+    return iffout;
 
 }
 
+ifchar interface::calc_hat(const ifchar ifc, const double z1, const double z2, const bool isz) {
+    // solves interface conditions for a single characteristic
+    
+    ifchar ifcout;
+    
+    if (isz) {
+        // "z" tangent vector, different sign convention
+        ifcout.v1 = (-ifc.s1-ifc.s2+z1*ifc.v1+z2*ifc.v2)/(z1+z2);
+        ifcout.v2 = ifcout.v1;
+        ifcout.s1 = ifc.s1-z1*ifc.v1+z1*ifc.v1;
+        ifcout.s2 = -ifcout.s1;
+    } else {
+        // normal or tangent vector with opposite sign
+        ifcout.v1 = (-ifc.s1+ifc.s2+z1*ifc.v1-z2*ifc.v2)/(z1+z2);
+        ifcout.v2 = -ifcout.v1;
+        ifcout.s1 = ifc.s1+z1*(-ifc.v1+ifcout.v1);
+        ifcout.s2 = ifcout.s1;
+    }
+    
+    return ifcout;
+}
+
+void interface::scale_df(const double A) {
+    // scale df for state variables by rk constant A
+    
+}
+
+void interface::calc_df(const double dt) {
+    // calculate df for state variables for rk time step
+
+}
+
+void interface::update(const double B) {
+    // updates state variables
+
+}

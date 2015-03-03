@@ -28,7 +28,7 @@ public:
              const coord c, const double dx[3], surface& surf, fields& f, material& m, cartesian& cart, fd_type& fd);
     ~boundary();
     virtual void apply_bcs(const double dt, fields& f);
-protected:
+private:
 	std::string boundtype;
     int ndim;
     int mode;
@@ -45,7 +45,6 @@ protected:
     double zs;
     double*** nx;
     double** dl;
-private:
     double r;
     void allocate_normals(const coord c, const double dx[3], fields& f, surface& surf, fd_type& fd);
     void deallocate_normals();
