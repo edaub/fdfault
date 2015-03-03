@@ -224,6 +224,26 @@ int block::get_xp_loc(const int index) const {
     return c.get_xp_loc(index);
 }
 
+double block::get_cp() const {
+    // returns block p-wave speed
+    return mat.get_cp();
+}
+
+double block::get_cs() const {
+    // returns block s-wave speed
+    return mat.get_cs();
+}
+
+double block::get_zp() const {
+    // returns block compressional impedance
+    return mat.get_zp();
+}
+
+double get_zs() const {
+    // returns block shear impedance
+    return mat.get_zs();
+}
+
 void block::calc_df(const double dt, fields& f, fd_type& fd) {
     // does first part of a low storage time step
     

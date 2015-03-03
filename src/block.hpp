@@ -22,6 +22,10 @@ public:
     int get_xm_loc(const int index) const;
 	int get_xp(const int index) const;
     int get_xp_loc(const int index) const;
+    double get_cp() const;
+    double get_cs() const;
+    double get_zp() const;
+    double get_zs() const;
     void calc_df(const double dt, fields& f, fd_type& fd);
     void set_boundaries(const double dt, fields& f);
 //    void calc_plastic(const double dt);
