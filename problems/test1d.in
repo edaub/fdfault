@@ -1,0 +1,12 @@
+# comment
+
+[fdfault.problem]
+rkorder = 4; this is a further comment
+sbporder = 4
+
+[fdfault.domain]
+nx = 1;
+ny = 1;
+nz = 1;
+mode = 3;
+sbporder = 4;
