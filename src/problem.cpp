@@ -1,10 +1,13 @@
 #include <iostream>
 #include <time.h>
+#include <string>
 #include "problem.hpp"
 #include "domain.hpp"
 #include "outputlist.hpp"
 #include "rk.hpp"
 #include <mpi.h>
+
+using namespace std;
 
 problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     // constructor
@@ -26,6 +29,7 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     int** xm_block;
     double**** x_block;
     double**** l_block;
+    string**** boundtype;
     
     nx_block = new int* [3];
     xm_block = new int* [3];
@@ -48,16 +52,19 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     
     x_block = new double*** [nblocks[0]];
     l_block = new double*** [nblocks[0]];
+    boundtype = new string*** [nblocks[0]];
     
     for (int i=0; i<nblocks[0]; i++) {
         x_block[i] = new double** [nblocks[1]];
         l_block[i] = new double** [nblocks[1]];
+        boundtype[i] = new string** [nblocks[1]];
     }
     
     for (int i=0; i<nblocks[0]; i++) {
         for (int j=0; j<nblocks[1]; j++) {
             x_block[i][j] = new double* [nblocks[2]];
             l_block[i][j] = new double* [nblocks[2]];
+            boundtype[i][j] = new string* [nblocks[2]];
         }
     }
     
@@ -72,9 +79,19 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
                 l_block[i][j][k][0] = 0.5;
                 l_block[i][j][k][1] = 1.;
                 l_block[i][j][k][2] = 1.;
+                boundtype[i][j][k] = new string [6];
             }
         }
     }
+    
+    boundtype[0][0][0][0] = "absorbing";
+    boundtype[0][0][0][1] = "none";
+    boundtype[0][0][0][2] = "absorbing";
+    boundtype[0][0][0][3] = "absorbing";
+    boundtype[1][0][0][0] = "none";
+    boundtype[1][0][0][1] = "absorbing";
+    boundtype[1][0][0][2] = "absorbing";
+    boundtype[1][0][0][3] = "absorbing";
     
     int nifaces = 1;
     int** blockm;
@@ -98,7 +115,7 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     blockp[0][2] = 0;
     direction[0] = 0;
     
-    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, nifaces, blockm, blockp, direction, 4);
+    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, 4);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
@@ -113,6 +130,7 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
             for (int k=0; k<nblocks[2]; k++) {
                 delete[] x_block[i][j][k];
                 delete[] l_block[i][j][k];
+                delete[] boundtype[i][j][k];
             }
         }
     }
@@ -121,16 +139,19 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
         for (int j=0; j<nblocks[1]; j++) {
             delete[] x_block[i][j];
             delete[] l_block[i][j];
+            delete[] boundtype[i][j];
         }
     }
     
     for (int i=0; i<nblocks[0]; i++) {
         delete[] x_block[i];
         delete[] l_block[i];
+        delete[] boundtype[i];
     }
     
     delete[] x_block;
     delete[] l_block;
+    delete[] boundtype;
     
     for (int i=0; i<nifaces; i++) {
         delete[] blockm[i];

@@ -14,7 +14,7 @@
 using namespace std;
 
 domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block,
-               int** xm_block, double**** x_block, double**** l_block, const int nifaces_in, int** blockm,
+               int** xm_block, double**** x_block, double**** l_block, string**** boundtype, const int nifaces_in, int** blockm,
                int** blockp, int* direction, const int sbporder) {
     // constructor, no default as need to allocate memory
     
@@ -47,11 +47,11 @@ domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int 
 	
     // allocate memory and create blocks
     
-    allocate_blocks(nx_block, xm_block, x_block, l_block);
+    allocate_blocks(nx_block, xm_block, x_block, l_block, boundtype);
     
     // allocate memory and create interfaces
     
-//    allocate_interfaces(blockm, blockp, direction, x_block, l_block);
+    allocate_interfaces(blockm, blockp, direction, x_block, l_block);
 
     // exchange neighbors to fill in ghost cells
     
@@ -66,7 +66,7 @@ domain::~domain() {
     
     deallocate_blocks();
     
-//    deallocate_interfaces();
+    deallocate_interfaces();
     
     delete fd;
 	
@@ -126,7 +126,7 @@ void domain::write_fields() {
     f->write_fields();
 }
 
-void domain::allocate_blocks(int** nx_block, int** xm_block, double**** x_block, double**** l_block) {
+void domain::allocate_blocks(int** nx_block, int** xm_block, double**** x_block, double**** l_block, string**** boundtype) {
     // allocate memory for blocks and initialize
 
     int nxtmp[3];
@@ -153,7 +153,7 @@ void domain::allocate_blocks(int** nx_block, int** xm_block, double**** x_block,
                 xmtmp[0] = xm_block[0][i];
                 xmtmp[1] = xm_block[1][j];
                 xmtmp[2] = xm_block[2][k];
-                blocks[i][j][k] = new block(ndim, mode, nxtmp, xmtmp, x_block[i][j][k], l_block[i][j][k], *cart, *f, *fd);
+                blocks[i][j][k] = new block(ndim, mode, nxtmp, xmtmp, x_block[i][j][k], l_block[i][j][k], boundtype[i][j][k], *cart, *f, *fd);
             }
         }
     }

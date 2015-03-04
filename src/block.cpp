@@ -15,7 +15,7 @@
 using namespace std;
 
 block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int xm_in[3], const double x_in[3],
-             const double l_in[3], cartesian& cart, fields& f, fd_type& fd) {
+             const double l_in[3], string boundtype[6], cartesian& cart, fields& f, fd_type& fd) {
     // constructor, no default constructor due to necessary memory allocation
     
 	assert(ndim_in == 2 || ndim_in == 3);
@@ -147,16 +147,10 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     
     // create local surfaces to create boundaries
     
-/*    surf = new surface* [nbound];
+    surf = new surface* [nbound];
     
     for (int i=0; i<nbound; i++) {
         surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),x[i],l[i],true);
-    }
-
-    string boundtype[6];
-    
-    for (int i=0; i<nbound; i++) {
-        boundtype[i] = "absorbing";
     }
     
     bound = new boundary* [nbound];
@@ -171,7 +165,7 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     
     delete[] surf;
     
-    init_fields(f);*/
+    init_fields(f);
 
 }
     
@@ -180,59 +174,59 @@ block::~block() {
     
     if (no_data) { return; }
 	
-/*    for (int i=0; i<nbound; i++) {
+    for (int i=0; i<nbound; i++) {
         delete bound[i];
     }
 	
-    delete[] bound;*/
+    delete[] bound;
     
 }
 
 int block::get_nx(const int index) const {
     // returns number of x grid points
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_nx(index);
 }
 
 int block::get_nx_loc(const int index) const {
     // returns number of x grid points for local process
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_nx_loc(index);
 }
 
 int block::get_xm(const int index) const {
     // returns minimum x index
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xm(index);
 }
 
 int block::get_xm_loc(const int index) const {
     // returns minimum x index for local process
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xm_loc(index);
 }
 
 int block::get_xp(const int index) const {
     // returns maximum x index
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xp(index);
 }
 
 int block::get_xp_loc(const int index) const {
     // returns maximum x index for local process
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xp_loc(index);
 }
 
 int block::get_xm_ghost(const int index) const {
     // returns maximum x index
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xm_ghost(index);
 }
 
 int block::get_xp_ghost(const int index) const {
     // returns maximum x index for local process
-    assert(index >= 0 && index < ndim);
+    assert(index >= 0 && index < 3);
     return c.get_xp_ghost(index);
 }
 
@@ -420,16 +414,15 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
         for (int j=mlb[0]-nxm; j<prb[0]+nxp; j++) {
             for (int k=mlb[1]-nym; k<prb[1]+nyp; k++) {
                 for (int l=mlb[2]-nzm; l<prb[2]+nzp; l++) {
-                    jj = xm_loc+j-nxm;
-                    kk = ym_loc+k-nym;
-                    ll = zm_loc+l-nzm;
+                    jj = xm_loc+j-nxm-mlb[0];
+                    kk = ym_loc+k-nym-mlb[1];
+                    ll = zm_loc+l-nzm-mlb[2];
                     p = (double)jj*dx[0];
                     q = (double)kk*dx[1];
                     r = (double)ll*dx[2];
-                    cout << jj << " " << kk << "\n";
                     f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] = ((1.-p)*surf[0]->get_x(i,kk,ll)+p*surf[1]->get_x(i,kk,ll)+
                                      (1.-q)*surf[2]->get_x(i,jj,ll)+q*surf[3]->get_x(i,jj,ll));
-/*                    if (ndim == 3) {
+                    if (ndim == 3) {
                         f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] += (1.-r)*surf[4]->get_x(i,jj,kk)+r*surf[5]->get_x(i,jj,kk);
                     }
                     f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] -= ((1.-q)*(1.-p)*surf[0]->get_x(i,0,ll)+(1.-q)*p*surf[1]->get_x(i,0,ll)+
@@ -447,7 +440,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
                                           p*(1.-q)*r*surf[1]->get_x(i,0,nz-1)+
                                           (1.-p)*q*r*surf[0]->get_x(i,ny-1,nz-1)+
                                           p*q*r*surf[1]->get_x(i,ny-1,nz-1));
-                    }*/
+                    }
                 }
             }
         }
@@ -456,7 +449,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
     // calculate metric derivatives
     // if 2d problem, set appropriate values for z derivatives to give correct 2d result
     
-/*    double***** xp;
+    double***** xp;
     
     xp = new double**** [3];
     
@@ -665,7 +658,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
     
     // exhange data with neighbors
     
-    f.exchange_grid();*/
+    f.exchange_grid();
 
 }
 

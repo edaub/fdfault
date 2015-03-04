@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	
     // initialize problem
     
-    problem prob(200,10,4);
+    problem prob(150,10,4);
     
 	// Barrier to wait for all processes to finish initialization
 	
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     
     // solve problem
     
-//    prob.solve();
+    prob.solve();
 	
     // finished with problem
     // Barrier to wait for all processes to finish running

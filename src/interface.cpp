@@ -8,6 +8,7 @@
 #include "fields.hpp"
 #include "interface.hpp"
 #include "surface.hpp"
+#include <mpi.h>
 
 interface::interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
                      const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) {
@@ -15,7 +16,7 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     
     assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
-    assert(direction >=0 && direction < ndim);
+    assert(direction_in >=0 && direction_in < ndim_in);
     
     ndim = ndim_in;
     mode = mode_in;
@@ -187,12 +188,12 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     } else {
         // use block 2 data
         for (int i=0; i<3; i++) {
-            c.set_nx(i,b1.get_nx(i));
-            c.set_nx_loc(i,b1.get_nx_loc(i));
-            c.set_xm(i,b1.get_xm(i));
-            c.set_xm_loc(i,b1.get_xm_loc(i));
-            c.set_xm_ghost(i,b1.get_xm_ghost(i));
-            c.set_xp_ghost(i,b1.get_xp_ghost(i));
+            c.set_nx(i,b2.get_nx(i));
+            c.set_nx_loc(i,b2.get_nx_loc(i));
+            c.set_xm(i,b2.get_xm(i));
+            c.set_xm_loc(i,b2.get_xm_loc(i));
+            c.set_xm_ghost(i,b2.get_xm_ghost(i));
+            c.set_xp_ghost(i,b2.get_xp_ghost(i));
         }
     }
     
@@ -269,7 +270,7 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], field
     // allocate memory for grid spacing
     
     dl1 = new double* [n_loc[0]];
-    dl2 = new double* [n_loc[1]];
+    dl2 = new double* [n_loc[0]];
     
     for (int i=0; i<n_loc[0]; i++) {
         dl1[i] = new double [n_loc[1]];
