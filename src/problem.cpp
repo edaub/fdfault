@@ -16,11 +16,11 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
 
     rk = new rk_type(rkorder);
     
-    int ndim = 3;
+    int ndim = 2;
     int mode = 3;
     
-    int nx[3] = {51, 51, 51};
-    int nblocks[3] = {1,1,1};
+    int nx[3] = {202, 201, 1};
+    int nblocks[3] = {2,1,1};
     
     int** nx_block;
     int** xm_block;
@@ -66,17 +66,17 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
             for (int k=0; k<nblocks[2]; k++) {
                 x_block[i][j][k] = new double [3];
                 l_block[i][j][k] = new double [3];
-                x_block[i][j][k][0] = (double)i;
+                x_block[i][j][k][0] = (double)i/2.;
                 x_block[i][j][k][1] = (double)j;
                 x_block[i][j][k][2] = (double)k;
-                l_block[i][j][k][0] = 1.;
+                l_block[i][j][k][0] = 0.5;
                 l_block[i][j][k][1] = 1.;
                 l_block[i][j][k][2] = 1.;
             }
         }
     }
     
-    int nifaces = 0;
+    int nifaces = 1;
     int** blockm;
     int** blockp;
     int* direction;
@@ -89,6 +89,14 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
         blockm[i] = new int [3];
         blockp[i] = new int [3];
     }
+    
+    blockm[0][0] = 0;
+    blockp[0][0] = 1;
+    blockm[0][1] = 0;
+    blockp[0][1] = 0;
+    blockm[0][2] = 0;
+    blockp[0][2] = 0;
+    direction[0] = 0;
     
     d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, nifaces, blockm, blockp, direction, 4);
     
@@ -170,7 +178,7 @@ void problem::solve() {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-            d->do_rk_stage(0.006,stage,*rk);
+            d->do_rk_stage(0.0015,stage,*rk);
         }
         
         // output data

@@ -147,7 +147,7 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     
     // create local surfaces to create boundaries
     
-    surf = new surface* [nbound];
+/*    surf = new surface* [nbound];
     
     for (int i=0; i<nbound; i++) {
         surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),x[i],l[i],true);
@@ -171,7 +171,7 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     
     delete[] surf;
     
-    init_fields(f);
+    init_fields(f);*/
 
 }
     
@@ -180,11 +180,11 @@ block::~block() {
     
     if (no_data) { return; }
 	
-    for (int i=0; i<nbound; i++) {
+/*    for (int i=0; i<nbound; i++) {
         delete bound[i];
     }
 	
-    delete[] bound;
+    delete[] bound;*/
     
 }
 
@@ -426,9 +426,10 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
                     p = (double)jj*dx[0];
                     q = (double)kk*dx[1];
                     r = (double)ll*dx[2];
+                    cout << jj << " " << kk << "\n";
                     f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] = ((1.-p)*surf[0]->get_x(i,kk,ll)+p*surf[1]->get_x(i,kk,ll)+
                                      (1.-q)*surf[2]->get_x(i,jj,ll)+q*surf[3]->get_x(i,jj,ll));
-                    if (ndim == 3) {
+/*                    if (ndim == 3) {
                         f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] += (1.-r)*surf[4]->get_x(i,jj,kk)+r*surf[5]->get_x(i,jj,kk);
                     }
                     f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l] -= ((1.-q)*(1.-p)*surf[0]->get_x(i,0,ll)+(1.-q)*p*surf[1]->get_x(i,0,ll)+
@@ -446,7 +447,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
                                           p*(1.-q)*r*surf[1]->get_x(i,0,nz-1)+
                                           (1.-p)*q*r*surf[0]->get_x(i,ny-1,nz-1)+
                                           p*q*r*surf[1]->get_x(i,ny-1,nz-1));
-                    }
+                    }*/
                 }
             }
         }
@@ -455,7 +456,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
     // calculate metric derivatives
     // if 2d problem, set appropriate values for z derivatives to give correct 2d result
     
-    double***** xp;
+/*    double***** xp;
     
     xp = new double**** [3];
     
@@ -664,7 +665,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
     
     // exhange data with neighbors
     
-    f.exchange_grid();
+    f.exchange_grid();*/
 
 }
 
@@ -1541,12 +1542,12 @@ void block::init_fields(fields& f) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
-                f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005
-                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005
-                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-                f.f[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005
-                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005
-                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
+                f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
+                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
+//                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
+                f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
+                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
+//                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
             }
         }
     }

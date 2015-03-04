@@ -51,7 +51,7 @@ domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int 
     
     // allocate memory and create interfaces
     
-    allocate_interfaces(blockm, blockp, direction, x_block, l_block);
+//    allocate_interfaces(blockm, blockp, direction, x_block, l_block);
 
     // exchange neighbors to fill in ghost cells
     
@@ -66,7 +66,7 @@ domain::~domain() {
     
     deallocate_blocks();
     
-    deallocate_interfaces();
+//    deallocate_interfaces();
     
     delete fd;
 	
