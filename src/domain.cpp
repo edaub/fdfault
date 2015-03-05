@@ -88,6 +88,40 @@ int domain::get_nblockstot() const {
 	return nblockstot;
 }
 
+int domain::get_nifaces() const {
+    
+    return nifaces;
+}
+
+double domain::get_min_dx() const {
+    // get min grid spacing divided by shear wave speed over all blocks
+    
+    double dxmin = 0., dxmintest, dxmin_all;
+    
+    for (int i=0; i<nblocks[0]; i++) {
+        for (int j=0; j<nblocks[1]; j++) {
+            for (int k=0; k<nblocks[2]; k++) {
+                dxmintest = blocks[i][j][k]->get_min_dx(f);
+                if (dxmintest > 1.e-14) {
+                    // block has data
+                    if (dxmin <= 1.e-14 || dxmintest < dxmin) {
+                        dxmin = dxmintest;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (dxmin <= 1.e-14) {
+        cerr << "Error in domain.cpp get_min_dx -- a process does not have any grid spacing values\n";
+        MPI_Abort(MPI_COMM_WORLD,1);
+    }
+    
+    MPI_AllReduce(&dxmin, &dxmin_all, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    
+    return dxmin_all;
+}
+
 void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
     // advances domain fields for one RK stage of one time step
     

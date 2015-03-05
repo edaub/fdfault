@@ -20,6 +20,7 @@ public:
     int get_nblocks(const int index) const;
 	int get_nblockstot() const;
     int get_nifaces() const;
+    double get_min_dx() const;
     void do_rk_stage(const double dt, const int stage, rk_type& rk);
     void write_fields();
 private:

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 #include <string>
+#include <cassert>
 #include "problem.hpp"
 #include "domain.hpp"
 #include "outputlist.hpp"
@@ -9,15 +10,16 @@
 
 using namespace std;
 
-problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
+problem::problem(const int nt_in, const double dt_in, const double ttot_in, const double cfl_in, const int ninfo_in, const int rkorder, const int sbporder) {
     // constructor
 
-    // set default values
-    
-    nt = nt_in;
+    // set parameters to input values
+
     ninfo = ninfo_in;
 
     rk = new rk_type(rkorder);
+    
+    // set up problem
     
     int ndim = 2;
     int mode = 2;
@@ -115,7 +117,7 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     blockp[0][2] = 0;
     direction[0] = 0;
     
-    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, 4);
+    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, sbporder);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
@@ -162,6 +164,12 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     delete[] blockp;
     
     delete[] direction;
+    
+    // set time step
+    
+    set_time_step(nt_in, dt_in, cfl_in, ttot_in);
+    
+    // create output list
 	
 	out = new outputlist();
     
@@ -174,10 +182,41 @@ problem::~problem() {
 	delete out;
 }
 
-int problem::get_nt() const {
-    // returns number of time steps
-
-    return nt;
+void problem:set_time_step(const int nt_in, const double dt_in, const double cfl_in, const double ttot_in) {
+    // sets time step
+    // must specify two of the following (except dt and cfl)
+    
+    // get minimum grid spacing/wave speed
+    
+    int id;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+    
+    double dx = d->get_min_dx();
+    
+    if (ttot_in > 0. && nt_in > 0) {
+        ttot
+        dt = ttot/(double)nt_
+    
+    if (dt_in > 0.) {
+        if (cfl_in > 0. && id == 0) {
+            cout << "Cannot specify both dt and cfl, defaulting to dt\n";
+        }
+        dt = dt_in;
+        cfl = dt/dx;
+    } else {
+        cfl = cfl_in;
+        dt = cfl*dx;
+    }
+    
+    if (cfl > 1. && id == 0) {
+        cout << "Warning: CFL ratio > 1, numerical instability is likely\n";
+    }
+    
+    if (ttot_in > 0.) {
+        if (dt_in > 0 && id == 0 ) {
+            cout << "Cannot specify both
+    
 }
 
 void problem::solve() {
