@@ -20,7 +20,7 @@ problem::problem(const int nt_in, const int ninfo_in, const int rkorder) {
     rk = new rk_type(rkorder);
     
     int ndim = 2;
-    int mode = 3;
+    int mode = 2;
     
     int nx[3] = {202, 201, 1};
     int nblocks[3] = {2,1,1};

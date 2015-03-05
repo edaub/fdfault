@@ -1538,7 +1538,7 @@ void block::init_fields(fields& f) {
                 f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
                                                          -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
 //                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-                f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
+                f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
                                                          -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
 //                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
             }

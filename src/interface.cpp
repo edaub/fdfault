@@ -446,12 +446,12 @@ void interface::apply_bcs(const double dt, fields& f) {
                             case 3:
                                 b1.v1 = 0.;
                                 b1.v2 = 0.;
-                                b1.v3 = f.f[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]];
+                                b1.v3 = f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k];
                                 b1.s11 = 0.;
                                 b1.s12 = 0.;
-                                b1.s13 = f.f[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]];
+                                b1.s13 = f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+k];
                                 b1.s22 = 0.;
-                                b1.s23 = f.f[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]];
+                                b1.s23 = f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+k];
                                 b1.s33 = 0.;
                                 b2.v1 = 0.;
                                 b2.v2 = 0.;
