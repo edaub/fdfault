@@ -342,7 +342,8 @@ void interface::apply_bcs(const double dt, fields& f) {
     
     if (no_data) { return; }
     
-    double nn1[3] = {0., 0., 0.}, t11[3], t12[3], nn2[3] = {0., 0., 0.}, t21[3], t22[3], h1, h2;
+    int ii, jj;
+    double nn1[3] = {0., 0., 0.}, t11[3], t12[3], nn2[3], t21[3], t22[3], h1, h2;
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -353,23 +354,20 @@ void interface::apply_bcs(const double dt, fields& f) {
                 for (int l=0; l<ndim; l++) {
                     switch (direction) {
                         case 0:
-                            nn1[l] = nx[l][j-mlb[1]][k-mlb[2]];
-                            nn2[l] = -nn1[l];
-                            h1 = dl1[j-mlb[1]][k-mlb[2]];
-                            h2 = dl2[j-mlb[1]][k-mlb[2]];
+                            ii = j-mlb[1];
+                            jj = k-mlb[2];
                             break;
                         case 1:
-                            nn1[l] = nx[l][i-mlb[0]][k-mlb[2]];
-                            nn2[l] = -nn1[l];
-                            h1 = dl1[i-mlb[0]][k-mlb[2]];
-                            h2 = dl2[i-mlb[0]][k-mlb[2]];
+                            ii = i-mlb[0];
+                            jj = k-mlb[2];
                             break;
                         case 2:
-                            nn1[l] = nx[l][i-mlb[0]][j-mlb[1]];
-                            nn2[l] = -nn1[l];
-                            h1 = dl1[i-mlb[0]][j-mlb[1]];
-                            h2 = dl2[i-mlb[0]][j-mlb[1]];
+                            ii = i-mlb[0];
+                            jj = j-mlb[1];
                     }
+                    nn1[l] = nx[l][ii][jj];
+                    h1 = dl1[ii][jj];
+                    h2 = dl2[ii][jj];
                 }
                 
                 if (fabs(nn1[0]) > fabs(nn1[1]) && fabs(nn1[0]) > fabs(nn1[2])) {
@@ -389,9 +387,10 @@ void interface::apply_bcs(const double dt, fields& f) {
                 t12[1] = nn1[2]*t11[0]-nn1[0]*t11[2];
                 t12[2] = nn1[0]*t11[1]-nn1[1]*t11[0];
                 
-                // set second block tangents (t21 = -t11, t22 = t12 based on sign conventions)
+                // set second block normal and tangents (nn2 = -nn1, t21 = -t11, t22 = t12 based on sign conventions)
                 
                 for (int l=0; l<3; l++) {
+                    nn2[l] = -nn1[l];
                     t21[l] = -t11[l];
                     t22[l] = t12[l];
                 }
@@ -477,7 +476,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 
                 iffields iffhat;
                 
-                iffhat = solve_interface(b_rot1, b_rot2);
+                iffhat = solve_interface(b_rot1, b_rot2, ii, jj);
                 
                 // rotate normal targets back to xyz
                 
@@ -621,7 +620,7 @@ void interface::apply_bcs(const double dt, fields& f) {
     
 }
 
-iffields interface::solve_interface(const boundfields b1, const boundfields b2) {
+iffields interface::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j) {
     // solves boundary condition for a locked interface
     
     ifchar ifcp, ifcs1, ifcs2, ifchatp, ifchats1, ifchats2;

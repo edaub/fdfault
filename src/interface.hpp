@@ -52,7 +52,7 @@ protected:
     bool no_data;
     void allocate_normals(const double dx1[3], const double dx2[3], fields& f, surface& surf, fd_type& fd);
     void deallocate_normals();
-    virtual iffields solve_interface(const boundfields b1, const boundfields b2);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j);
     ifchar calc_hat(const ifchar ifc, const double z1, const double z2, const bool isz=false);
 };
 
