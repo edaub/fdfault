@@ -101,7 +101,7 @@ double domain::get_min_dx() const {
     for (int i=0; i<nblocks[0]; i++) {
         for (int j=0; j<nblocks[1]; j++) {
             for (int k=0; k<nblocks[2]; k++) {
-                dxmintest = blocks[i][j][k]->get_min_dx(f);
+                dxmintest = blocks[i][j][k]->get_min_dx(*f);
                 if (dxmintest > 1.e-14) {
                     // block has data
                     if (dxmin <= 1.e-14 || dxmintest < dxmin) {
@@ -117,7 +117,7 @@ double domain::get_min_dx() const {
         MPI_Abort(MPI_COMM_WORLD,1);
     }
     
-    MPI_AllReduce(&dxmin, &dxmin_all, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    MPI_Allreduce(&dxmin, &dxmin_all, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     
     return dxmin_all;
 }

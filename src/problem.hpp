@@ -21,7 +21,7 @@ private:
     domain* d;
     rk_type* rk;
 	outputlist* out;
-    void set_time_step(const int nt_in, const double dt_in, const double cfl_in, const double ttot_in);
+    void set_time_step(const int nt_in, const double dt_in, const double ttot_in, const double cfl_in);
 };
 
 #endif

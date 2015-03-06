@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string>
 #include <cassert>
+#include <cmath>
 #include "problem.hpp"
 #include "domain.hpp"
 #include "outputlist.hpp"
@@ -167,7 +168,7 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     
     // set time step
     
-    set_time_step(nt_in, dt_in, cfl_in, ttot_in);
+    set_time_step(nt_in, dt_in, ttot_in, cfl_in);
     
     // create output list
 	
@@ -182,9 +183,9 @@ problem::~problem() {
 	delete out;
 }
 
-void problem:set_time_step(const int nt_in, const double dt_in, const double cfl_in, const double ttot_in) {
+void problem::set_time_step(const int nt_in, const double dt_in, const double ttot_in, const double cfl_in) {
     // sets time step
-    // must specify two of the following (except dt and cfl)
+    // must specify two of nt, dt, cfl, and ttot (except cannot specify both dt and cfl)
     
     // get minimum grid spacing/wave speed
     
@@ -194,28 +195,38 @@ void problem:set_time_step(const int nt_in, const double dt_in, const double cfl
     
     double dx = d->get_min_dx();
     
-    if (ttot_in > 0. && nt_in > 0) {
-        ttot
-        dt = ttot/(double)nt_
-    
-    if (dt_in > 0.) {
-        if (cfl_in > 0. && id == 0) {
-            cout << "Cannot specify both dt and cfl, defaulting to dt\n";
-        }
-        dt = dt_in;
+    if ((ttot_in > 0. && nt_in > 0) && (dt_in == 0 && cfl_in ==0.)) {
+        // if supplied ttot, nt but not dt, cfl, use ttot and nt
+        nt = nt_in;
+        ttot = ttot_in;
+        dt = ttot/(double)nt;
         cfl = dt/dx;
-    } else {
-        cfl = cfl_in;
-        dt = cfl*dx;
+    } else { // use one of ttot/nt and one of dt/cfl
+        if (dt_in > 0.) {
+            if (cfl_in > 0. && id == 0) {
+                cout << "Cannot specify both dt and cfl, defaulting to dt\n";
+            }
+            dt = dt_in;
+            cfl = dt/dx;
+        } else {
+            cfl = cfl_in;
+            dt = cfl*dx;
+        }
+        if (ttot_in > 0.) {
+            if (nt_in > 0 && id == 0 ) {
+                cout << "Cannot specify both ttot and nt with one of cfl or dt, defaulting to ttot\n";
+            }
+            nt = ceil(ttot_in/dt);
+            ttot = (double)nt*dt;
+        } else {
+            nt = nt_in;
+            ttot = (double)nt*dt;
+        }
     }
     
     if (cfl > 1. && id == 0) {
         cout << "Warning: CFL ratio > 1, numerical instability is likely\n";
     }
-    
-    if (ttot_in > 0.) {
-        if (dt_in > 0 && id == 0 ) {
-            cout << "Cannot specify both
     
 }
 
