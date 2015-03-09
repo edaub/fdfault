@@ -343,7 +343,7 @@ void interface::apply_bcs(const double dt, fields& f) {
     if (no_data) { return; }
     
     int ii, jj;
-    double nn1[3] = {0., 0., 0.}, t11[3], t12[3], nn2[3], t21[3], t22[3], h1, h2;
+    double nn[3] = {0., 0., 0.}, t1[3], t2[3], h1, h2;
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -351,49 +351,43 @@ void interface::apply_bcs(const double dt, fields& f) {
                 
                 // find max dimension of normal vector for constructing tangent vectors
                 
+                switch (direction) {
+                    case 0:
+                        ii = j-mlb[1];
+                        jj = k-mlb[2];
+                        break;
+                    case 1:
+                        ii = i-mlb[0];
+                        jj = k-mlb[2];
+                        break;
+                    case 2:
+                        ii = i-mlb[0];
+                        jj = j-mlb[1];
+                }
+                
+                h1 = dt*dl1[ii][jj];
+                h2 = dt*dl2[ii][jj];
+                
                 for (int l=0; l<ndim; l++) {
-                    switch (direction) {
-                        case 0:
-                            ii = j-mlb[1];
-                            jj = k-mlb[2];
-                            break;
-                        case 1:
-                            ii = i-mlb[0];
-                            jj = k-mlb[2];
-                            break;
-                        case 2:
-                            ii = i-mlb[0];
-                            jj = j-mlb[1];
-                    }
-                    nn1[l] = nx[l][ii][jj];
-                    h1 = dl1[ii][jj];
-                    h2 = dl2[ii][jj];
+                    nn[l] = nx[l][ii][jj];
                 }
-                
-                if (fabs(nn1[0]) > fabs(nn1[1]) && fabs(nn1[0]) > fabs(nn1[2])) {
-                    t11[2] = 0.;
-                    t11[1] = nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
-                    t11[0] = -nn1[1]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
-                } else if (fabs(nn1[1]) > fabs(nn1[2])) {
-                    t11[2] = 0.;
-                    t11[0] = nn1[1]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
-                    t11[1] = -nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[1],2));
+
+                if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
+                    t1[2] = 0.;
+                    t1[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    t1[0] = -nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                } else if (fabs(nn[1]) > fabs(nn[2])) {
+                    t1[2] = 0.;
+                    t1[0] = nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    t1[1] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
                 } else {
-                    t11[1] = 0.;
-                    t11[0] = nn1[2]/sqrt(pow(nn1[0],2)+pow(nn1[2],2));
-                    t11[2] = -nn1[0]/sqrt(pow(nn1[0],2)+pow(nn1[2],2));
+                    t1[1] = 0.;
+                    t1[0] = nn[2]/sqrt(pow(nn[0],2)+pow(nn[2],2));
+                    t1[2] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[2],2));
                 }
-                t12[0] = nn1[1]*t11[2]-nn1[2]*t11[1];
-                t12[1] = nn1[2]*t11[0]-nn1[0]*t11[2];
-                t12[2] = nn1[0]*t11[1]-nn1[1]*t11[0];
-                
-                // set second block normal and tangents (nn2 = -nn1, t21 = -t11, t22 = t12 based on sign conventions)
-                
-                for (int l=0; l<3; l++) {
-                    nn2[l] = -nn1[l];
-                    t21[l] = -t11[l];
-                    t22[l] = t12[l];
-                }
+                t2[0] = nn[1]*t1[2]-nn[2]*t1[1];
+                t2[1] = nn[2]*t1[0]-nn[0]*t1[2];
+                t2[2] = nn[0]*t1[1]-nn[1]*t1[0];
                 
                 // rotate fields
                 
@@ -464,8 +458,8 @@ void interface::apply_bcs(const double dt, fields& f) {
                         }
                 }
                 
-                b_rot1 = rotate_xy_nt(b1,nn1,t11,t12);
-                b_rot2 = rotate_xy_nt(b2,nn2,t21,t22);
+                b_rot1 = rotate_xy_nt(b1,nn,t1,t2);
+                b_rot2 = rotate_xy_nt(b2,nn,t1,t2);
                 
                 // save rotated fields in b_rots1, b_rots2 for s waves
                 
@@ -499,45 +493,45 @@ void interface::apply_bcs(const double dt, fields& f) {
                 b_rot2.s23 = 0.;
                 b_rot2.s33 = 0.;
                 
-                b1 = rotate_nt_xy(b_rot1,nn1,t11,t12);
-                b2 = rotate_nt_xy(b_rot2,nn2,t21,t22);
+                b1 = rotate_nt_xy(b_rot1,nn,t1,t2);
+                b2 = rotate_nt_xy(b_rot2,nn,t1,t2);
                 
                 // add SAT term for normal characteristics
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s33;
-                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.v1;
-                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.v2;
-                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.v3;
-                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s11;
-                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s12;
-                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s13;
-                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s22;
-                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s23;
-                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s33;
+                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
+                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
+                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v3;
+                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
+                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
+                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s13;
+                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
+                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s23;
+                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s33;
+                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
+                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
+                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v3;
+                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
+                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
+                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s13;
+                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
+                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s23;
+                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s33;
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                             f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.v1;
-                             f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.v2;
-                             f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s11;
-                             f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s12;
-                             f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp1*h1*b1.s22;
-                             f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.v1;
-                             f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.v2;
-                             f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s11;
-                             f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s12;
-                             f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cp2*h2*b2.s22;
+                             f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
+                             f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
+                             f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
+                             f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
+                             f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
+                             f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
+                             f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
+                             f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
+                             f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
+                             f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
                         }
                 }
                 
@@ -562,53 +556,53 @@ void interface::apply_bcs(const double dt, fields& f) {
                 b_rots2.s23 = 0.;
                 b_rots2.s33 = 0.;
                 
-                b1 = rotate_nt_xy(b_rots1,nn1,t11,t12);
-                b2 = rotate_nt_xy(b_rots2,nn2,t21,t22);
+                b1 = rotate_nt_xy(b_rots1,nn,t1,t2);
+                b2 = rotate_nt_xy(b_rots2,nn,t1,t2);
                 
                 // add SAT term for tangential characteristics
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s33;
-                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v1;
-                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v2;
-                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v3;
-                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s11;
-                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s12;
-                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s13;
-                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s22;
-                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s23;
-                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s33;
+                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
+                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
+                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
+                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
+                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
+                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
+                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
+                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
+                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s33;
+                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
+                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
+                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
+                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
+                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
+                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
+                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
+                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
+                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s33;
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v1;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v2;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s11;
-                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s12;
-                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s22;
-                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v1;
-                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v2;
-                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s11;
-                                f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s12;
-                                f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s22;
+                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
+                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
+                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
+                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
+                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
+                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
+                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
+                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
+                                f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
+                                f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
                                 break;
                             case 3:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.v3;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s13;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs1*h1*b1.s23;
-                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.v3;
-                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s13;
-                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= dt*cs2*h2*b2.s23;
+                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
+                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
+                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
+                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
+                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
+                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
                         }
                 }
                 
@@ -630,21 +624,21 @@ iffields interface::solve_interface(const boundfields b1, const boundfields b2, 
     ifcp.s1 = b1.s11;
     ifcp.s2 = b2.s11;
     
-    ifchatp = calc_hat(ifcp,zp1,zp2);
+    ifchatp = solve_locked(ifcp,zp1,zp2);
     
     ifcs1.v1 = b1.v2;
     ifcs1.v2 = b2.v2;
     ifcs1.s1 = b1.s12;
     ifcs1.s2 = b2.s12;
     
-    ifchats1 = calc_hat(ifcs1,zs1,zs2);
+    ifchats1 = solve_locked(ifcs1,zs1,zs2);
     
     ifcs2.v1 = b1.v3;
     ifcs2.v2 = b2.v3;
     ifcs2.s1 = b1.s13;
     ifcs2.s2 = b2.s13;
     
-    ifchats2 = calc_hat(ifcs2,zs1,zs2,true); // t2 fields ("z" normal vector) have a different sign convention
+    ifchats2 = solve_locked(ifcs2,zs1,zs2);
     
     iffields iffout;
     
@@ -665,24 +659,15 @@ iffields interface::solve_interface(const boundfields b1, const boundfields b2, 
 
 }
 
-ifchar interface::calc_hat(const ifchar ifc, const double z1, const double z2, const bool isz) {
-    // solves interface conditions for a single characteristic
+ifchar interface::solve_locked(const ifchar ifc, const double z1, const double z2) {
+    // solves locked interface conditions for a single characteristic
     
     ifchar ifcout;
     
-    if (isz) {
-        // "z" tangent vector, different sign convention
-        ifcout.v1 = (-ifc.s1-ifc.s2+z1*ifc.v1+z2*ifc.v2)/(z1+z2);
-        ifcout.v2 = ifcout.v1;
-        ifcout.s1 = ifc.s1-z1*ifc.v1+z1*ifc.v1;
-        ifcout.s2 = -ifcout.s1;
-    } else {
-        // normal or tangent vector with opposite sign
-        ifcout.v1 = (-ifc.s1+ifc.s2+z1*ifc.v1-z2*ifc.v2)/(z1+z2);
-        ifcout.v2 = -ifcout.v1;
-        ifcout.s1 = ifc.s1+z1*(-ifc.v1+ifcout.v1);
-        ifcout.s2 = ifcout.s1;
-    }
+    ifcout.s1 = (z2*(ifc.s1-z1*ifc.v1)+z1*(ifc.s2+z2*ifc.v2))/(z1+z2);
+    ifcout.s2 = ifcout.s1;
+    ifcout.v1 = (ifcout.s1-ifc.s1)/z1+ifc.v1;
+    ifcout.v2 = ifcout.v1;
     
     return ifcout;
 }

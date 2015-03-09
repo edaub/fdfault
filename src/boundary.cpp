@@ -257,17 +257,17 @@ void boundary::apply_bcs(const double dt, fields& f) {
                         case 0:
                         case 1:
                             nn[l] = nx[l][j-mlb[1]][k-mlb[2]];
-                            h = dl[j-mlb[1]][k-mlb[2]];
+                            h = dt*dl[j-mlb[1]][k-mlb[2]];
                             break;
                         case 2:
                         case 3:
                             nn[l] = nx[l][i-mlb[0]][k-mlb[2]];
-                            h = dl[i-mlb[0]][k-mlb[2]];
+                            h = dt*dl[i-mlb[0]][k-mlb[2]];
                             break;
                         case 4:
                         case 5:
                             nn[l] = nx[l][i-mlb[0]][j-mlb[1]];
-                            h = dl[i-mlb[0]][j-mlb[1]];
+                            h = dt*dl[i-mlb[0]][j-mlb[1]];
                     }
                 }
                 
@@ -373,24 +373,24 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s33;
+                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.v1;
+                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.v2;
+                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.v3;
+                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s11;
+                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s12;
+                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s13;
+                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s22;
+                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s23;
+                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s33;
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.v1;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.v2;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s11;
-                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s12;
-                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cp*h*b.s22;
+                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.v1;
+                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.v2;
+                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s11;
+                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s12;
+                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp*h*b.s22;
                         }
                 }
                 
@@ -412,29 +412,29 @@ void boundary::apply_bcs(const double dt, fields& f) {
 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s33;
+                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v1;
+                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v2;
+                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v3;
+                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s11;
+                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s12;
+                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s13;
+                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s22;
+                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s23;
+                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s33;
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v1;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v2;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s11;
-                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s12;
-                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s22;
+                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v1;
+                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v2;
+                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s11;
+                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s12;
+                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s22;
                                 break;
                             case 3:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.v3;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s13;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*cs*h*b.s23;
+                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.v3;
+                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s13;
+                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s23;
                         }
                 }
                     

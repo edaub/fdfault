@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	
     // initialize problem
     
-    problem prob(150,0.,0.225,0.,10,4,4);
+    problem prob(150,0.,0.,0.3,10,4,4);
     
 	// Barrier to wait for all processes to finish initialization
 	
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     
     prob.solve();
 	
-    // finished with problem
+    // finished with problem setup
     // Barrier to wait for all processes to finish running
     
     MPI_Barrier(MPI_COMM_WORLD);
