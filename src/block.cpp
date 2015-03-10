@@ -1562,7 +1562,7 @@ void block::calc_df_3d(const double dt, fields& f, fd_type& fd) {
 }
 
 void block::init_fields(fields& f) {
-    for (int i=mlb[0]; i<prb[0]; i++) {
+/*    for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
@@ -1573,7 +1573,7 @@ void block::init_fields(fields& f) {
 //                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
             }
         }
-    }
+    }*/
 }
 
 

@@ -25,7 +25,7 @@ protected:
     double* dux;
     double* vx;
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j);
-    virtual iffields solve_friction(const iffields iffin, const double sn, const double z1, const double z2, const int i, const int j);
+    virtual iffields solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j);
     virtual boundchar solve_fs(const double phi, const double eta, const double sn, const int i, const int j);
 };
 

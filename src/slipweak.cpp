@@ -16,8 +16,8 @@ slipweak::slipweak(const int ndim_in, const int mode_in, const int direction_in,
     // constructor initializes interface
     
     dc = 0.4;
-    mus = 0.6;
-    mud = 0.7;
+    mus = 0.7;
+    mud = 0.6;
     
 }
 
@@ -45,6 +45,7 @@ boundchar slipweak::solve_fs(const double phi, const double eta, const double sn
             // slipping
             b.s = mu*fabs(sn);
             b.v = (phi-b.s)/eta;
+            
         }
     } else {
         // tensile normal stress, no shear strength

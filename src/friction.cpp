@@ -97,11 +97,15 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     
 }
 
-iffields friction::solve_friction(const iffields iffin, const double sn, const double z1, const double z2, const int i, const int j) {
+iffields friction::solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j) {
     // solve friction law for shear tractions and slip velocities
     
     const double eta = z1*z2/(z1+z2);
     double phi, phi2, phi3, v2, v3;
+    
+    iffin.s12 += 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
+    iffin.s22 += 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
+    sn -= 100.;
     
     phi2 = eta*(iffin.s12/z1-iffin.v12+iffin.s22/z2+iffin.v22);
     phi3 = eta*(iffin.s13/z1-iffin.v13+iffin.s23/z2+iffin.v23);
@@ -146,6 +150,9 @@ iffields friction::solve_friction(const iffields iffin, const double sn, const d
     iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
     iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
     iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
+    
+    iffout.s12 -= 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
+    iffout.s22 -= 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
 
     return iffout;
     
