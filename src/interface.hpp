@@ -28,6 +28,7 @@ public:
     virtual void scale_df(const double A);
     virtual void calc_df(const double dt);
     virtual void update(const double B);
+    virtual void write_fields();
 protected:
     int ndim;
     int mode;

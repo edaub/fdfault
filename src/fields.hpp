@@ -44,7 +44,7 @@ private:
 	MPI_Comm comm;
 	MPI_Datatype slicep[3];
 	MPI_Datatype slicem[3];
-	void init_fields();
+    void init_fields();
 	void init_exchange(cartesian& cart);
     void exchange_grid();
 };

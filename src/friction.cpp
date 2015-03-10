@@ -1,3 +1,7 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cmath>
 #include "block.hpp"
 #include "cartesian.hpp"
 #include "fd.hpp"
@@ -5,39 +9,41 @@
 #include "friction.hpp"
 #include "interface.hpp"
 
+using namespace std;
+
 friction::friction(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                   const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) : interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                                                const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) {
+                   const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) : interface(ndim_in, mode_in, direction_in, b1, b2,
+                                                x_block, l_block, f, cart, fd) {
     // constructor initializes interface and then allocates memory for slip velocity and slip
     
     // allocate memory for slip and slip rate arrays
     
     if (no_data) {return;}
     
-    u = new double** [ndim-1];
-    du = new double** [ndim-1];
-    v = new double** [ndim-1];
+    ux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+    dux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+    vx = new double [(ndim-1)*n_loc[0]*n_loc[1]];
     
-    for (int i=0; i<ndim-1; i++) {
-        u[i] = new double* [n_loc[0]];
-        du[i] = new double* [n_loc[0]];
-        v[i] = new double* [n_loc[0]];
-    }
+    u = new double [n_loc[0]*n_loc[1]];
+    du = new double [n_loc[0]*n_loc[1]];
+    v = new double [n_loc[0]*n_loc[1]];
+    
+    // initialize slip and slip velocity
     
     for (int i=0; i<ndim-1; i++) {
         for (int j=0; j<n_loc[0]; j++) {
-            u[i][j] = new double [n_loc[1]];
-            du[i][j] = new double [n_loc[1]];
-            v[i][j] = new double [n_loc[1]];
+            for (int k=0; k<n_loc[1]; k++) {
+                ux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] = 0.;
+                vx[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] = 0.;
+            }
         }
     }
     
-    utot = new double* [n_loc[0]];
-    dutot = new double* [n_loc[0]];
-    
     for (int i=0; i<n_loc[0]; i++) {
-        utot = new double [n_loc[1]];
-        du_tot = new double [n_loc[1]];
+        for (int j=0; j<n_loc[1]; j++) {
+            u[i*n_loc[1]+j] = 0.;
+            v[i*n_loc[1]+j] = 0.;
+        }
     }
     
 }
@@ -47,19 +53,9 @@ friction::~friction() {
     
     if (no_data) {return;}
     
-    for (int i=0; i<ndim-1; i++) {
-        for (int j=0; i<n_loc[0]; j++) {
-            delete[] u[i][j];
-            delete[] du[i][j];
-            delete[] v[i][j];
-        }
-    }
-    
-    for (int i=0; i<ndim-1; i++) {
-        delete[] u[i];
-        delete[] du[i];
-        delete[] v[i];
-    }
+    delete[] ux;
+    delete[] dux;
+    delete[] vx;
     
     delete[] u;
     delete[] du;
@@ -77,7 +73,7 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     ifcp.s1 = b1.s11;
     ifcp.s2 = b2.s11;
     
-    ifchatp = calc_hat(ifcp,zp1,zp2);
+    ifchatp = solve_locked(ifcp,zp1,zp2);
     
     iffields iffin, iffout;
     
@@ -90,7 +86,7 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     iffin.s13 = b1.s13;
     iffin.s23 = b2.s13;
     
-    iffout = solve_friction(iffin, zs1, zs2);
+    iffout = solve_friction(iffin, ifchatp.s1, zs1, zs2, i, j);
     
     iffout.v11 = ifchatp.v1;
     iffout.v21 = ifchatp.v2;
@@ -101,17 +97,148 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     
 }
 
-iffields friction::solve_friction(const iffields iffin, const double z1, const double z1) {
-    // solve friction law with frictionless interface for shear velocities and tractions
+iffields friction::solve_friction(const iffields iffin, const double sn, const double z1, const double z2, const int i, const int j) {
+    // solve friction law for shear tractions and slip velocities
+    
+    const double eta = z1*z2/(z1+z2);
+    double phi, phi2, phi3, v2, v3;
+    
+    phi2 = eta*(iffin.s12/z1-iffin.v12+iffin.s22/z2+iffin.v22);
+    phi3 = eta*(iffin.s13/z1-iffin.v13+iffin.s23/z2+iffin.v23);
+    phi = sqrt(pow(phi2,2)+pow(phi3,2));
+    
+    boundchar b = solve_fs(phi, eta, sn, i, j);
+    
+    if (fabs(b.v) < 1.e-14 && fabs(b.s) < 1.e-14) {
+        v2 = 0.;
+        v3 = 0.;
+    } else {
+        v2 = b.v*phi2/(eta*b.v+b.s);
+        v3 = b.v*phi3/(eta*b.v+b.s);
+    }
+    
+    // set interface variables to hat variables
+    
+    v[i*n_loc[1]+j] = b.v;
+    switch (ndim) {
+        case 3:
+            vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v2;
+            vx[1*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v3;
+            break;
+        case 2:
+            switch (mode) {
+                case 2:
+                    vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v2;
+                    break;
+                case 3:
+                    vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v3;
+            }
+    }
+    
     
     iffields iffout;
     
-    iffout.v12 = (-iffin.s12-iffin.s22+z1*iffin.v12+z2*iffin.v22)/(z1+z2);
-    iffout.v22 = iffout.v12;
-    iffout.s12 = 0.;
-    iffout.s22 = 0.;
+    iffout.s12 = phi2-eta*v2;
+    iffout.s22 = iffout.s12;
+    iffout.s13 = phi3-eta*v3;
+    iffout.s23 = iffout.s13;
+    iffout.v12 = (iffout.s12-iffin.s12)/z1+iffin.v12;
+    iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
+    iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
+    iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
+
+    return iffout;
     
-    iffout.v13 = (-iffin.s12-iffin.s22+z1*iffin.v12+z2*iffin.v22)/(z1+z2)
+}
+
+boundchar friction::solve_fs(const double phi, const double eta, const double sn, const int i, const int j) {
+    // solves friction law for slip velocity and strength
+    // frictionless interface
+    
+    boundchar b;
+    
+    b.v = phi/eta;
+    b.s = 0.;
+    
+    return b;
+}
+
+void friction::scale_df(const double A) {
+    // scale df for state variables by rk constant A
+    
+    for (int i=0; i<ndim-1; i++) {
+        for (int j=0; j<n_loc[0]; j++) {
+            for (int k=0; k<n_loc[1]; k++) {
+                dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] *= A;
+            }
+        }
+    }
+    
+    for (int i=0; i<n_loc[0]; i++) {
+        for (int j=0; j<n_loc[1]; j++) {
+            du[i*n_loc[1]+j] *= A;
+        }
+    }
+    
+}
+
+void friction::calc_df(const double dt) {
+    // calculate df for state variables for rk time step
+    
+    for (int i=0; i<ndim-1; i++) {
+        for (int j=0; j<n_loc[0]; j++) {
+            for (int k=0; k<n_loc[1]; k++) {
+                dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += dt*vx[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
+            }
+        }
+    }
+    
+    for (int i=0; i<n_loc[0]; i++) {
+        for (int j=0; j<n_loc[1]; j++) {
+            du[i*n_loc[1]+j] += dt*v[i*n_loc[1]+j];
+        }
+    }
+    
+}
+
+void friction::update(const double B) {
+    // updates state variables
+    
+    for (int i=0; i<ndim-1; i++) {
+        for (int j=0; j<n_loc[0]; j++) {
+            for (int k=0; k<n_loc[1]; k++) {
+                ux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += B*dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
+            }
+        }
+    }
+    
+    for (int i=0; i<n_loc[0]; i++) {
+        for (int j=0; j<n_loc[1]; j++) {
+            u[i*n_loc[1]+j] += B*du[i*n_loc[1]+j];
+        }
+    }
+}
+
+void friction::write_fields() {
+    // writes interface fields
+    
+    int id;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+    
+    stringstream ss;
+    ss << id;
+    
+    fstream myFile;
+    myFile.open (("i"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    
+    myFile.write((char*) ux, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);
+    myFile.write((char*) vx, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);
+    myFile.write((char*) u, sizeof(double)*n_loc[0]*n_loc[1]);
+    myFile.write((char*) v, sizeof(double)*n_loc[0]*n_loc[1]);
+    
+    myFile.close();
+
 }
 
 

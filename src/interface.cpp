@@ -686,3 +686,8 @@ void interface::update(const double B) {
     // updates state variables
 
 }
+
+void interface::write_fields() {
+    // writes interface fields
+
+}

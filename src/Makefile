@@ -14,7 +14,7 @@ cartesian.o : cartesian.hpp coord.hpp cartesian.cpp
 coord.o : coord.hpp coord.cpp
 	$(CC) $(CFLAGS) coord.cpp
 
-domain.o : block.hpp cartesian.hpp domain.hpp fd.hpp fields.hpp interface.hpp rk.hpp domain.cpp
+domain.o : block.hpp cartesian.hpp domain.hpp fd.hpp fields.hpp interface.hpp rk.hpp slipweak.hpp domain.cpp
 	$(CC) $(CFLAGS) domain.cpp
 
 fd.o : fd.hpp coord.hpp fd.cpp
@@ -22,6 +22,9 @@ fd.o : fd.hpp coord.hpp fd.cpp
 
 fields.o : fields.hpp coord.hpp cartesian.hpp fields.cpp
 	$(CC) $(CFLAGS) fields.cpp
+
+friction.o : block.hpp cartesian.hpp fd.hpp fields.hpp friction.hpp interface.hpp friction.cpp
+	$(CC) $(CFLAGS) friction.cpp
 
 interface.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fields.hpp interface.hpp surface.hpp interface.cpp
 	$(CC) $(CFLAGS) interface.cpp
@@ -44,10 +47,13 @@ problem.o : domain.hpp outputlist.hpp problem.hpp rk.hpp problem.cpp
 rk.o : rk.hpp rk.cpp
 	$(CC) $(CFLAGS) rk.cpp
 
+slipweak.o : block.hpp cartesian.hpp fd.hpp fields.hpp friction.hpp interface.hpp slipweak.hpp slipweak.cpp
+	$(CC) $(CFLAGS) slipweak.cpp
+
 surface.o : coord.hpp surface.hpp surface.cpp
 	$(CC) $(CFLAGS) surface.cpp
 
-fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o interface.o main.o material.o outputlist.o outputunit.o problem.o rk.o surface.o
+fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
 	$(CC) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
-		fd.o fields.o interface.o main.o material.o outputlist.o outputunit.o \
-		problem.o rk.o surface.o
+		fd.o fields.o friction.o interface.o main.o material.o \
+		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o

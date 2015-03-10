@@ -100,14 +100,17 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     int** blockm;
     int** blockp;
     int* direction;
+    string* iftype;
     
     blockm = new int* [nifaces];
     blockp = new int* [nifaces];
     direction = new int [nifaces];
+    iftype = new string [nifaces];
     
     for (int i=0; i<nifaces; i++) {
         blockm[i] = new int [3];
         blockp[i] = new int [3];
+        
     }
     
     blockm[0][0] = 0;
@@ -117,8 +120,9 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     blockm[0][2] = 0;
     blockp[0][2] = 0;
     direction[0] = 0;
+    iftype[0] = "slipweak";
     
-    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, sbporder);
+    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, iftype, sbporder);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
