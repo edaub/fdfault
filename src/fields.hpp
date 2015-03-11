@@ -11,6 +11,8 @@ class fields
     friend class block;
     friend class boundary;
     friend class interface;
+    friend class load;
+    friend class outputunit;
 public:
     fields(const int ndim_in, const int mode, const std::string material, cartesian& cart);
 	~fields();

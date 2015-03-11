@@ -6,9 +6,9 @@
 class outputlist
 {
 public:
-	outputlist();
+	outputlist(const int ndim_in, const int mode_in, domain& d);
 	~outputlist();
-    void write_list();
+    void write_list(const int tstep);
 private:
 	outputunit* rootunit;
 };

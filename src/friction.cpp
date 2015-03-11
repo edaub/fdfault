@@ -8,6 +8,7 @@
 #include "fields.hpp"
 #include "friction.hpp"
 #include "interface.hpp"
+#include "load.hpp"
 
 using namespace std;
 
@@ -46,6 +47,13 @@ friction::friction(const int ndim_in, const int mode_in, const int direction_in,
         }
     }
     
+    nloads = 2;
+    
+    loads = new load* [nloads];
+    
+    loads[0] = new load("constant", 0.5, 0., 0.05, 1., -100., 62., 0., 0);
+    loads[1] = new load("gaussian", 0.5, 0., 0.05, 1., 0., 8.1, 0., 0);
+    
 }
 
 friction::~friction() {
@@ -60,6 +68,12 @@ friction::~friction() {
     delete[] u;
     delete[] du;
     delete[] v;
+    
+    for (int i=0; i<nloads; i++) {
+        delete loads[i];
+    }
+    
+    delete[] loads;
 
 }
 
@@ -103,9 +117,13 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     const double eta = z1*z2/(z1+z2);
     double phi, phi2, phi3, v2, v3;
     
-    iffin.s12 += 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
-    iffin.s22 += 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
-    sn -= 100.;
+    for (int k=0; k<nloads; k++) {
+        sn += loads[k]->get_sn(i,j);
+        iffin.s12 += loads[k]->get_s2(i,j);
+        iffin.s22 += loads[k]->get_s2(i,j);
+        iffin.s13 += loads[k]->get_s3(i,j);
+        iffin.s23 += loads[k]->get_s3(i,j);
+    }
     
     phi2 = eta*(iffin.s12/z1-iffin.v12+iffin.s22/z2+iffin.v22);
     phi3 = eta*(iffin.s13/z1-iffin.v13+iffin.s23/z2+iffin.v23);
@@ -151,8 +169,12 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
     iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
     
-    iffout.s12 -= 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
-    iffout.s22 -= 65.+5.1*exp(-pow((double)i-100.,2)/1000.);
+    for (int k=0; k<nloads; k++) {
+        iffout.s12 -= loads[k]->get_s2(i,j);
+        iffout.s22 -= loads[k]->get_s2(i,j);
+        iffout.s13 -= loads[k]->get_s3(i,j);
+        iffout.s23 -= loads[k]->get_s3(i,j);
+    }
 
     return iffout;
     

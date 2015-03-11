@@ -25,7 +25,7 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     int ndim = 2;
     int mode = 2;
     
-    int nx[3] = {202, 201, 1};
+    int nx[3] = {402, 401, 1};
     int nblocks[3] = {2,1,1};
     
     int** nx_block;
@@ -176,7 +176,7 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     
     // create output list
 	
-	out = new outputlist();
+	out = new outputlist(ndim, mode, *d);
     
 }
 
@@ -258,7 +258,7 @@ void problem::solve() {
         
         // output data
         
-        out->write_list();
+        out->write_list(i);
 
         // update status
         

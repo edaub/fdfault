@@ -11,7 +11,7 @@
 #include "rk.hpp"
 
 class domain
-{
+{ friend class outputunit;
 public:
 	domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block,
            int** xm_block, double**** x_block, double**** l_block, std::string**** boundtype, const int nifaces_in, int** blockm,
