@@ -1,6 +1,12 @@
 CC=mpic++
-CFLAGS=-c -O2
+CFLAGS=-c -O3
+EFLAGS= -O3
 EXEC = ../fdfault
+
+fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
+	$(CC) $(EFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
+		fd.o fields.o friction.o interface.o load.o main.o material.o \
+		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
 
 block.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fd.hpp material.hpp surface.hpp block.cpp
 	$(CC) $(CFLAGS) block.cpp
@@ -55,8 +61,3 @@ slipweak.o : block.hpp cartesian.hpp fd.hpp fields.hpp friction.hpp interface.hp
 
 surface.o : coord.hpp surface.hpp surface.cpp
 	$(CC) $(CFLAGS) surface.cpp
-
-fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
-	$(CC) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
-		fd.o fields.o friction.o interface.o load.o main.o material.o \
-		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o

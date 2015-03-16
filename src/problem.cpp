@@ -258,7 +258,7 @@ void problem::solve() {
         
         // output data
         
-        out->write_list(i);
+        out->write_list(i, dt, *d);
 
         // update status
         
@@ -271,4 +271,9 @@ void problem::solve() {
     }
     
     d->write_fields();
+    
+    // close output files
+    
+    out->close_list();
+    
 }
