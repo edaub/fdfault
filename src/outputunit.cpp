@@ -7,13 +7,11 @@
 #include "outputunit.hpp"
 #include <mpi.h>
 
-outputunit::outputunit(const int ndim_in, const int mode_in, const int tm_in, const int tp_in,
+outputunit::outputunit(const int tm_in, const int tp_in,
                        const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
                        std::string field_in, std::string name, domain& d) {
     // constructor
     
-    assert(ndim_in == 2 || ndim_in == 3);
-    assert(mode_in == 2 || mode_in == 3);
     assert(ts_in > 0);
     assert(tp_in >= tm_in);
     for (int i=0; i<3; i++) {
@@ -25,8 +23,8 @@ outputunit::outputunit(const int ndim_in, const int mode_in, const int tm_in, co
     
     // set input parameters
     
-    ndim = ndim_in;
-    mode = mode_in;
+    ndim = d.get_ndim();
+    mode = d.get_mode();
     
     // set pointer to next unit to null pointer
     

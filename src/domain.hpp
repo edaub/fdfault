@@ -18,6 +18,8 @@ public:
            int** blockp, int* direction, std::string* iftype, const int sbporder);
 //    domain(const domain& otherdomain);
     ~domain();
+    int get_ndim() const;
+    int get_mode() const;
     int get_nblocks(const int index) const;
 	int get_nblockstot() const;
     int get_nifaces() const;

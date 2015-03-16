@@ -6,7 +6,7 @@
 class outputunit
 {
 public:
-    outputunit(const int ndim_in, const int mode_in, const int tm_in, const int tp_in,
+    outputunit(const int tm_in, const int tp_in,
                const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
                std::string field_in, std::string name, domain& d);
     outputunit* get_next_unit() const ;

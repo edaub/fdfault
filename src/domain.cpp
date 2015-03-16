@@ -77,6 +77,18 @@ domain::~domain() {
 
 }
 
+int domain::get_ndim() const {
+    // returns number of spatial dimensions
+    
+    return ndim;
+}
+
+int domain::get_mode() const {
+    // returns mode
+    
+    return mode;
+}
+
 int domain::get_nblocks(const int index) const {
     // returns number of blocks
 	assert(index >= 0 && index < 3);

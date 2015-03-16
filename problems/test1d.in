@@ -10,3 +10,11 @@ ny = 1;
 nz = 1;
 mode = 3;
 sbporder = 4;
+
+[fdfault.outputlist]
+test
+vx
+0 100 1
+100 100 1
+100 100 1
+0 0 1

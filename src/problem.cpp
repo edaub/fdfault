@@ -11,7 +11,7 @@
 
 using namespace std;
 
-problem::problem(const int nt_in, const double dt_in, const double ttot_in, const double cfl_in, const int ninfo_in, const int rkorder, const int sbporder) {
+problem::problem(const string filename, const int nt_in, const double dt_in, const double ttot_in, const double cfl_in, const int ninfo_in, const int rkorder, const int sbporder) {
     // constructor
 
     // set parameters to input values
@@ -176,7 +176,7 @@ problem::problem(const int nt_in, const double dt_in, const double ttot_in, cons
     
     // create output list
 	
-	out = new outputlist(ndim, mode, *d);
+	out = new outputlist(filename, *d);
     
 }
 
