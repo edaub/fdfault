@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 #include <cassert>
 #include <string>
@@ -14,9 +16,56 @@
 
 using namespace std;
 
-block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int xm_in[3], const double x_in[3],
-             const double l_in[3], string boundtype[6], cartesian& cart, fields& f, fd_type& fd) {
+block::block(const string filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
     // constructor, no default constructor due to necessary memory allocation
+    
+    // open input file, find appropriate place and read in parameters
+    
+    double rho_in, lambda_in, g_in;
+    string boundtype[6], boundfile[6];
+    
+    stringstream ss;
+    
+    for (int i=0; i<3; i++) {
+        ss << coords[i];
+    }
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of appropriate block list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.block"+ss.str()+"]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading block "+ss.str()+" from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read block variables
+            paramfile >> rho_in;
+            paramfile >> lambda_in;
+            paramfile >> g_in;
+            for (int i=0; i<ndim_in; i++) {
+                paramfile >> x_block[i];
+            }
+            for (int i=0; i<ndim_in; i++) {
+                paramfile >> l_block[i];
+            }
+            for (int i=0; i<2*ndim_in; i++) {
+                paramfile >> boundtype[i];
+            }
+            for (int i=0; i<2*ndim_in; i++) {
+                paramfile >> boundfile[i];
+            }
+        }
+    } else {
+        cerr << "Error opening input file in block.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+
     
 	assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
@@ -42,9 +91,9 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     
     // set material properties
     
-    mat.set_lambda(1.);
-    mat.set_rho(1.);
-    mat.set_g(1.);
+    mat.set_lambda(lambda_in);
+    mat.set_rho(rho_in);
+    mat.set_g(g_in);
     
     // if process has data, allocate grid, fields, and boundaries
     
@@ -78,33 +127,33 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     double l[6][2];
 
     for (int i=0; i<ndim; i++) {
-        x[0][i] = x_in[i];
-        x[2][i] = x_in[i];
-        x[4][i] = x_in[i];
+        x[0][i] = x_block[i];
+        x[2][i] = x_block[i];
+        x[4][i] = x_block[i];
     }
 
-    x[1][0] = x_in[0]+l_in[0];
-    x[1][1] = x_in[1];
-    x[1][2] = x_in[2];
-    x[3][0] = x_in[0];
-    x[3][1] = x_in[1]+l_in[1];
-    x[3][2] = x_in[2];
-    x[5][0] = x_in[0];
-    x[5][1] = x_in[1];
-    x[5][2] = x_in[2]+l_in[2];
+    x[1][0] = x_block[0]+l_block[0];
+    x[1][1] = x_block[1];
+    x[1][2] = x_block[2];
+    x[3][0] = x_block[0];
+    x[3][1] = x_block[1]+l_block[1];
+    x[3][2] = x_block[2];
+    x[5][0] = x_block[0];
+    x[5][1] = x_block[1];
+    x[5][2] = x_block[2]+l_block[2];
 
-    l[0][0] = l_in[1];
-    l[0][1] = l_in[2];
-    l[1][0] = l_in[1];
-    l[1][1] = l_in[2];
-    l[2][0] = l_in[0];
-    l[2][1] = l_in[2];
-    l[3][0] = l_in[0];
-    l[3][1] = l_in[2];
-    l[4][0] = l_in[0];
-    l[4][1] = l_in[1];
-    l[5][0] = l_in[0];
-    l[5][1] = l_in[1];
+    l[0][0] = l_block[1];
+    l[0][1] = l_block[2];
+    l[1][0] = l_block[1];
+    l[1][1] = l_block[2];
+    l[2][0] = l_block[0];
+    l[2][1] = l_block[2];
+    l[3][0] = l_block[0];
+    l[3][1] = l_block[2];
+    l[4][0] = l_block[0];
+    l[4][1] = l_block[1];
+    l[5][0] = l_block[0];
+    l[5][1] = l_block[1];
         
     // create surfaces
     // surfaces must be global for constructing grid
@@ -164,8 +213,6 @@ block::block(const int ndim_in, const int mode_in, const int nx_in[3], const int
     }
     
     delete[] surf;
-    
-    init_fields(f);
 
 }
     
@@ -257,6 +304,20 @@ double block::get_dx(const int index) const {
     return dx[index];
 }
 
+double block::get_x(const int index) const {
+    // returns block corner location in specified direction
+    assert(index >=0 && index < 3);
+    
+    return x_block[index];
+}
+
+double block::get_l(const int index) const {
+    // returns block length in specified direction
+    assert(index >=0 && index < 3);
+    
+    return l_block[index];
+}
+
 double block::get_min_dx(fields& f) const {
     // returns minimum value of the grid spacing divided by the wave speed
     
@@ -287,7 +348,7 @@ double block::get_min_dx(fields& f) const {
 
 }
 
-void block::calc_df(const double dt, fields& f, fd_type& fd) {
+void block::calc_df(const double dt, fields& f, const fd_type& fd) {
     // does first part of a low storage time step
     
     if (no_data) { return; }
@@ -341,7 +402,7 @@ void block::set_boundaries(const double dt, fields& f) {
     }
 }*/
 
-void block::calc_process_info(cartesian& cart, const int sbporder) {
+void block::calc_process_info(const cartesian& cart, const int sbporder) {
     // calculate local process-specific information
 
     // store values to save some typing
@@ -411,7 +472,7 @@ void block::calc_process_info(cartesian& cart, const int sbporder) {
 	}
 }
 
-void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
+void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_type& fd) {
     // set grid, metric, and jacobian in fields
     
     for (int i=0; i<3; i++) {
@@ -692,7 +753,7 @@ void block::set_grid(surface** surf, fields& f, cartesian& cart, fd_type& fd) {
 
 }
 
-void block::calc_df_mode2(const double dt, fields& f, fd_type& fd) {
+void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a mode 2 problem
     
     // x derivatives
@@ -894,7 +955,7 @@ void block::calc_df_mode2(const double dt, fields& f, fd_type& fd) {
     
 }
 
-void block::calc_df_mode3(const double dt, fields& f, fd_type& fd) {
+void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a mode 3 problem
     
     // x derivatives
@@ -1008,7 +1069,7 @@ void block::calc_df_mode3(const double dt, fields& f, fd_type& fd) {
     
 }
 
-void block::calc_df_3d(const double dt, fields& f, fd_type& fd) {
+void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a 3d problem
     
     // x derivatives
@@ -1559,21 +1620,6 @@ void block::calc_df_3d(const double dt, fields& f, fd_type& fd) {
         }
     }
     
-}
-
-void block::init_fields(fields& f) {
-/*    for (int i=mlb[0]; i<prb[0]; i++) {
-        for (int j=mlb[1]; j<prb[1]; j++) {
-            for (int k=mlb[2]; k<prb[2]; k++) {
-                f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
-                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-//                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-                f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] = -exp(-pow(f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.75,2)/0.005
-                                                         -pow(f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-//                                                         -pow(f.x[2*nxd[0]+i*nxd[1]+j*nxd[2]+k]-0.5,2)/0.005);
-            }
-        }
-    }*/
 }
 
 

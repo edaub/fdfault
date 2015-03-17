@@ -12,7 +12,7 @@
 using namespace std;
 
 boundary::boundary(const int ndim_in, const int mode_in, const int location_in, const std::string boundtype_in,
-                   const coord c, const double dx[3], surface& surf, fields& f, material& m, cartesian& cart, fd_type& fd) {
+                   const coord c, const double dx[3], const surface& surf, fields& f, material& m, const cartesian& cart, const fd_type& fd) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in == 3);
@@ -155,7 +155,7 @@ boundary::~boundary() {
     deallocate_normals();
 }
 
-void boundary::allocate_normals(const double dx[3], fields& f, surface& surf, fd_type& fd) {
+void boundary::allocate_normals(const double dx[3], fields& f, const surface& surf, const fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];

@@ -14,7 +14,7 @@ class fields
     friend class load;
     friend class outputunit;
 public:
-    fields(const int ndim_in, const int mode, const std::string material, cartesian& cart);
+    fields(const std::string filename, const int ndim_in, const int mode, const cartesian& cart);
 	~fields();
     void scale_df(const double A);
     void update(const double B);
@@ -46,8 +46,8 @@ private:
 	MPI_Comm comm;
 	MPI_Datatype slicep[3];
 	MPI_Datatype slicem[3];
-    void init_fields();
-	void init_exchange(cartesian& cart);
+    void init_fields(const int mode, const double s[6]);
+	void init_exchange(const cartesian& cart);
     void exchange_grid();
 };
 

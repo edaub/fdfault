@@ -11,8 +11,7 @@
 using namespace std;
 
 slipweak::slipweak(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                   const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) : friction(ndim_in, mode_in, direction_in, b1, b2,
-                                                x_block, l_block, f, cart, fd) {
+                   const fields& f, const cartesian& cart, const fd_type& fd) : friction(ndim_in, mode_in, direction_in, b1, b2, f, cart, fd) {
     // constructor initializes interface
     
     dc = 0.4;

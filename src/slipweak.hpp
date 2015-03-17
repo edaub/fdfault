@@ -7,7 +7,7 @@ class slipweak: public friction
 { friend class outputunit;
 public:
     slipweak(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-             const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd);
+             const fields& f, const cartesian& cart, const fd_type& fd);
 protected:
     double dc;
     double mus;

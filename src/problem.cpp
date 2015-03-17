@@ -151,9 +151,8 @@ problem::problem(const string filename) {
     blockm[0][2] = 0;
     blockp[0][2] = 0;
     direction[0] = 0;
-    iftype[0] = "slipweak";
     
-    d = new domain(filename, nx_block, xm_block, x_block, l_block, boundtype, blockm, blockp, direction, iftype);
+    d = new domain(filename, blockm, blockp, direction);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];

@@ -15,8 +15,53 @@
 2
 1
 1
+201
+201
+401
 1
+1
+slipweak
 4
+
+[fdfault.fields]
+elastic
+0.
+0.
+0.
+
+[fdfault.block000]
+1.
+1.
+1.
+0.
+0.
+0.5
+1.
+absorbing
+none
+absorbing
+absorbing
+none
+none
+none
+none
+
+[fdfault.block100]
+1.
+1.
+1.
+0.5
+0.
+0.5
+1.
+none
+absorbing
+absorbing
+absorbing
+none
+none
+none
+none
 
 [fdfault.outputlist]
 test
@@ -38,4 +83,3 @@ sxx
 100 100 1
 0 0 1
 
-hello

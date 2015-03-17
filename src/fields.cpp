@@ -10,11 +10,59 @@
 
 using namespace std;
 
-fields::fields(const int ndim_in, const int mode, const std::string material, cartesian& cart) {
+fields::fields(const string filename, const int ndim_in, const int mode, const cartesian& cart) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in ==3);
     assert(mode == 2 || mode == 3);
+    
+    double s[6];
+    string material;
+    
+    // read from input file
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of fields list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.fields]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading fields from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read problem variables
+            paramfile >> material;
+            switch (ndim_in) {
+                case 3:
+                    for (int i=0; i<6; i++) {
+                        paramfile >> s[i];
+                    }
+                    break;
+                case 2:
+                    switch (mode) {
+                        case 2:
+                            for (int i=0; i<3; i++) {
+                                paramfile >> s[i];
+                            }
+                            break;
+                        case 3:
+                            for (int i=0; i<2; i++) {
+                                paramfile >> s[i];
+                            }
+                    }
+            }
+            
+        }
+    } else {
+        cerr << "Error opening input file in fields.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+    
     assert(material == "elastic" || material == "plastic");
     
     ndim = ndim_in;
@@ -61,7 +109,7 @@ fields::fields(const int ndim_in, const int mode, const std::string material, ca
 	
 	// initialize fields
 	
-	init_fields();
+	init_fields(mode, s);
 }
 
 fields::~fields() {
@@ -74,16 +122,39 @@ fields::~fields() {
 	
 }
 
-void fields::init_fields() {
-	// initialize fields
-		
-	for (int i=0; i<ndataf; i++) {
-		f[i] = 0.;
+void fields::init_fields(const int mode, const double s[6]) {
+	// initialize fields to constant initial stress state
+    
+    int nv, ns, nxyz;
+    
+    switch (ndim) {
+        case 3:
+            ns = 6;
+            nv = 3;
+            break;
+        case 2:
+            switch (mode) {
+                case 2:
+                    ns = 3;
+                    nv = 2;
+                    break;
+                case 3:
+                    ns = 2;
+                    nv = 1;
+            }
+    }
+    
+    nxyz = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
+    
+	for (int i=0; i<ns; i++) {
+        for (int j=0; j<nxyz; j++) {
+            f[(nv+i)*nxyz+j] = s[i];
+        }
 	}
 		
 }
 
-void fields::init_exchange(cartesian& cart) {
+void fields::init_exchange(const cartesian& cart) {
 	// copy cartesian parameters
 	
 	comm = cart.comm;

@@ -15,11 +15,17 @@
 
 using namespace std;
 
-domain::domain(const string filename, int** nx_block, int** xm_block, double**** x_block, double**** l_block, std::string**** boundtype,
-               int** blockm, int** blockp, int* direction, std::string* iftype) {
+domain::domain(const string filename, int** blockm, int** blockp, int* direction) {
     // constructor, no default as need to allocate memory
     
     int sbporder;
+    string* iftype;
+    
+    int** nx_block;
+    int** xm_block;
+    
+    nx_block = new int* [3];
+    xm_block = new int* [3];
     
     // open input file, find appropriate place and read in parameters
     
@@ -36,7 +42,7 @@ domain::domain(const string filename, int** nx_block, int** xm_block, double****
             cerr << "Error reading domain from input file\n";
             MPI_Abort(MPI_COMM_WORLD,-1);
         } else {
-            // read problem variables
+            // read domain variables
             paramfile >> ndim;
             paramfile >> mode;
             for (int i=0; i<3; i++) {
@@ -45,7 +51,20 @@ domain::domain(const string filename, int** nx_block, int** xm_block, double****
             for (int i=0; i<3; i++) {
                 paramfile >> nblocks[i];
             }
+            for (int i=0; i<3; i++) {
+                nx_block[i] = new int [nblocks[i]];
+                xm_block[i] = new int [nblocks[i]];
+            }
+            for (int i=0; i<3; i++) {
+                for (int j=0; j<nblocks[i]; j++) {
+                    paramfile >> nx_block[i][j];
+                }
+            }
             paramfile >> nifaces;
+            iftype = new string [nifaces];
+            for (int i=0; i<nifaces; i++) {
+                paramfile >> iftype[i];
+            }
             paramfile >> sbporder;
         }
     } else {
@@ -53,15 +72,37 @@ domain::domain(const string filename, int** nx_block, int** xm_block, double****
         MPI_Abort(MPI_COMM_WORLD,-1);
     }
     paramfile.close();
+    
+    // check validity of input parameters
 
 	assert(ndim == 2 || ndim == 3);
     assert(mode == 2 || mode == 3);
+    if (ndim == 2) {
+        assert(nx[2] == 1);
+    }
 	for (int i=0; i<3; i++) {
 		assert(nx[i] > 0);
 		assert(nblocks[i] > 0);
+        int sum = 0;
+        for (int j=0; j<nblocks[i]; j++) {
+            sum += nx_block[i][j];
+        }
+        assert(sum == nx[i]);
 	}
 	
+    // set other domain parameters
+    
 	nblockstot = nblocks[0]*nblocks[1]*nblocks[2];
+    
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<nblocks[i]; j++) {
+            if (j==0) {
+                xm_block[i][j] = 0;
+            } else {
+                xm_block[i][j] = xm_block[i][j-1]+nx_block[i][j-1];
+            }
+        }
+    }
 	
     // allocate memory for fd coefficients
     
@@ -71,22 +112,28 @@ domain::domain(const string filename, int** nx_block, int** xm_block, double****
 	
 	cart = new cartesian(ndim, nx, nblocks, nx_block, xm_block, sbporder);
     
-    f = new fields(ndim,mode,"elastic",*cart);
+    f = new fields(filename, ndim, mode, *cart);
 	
     // allocate memory and create blocks
     
-    allocate_blocks(nx_block, xm_block, boundtype, x_block, l_block);
+    allocate_blocks(filename, nx_block, xm_block);
     
     // allocate memory and create interfaces
     
-    allocate_interfaces(blockm, blockp, direction, iftype, x_block, l_block);
+    allocate_interfaces(blockm, blockp, direction, iftype);
 
     // exchange neighbors to fill in ghost cells
     
     f->exchange_neighbors();
     
-    f->write_fields();
-
+    for (int i=0; i<3; i++) {
+        delete[] nx_block[i];
+        delete[] xm_block[i];
+    }
+    
+    delete[] nx_block;
+    delete[] xm_block;
+    
 }
 
 domain::~domain() {
@@ -211,11 +258,12 @@ void domain::write_fields() {
     }
 }
 
-void domain::allocate_blocks(int** nx_block, int** xm_block, string**** boundtype, double**** x_block, double**** l_block) {
+void domain::allocate_blocks(const string filename, int** nx_block, int** xm_block) {
     // allocate memory for blocks and initialize
 
     int nxtmp[3];
     int xmtmp[3];
+    int coords[3];
     
     blocks = new block*** [nblocks[0]];
     
@@ -238,14 +286,17 @@ void domain::allocate_blocks(int** nx_block, int** xm_block, string**** boundtyp
                 xmtmp[0] = xm_block[0][i];
                 xmtmp[1] = xm_block[1][j];
                 xmtmp[2] = xm_block[2][k];
-                blocks[i][j][k] = new block(ndim, mode, nxtmp, xmtmp, x_block[i][j][k], l_block[i][j][k], boundtype[i][j][k], *cart, *f, *fd);
+                coords[0] = i;
+                coords[1] = j;
+                coords[2] = k;
+                blocks[i][j][k] = new block(filename, ndim, mode, coords, nxtmp, xmtmp, *cart, *f, *fd);
             }
         }
     }
 
 }
 
-void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, string* iftype, double**** x_block, double**** l_block) {
+void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, string* iftype) {
     // allocate memory for interfaces
     
     for (int i=0; i<nifaces; i++) {
@@ -259,22 +310,16 @@ void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, str
             interfaces[i] = new interface(ndim, mode, direction[i],
                                       *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                       *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                      x_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                      l_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                       *f, *cart, *fd);
         } else if (iftype[i] == "frictionless") {
             interfaces[i] = new friction(ndim, mode, direction[i],
                                           *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                           *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                          x_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                          l_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                           *f, *cart, *fd);
         } else { // slip weakening
             interfaces[i] = new slipweak(ndim, mode, direction[i],
                                          *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                          *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                         x_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                         l_block[blockm[i][0]][blockm[i][1]][blockm[i][2]],
                                          *f, *cart, *fd);
         }
     }

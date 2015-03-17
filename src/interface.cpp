@@ -11,7 +11,7 @@
 #include <mpi.h>
 
 interface::interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                     const double x_block[3], const double l_block[3], fields& f, cartesian& cart, fd_type& fd) {
+                     const fields& f, const cartesian& cart, const fd_type& fd) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in == 3);
@@ -174,6 +174,8 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     // create surface for interface
     
     coord c;
+    double x_block[3];
+    double l_block[3];
     
     if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
         // use block 1 data
@@ -184,6 +186,8 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
             c.set_xm_loc(i,b1.get_xm_loc(i));
             c.set_xm_ghost(i,b1.get_xm_ghost(i));
             c.set_xp_ghost(i,b1.get_xp_ghost(i));
+            x_block[i] = b1.get_x(i);
+            l_block[i] = b1.get_l(i);
         }
     } else {
         // use block 2 data
@@ -194,10 +198,12 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
             c.set_xm_loc(i,b2.get_xm_loc(i));
             c.set_xm_ghost(i,b2.get_xm_ghost(i));
             c.set_xp_ghost(i,b2.get_xp_ghost(i));
+            x_block[i] = b2.get_x(i);
+            l_block[i] = b2.get_l(i);
         }
     }
     
-    surface surf(ndim,c,direction,1.,x_block, l_block, true);
+    surface surf(ndim,c,direction,1., x_block, l_block, true);
     
     // allocate memory for arrays for normal vectors and grid spacing
     
@@ -221,28 +227,7 @@ interface::~interface() {
     
 }
 
-/*interface::interface(const interface& otherint) {
-    // copy constructor
-    
-    index = otherint.get_index();
-    blockm = otherint.get_blockm();
-    blockp = otherint.get_blockp();
-    iftype = otherint.get_iftype();
-    direction = otherint.get_direction();
-}
-
-interface& interface:: operator=(const interface& assignint) {
-    // assignment operator
-    
-    index = assignint.get_index();
-	blockm = assignint.get_blockm();
-	blockp = assignint.get_blockp();
-	iftype = assignint.get_iftype();
-    direction = assignint.get_direction();
-	return *this;
-}*/
-
-void interface::allocate_normals(const double dx1[3], const double dx2[3], fields& f, surface& surf, fd_type& fd) {
+void interface::allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];
