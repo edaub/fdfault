@@ -10,9 +10,10 @@ using namespace std;
 outputlist::outputlist(string filename, domain& d) {
     // constructor
     
-    // set rootunit to null pointer
-    
     rootunit = 0;
+    
+    outputunit* cunit = rootunit;
+    outputunit* nunit;
     
     // reads input from outlist in input file
     
@@ -30,20 +31,36 @@ outputlist::outputlist(string filename, domain& d) {
                 break;
             }
         }
-        // read nextoutput unit
-        paramfile >> name;
-        paramfile >> field;
-        paramfile >> tm;
-        paramfile >> tp;
-        paramfile >> ts;
-        for (int i=0; i<3; i++) {
-            paramfile >> xm[i];
-            paramfile >> xp[i];
-            paramfile >> xs[i];
+        if (paramfile.eof()) {
+            cerr << "Error reading outputlist from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read nextoutput unit
+            while (paramfile.peek() != '\n') {
+                    // read in next item
+                    paramfile >> name;
+                    paramfile >> field;
+                    paramfile >> tm;
+                    paramfile >> tp;
+                    paramfile >> ts;
+                    for (int i=0; i<3; i++) {
+                        paramfile >> xm[i];
+                        paramfile >> xp[i];
+                        paramfile >> xs[i];
+                    }
+                    // traverse list and add onto end
+                    cunit = new outputunit(tm, tp, ts, xm, xp, xs, field, name, d);
+                    if (!rootunit) {
+                        rootunit = cunit;
+                        nunit = rootunit;
+                    } else {
+                        nunit->set_next_unit(cunit);
+                        nunit = nunit->get_next_unit();
+                    }
+            }
+            
         }
-        rootunit = new outputunit(tm, tp, ts, xm, xp, xs, field, name, d);
-    }
-    else {
+    } else {
         cerr << "Error reading input file in outputlist.cpp\n";
         MPI_Abort(MPI_COMM_WORLD,-1);
     }

@@ -1,5 +1,3 @@
-# comment
-
 [fdfault.problem]
 rkorder = 4; this is a further comment
 sbporder = 4
@@ -14,7 +12,21 @@ sbporder = 4;
 [fdfault.outputlist]
 test
 vx
-0 100 1
+0 10 1
+100 100 1
+100 100 1
+0 1 1
+test2
+sxx
+0 10 1
 100 100 1
 100 100 1
 0 0 1
+test3
+sxx
+0 10 1
+100 100 1
+100 100 1
+0 0 1
+
+hello
