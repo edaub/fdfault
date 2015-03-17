@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cassert>
 #include <string>
 #include "block.hpp"
@@ -14,27 +15,53 @@
 
 using namespace std;
 
-domain::domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block,
-               int** xm_block, double**** x_block, double**** l_block, string**** boundtype, const int nifaces_in, int** blockm,
-               int** blockp, int* direction, string* iftype, const int sbporder) {
+domain::domain(const string filename, int** nx_block, int** xm_block, double**** x_block, double**** l_block, std::string**** boundtype,
+               int** blockm, int** blockp, int* direction, std::string* iftype) {
     // constructor, no default as need to allocate memory
     
-	assert(ndim_in == 2 || ndim_in == 3);
+    int sbporder;
+    
+    // open input file, find appropriate place and read in parameters
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of domain list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.domain]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading domain from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read problem variables
+            paramfile >> ndim;
+            paramfile >> mode;
+            for (int i=0; i<3; i++) {
+                paramfile >> nx[i];
+            }
+            for (int i=0; i<3; i++) {
+                paramfile >> nblocks[i];
+            }
+            paramfile >> nifaces;
+            paramfile >> sbporder;
+        }
+    } else {
+        cerr << "Error opening input file in domain.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+
+	assert(ndim == 2 || ndim == 3);
+    assert(mode == 2 || mode == 3);
 	for (int i=0; i<3; i++) {
 		assert(nx[i] > 0);
-		assert(nblocks_in[i] > 0);
-	}
-	assert(sbporder >= 2 && sbporder <= 4);
-	
-	ndim = ndim_in;
-    mode = mode_in;
-	
-	for (int i=0; i<3; i++) {
-		nblocks[i] = nblocks_in[i];
+		assert(nblocks[i] > 0);
 	}
 	
 	nblockstot = nblocks[0]*nblocks[1]*nblocks[2];
-    nifaces = nifaces_in;
 	
     // allocate memory for fd coefficients
     

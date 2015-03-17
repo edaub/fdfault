@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string>
 #include <cassert>
+#include <fstream>
 #include <cmath>
 #include "problem.hpp"
 #include "domain.hpp"
@@ -11,12 +12,41 @@
 
 using namespace std;
 
-problem::problem(const string filename, const int nt_in, const double dt_in, const double ttot_in, const double cfl_in, const int ninfo_in, const int rkorder, const int sbporder) {
+problem::problem(const string filename) {
     // constructor
 
-    // set parameters to input values
-
-    ninfo = ninfo_in;
+    int rkorder;
+    
+    // open input file, find appropriate place and read in parameters
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of problem list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.problem]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading problem from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read problem variables
+            paramfile >> nt;
+            paramfile >> dt;
+            paramfile >> ttot;
+            paramfile >> cfl;
+            paramfile >> ninfo;
+            paramfile >> rkorder;
+        }
+    } else {
+        cerr << "Error opening input file in problem.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+    
+    // initiailize rk class
 
     rk = new rk_type(rkorder);
     
@@ -24,6 +54,7 @@ problem::problem(const string filename, const int nt_in, const double dt_in, con
     
     int ndim = 2;
     int mode = 2;
+    int sbporder = 4;
     
     int nx[3] = {402, 401, 1};
     int nblocks[3] = {2,1,1};
@@ -122,7 +153,7 @@ problem::problem(const string filename, const int nt_in, const double dt_in, con
     direction[0] = 0;
     iftype[0] = "slipweak";
     
-    d = new domain(ndim, mode, nx, nblocks, nx_block, xm_block, x_block, l_block, boundtype, nifaces, blockm, blockp, direction, iftype, sbporder);
+    d = new domain(filename, nx_block, xm_block, x_block, l_block, boundtype, blockm, blockp, direction, iftype);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
@@ -172,7 +203,7 @@ problem::problem(const string filename, const int nt_in, const double dt_in, con
     
     // set time step
     
-    set_time_step(nt_in, dt_in, ttot_in, cfl_in);
+    set_time_step();
     
     // create output list
 	
@@ -187,7 +218,7 @@ problem::~problem() {
 	delete out;
 }
 
-void problem::set_time_step(const int nt_in, const double dt_in, const double ttot_in, const double cfl_in) {
+void problem::set_time_step() {
     // sets time step
     // must specify two of nt, dt, cfl, and ttot (except cannot specify both dt and cfl)
     
@@ -199,31 +230,26 @@ void problem::set_time_step(const int nt_in, const double dt_in, const double tt
     
     double dx = d->get_min_dx();
     
-    if ((ttot_in > 0. && nt_in > 0) && (dt_in == 0 && cfl_in ==0.)) {
+    if ((ttot > 0. && nt > 0) && (dt == 0 && cfl ==0.)) {
         // if supplied ttot, nt but not dt, cfl, use ttot and nt
-        nt = nt_in;
-        ttot = ttot_in;
         dt = ttot/(double)nt;
         cfl = dt/dx;
     } else { // use one of ttot/nt and one of dt/cfl
-        if (dt_in > 0.) {
-            if (cfl_in > 0. && id == 0) {
+        if (dt > 0.) {
+            if (cfl > 0. && id == 0) {
                 cout << "Cannot specify both dt and cfl, defaulting to dt\n";
             }
-            dt = dt_in;
             cfl = dt/dx;
         } else {
-            cfl = cfl_in;
             dt = cfl*dx;
         }
-        if (ttot_in > 0.) {
-            if (nt_in > 0 && id == 0 ) {
+        if (ttot > 0.) {
+            if (nt > 0 && id == 0 ) {
                 cout << "Cannot specify both ttot and nt with one of cfl or dt, defaulting to ttot\n";
             }
-            nt = ceil(ttot_in/dt);
+            nt = ceil(ttot/dt);
             ttot = (double)nt*dt;
         } else {
-            nt = nt_in;
             ttot = (double)nt*dt;
         }
     }
@@ -249,11 +275,11 @@ void problem::solve() {
 	
 	nstages = rk->get_nstages();
     
-    for (int i=0; i < nt; i++) {
+    for (int i=0; i<nt; i++) {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-            d->do_rk_stage(0.0015,stage,*rk);
+            d->do_rk_stage(dt,stage,*rk);
         }
         
         // output data

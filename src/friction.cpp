@@ -51,8 +51,8 @@ friction::friction(const int ndim_in, const int mode_in, const int direction_in,
     
     loads = new load* [nloads];
     
-    loads[0] = new load("constant", 0.5, 0., 0.05, 1., -100., 62., 0., 0);
-    loads[1] = new load("gaussian", 0.5, 0., 0.05, 1., 0., 8.1, 0., 0);
+    loads[0] = new load("constant", 0., 0.5, 0., 0.05, 1., -100., 62., 0., 0);
+    loads[1] = new load("gaussian", 0., 0.5, 0., 0.05, 1., 0., 8.1, 0., 0);
     
 }
 

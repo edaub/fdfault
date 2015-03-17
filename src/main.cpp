@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	
     // initialize problem
     
-    problem prob(inputfile, 10, 0., 0., 0.3, 10, 4, 4);
+    problem prob(inputfile);
     
 	// Barrier to wait for all processes to finish initialization
 	

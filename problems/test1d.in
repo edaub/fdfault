@@ -1,13 +1,22 @@
 [fdfault.problem]
-rkorder = 4; this is a further comment
-sbporder = 4
+10
+0
+0
+0.3
+10
+4
 
 [fdfault.domain]
-nx = 1;
-ny = 1;
-nz = 1;
-mode = 3;
-sbporder = 4;
+2
+2
+402
+401
+1
+2
+1
+1
+1
+4
 
 [fdfault.outputlist]
 test

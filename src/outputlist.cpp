@@ -35,10 +35,13 @@ outputlist::outputlist(string filename, domain& d) {
             cerr << "Error reading outputlist from input file\n";
             MPI_Abort(MPI_COMM_WORLD,-1);
         } else {
-            // read nextoutput unit
-            while (paramfile.peek() != '\n') {
+            // read next output unit
+            while (getline(paramfile, line)) {
+                if (line.empty()) {
+                    break;
+                } else {
                     // read in next item
-                    paramfile >> name;
+                    name = line;
                     paramfile >> field;
                     paramfile >> tm;
                     paramfile >> tp;
@@ -48,6 +51,8 @@ outputlist::outputlist(string filename, domain& d) {
                         paramfile >> xp[i];
                         paramfile >> xs[i];
                     }
+                    // skip over newline
+                    getline(paramfile, line);
                     // traverse list and add onto end
                     cunit = new outputunit(tm, tp, ts, xm, xp, xs, field, name, d);
                     if (!rootunit) {
@@ -57,11 +62,11 @@ outputlist::outputlist(string filename, domain& d) {
                         nunit->set_next_unit(cunit);
                         nunit = nunit->get_next_unit();
                     }
+                }
             }
-            
         }
     } else {
-        cerr << "Error reading input file in outputlist.cpp\n";
+        cerr << "Error opening input file in outputlist.cpp\n";
         MPI_Abort(MPI_COMM_WORLD,-1);
     }
     paramfile.close();

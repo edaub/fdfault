@@ -4,7 +4,7 @@
 #include <string>
 #include "load.hpp"
 
-load::load(const std::string type_in, const double x0_in, const double y0_in, const double dx_in, const double dy_in, const double sn_in, const double s2_in, const double s3_in, const int direction_in) {
+load::load(const std::string type_in, const double t0_in, const double x0_in, const double y0_in, const double dx_in, const double dy_in, const double sn_in, const double s2_in, const double s3_in, const int direction_in) {
     // constructor
 	
     assert(type_in == "constant" || type_in == "gaussian" || type_in == "ellipse" || type_in == "boxcar");

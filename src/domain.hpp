@@ -13,10 +13,8 @@
 class domain
 { friend class outputunit;
 public:
-	domain(const int ndim_in, const int mode_in, const int nx[3], const int nblocks_in[3], int** nx_block,
-           int** xm_block, double**** x_block, double**** l_block, std::string**** boundtype, const int nifaces_in, int** blockm,
-           int** blockp, int* direction, std::string* iftype, const int sbporder);
-//    domain(const domain& otherdomain);
+    domain(const std::string filename, int** nx_block, int** xm_block, double**** x_block, double**** l_block, std::string**** boundtype,
+           int** blockm, int** blockp, int* direction, std::string* iftype);
     ~domain();
     int get_ndim() const;
     int get_mode() const;

@@ -1,7 +1,9 @@
 #ifndef OUTPUTUNITCLASSHEADERDEF
 #define OUTPUTUNITCLASSHEADERDEF
 
+#include <fstream>
 #include <string>
+#include <mpi.h>
 
 class outputunit
 {
@@ -33,8 +35,8 @@ private:
     int iface;
     int start;
     outputunit* next;
+    std::ofstream* tfile;
     MPI_File outfile;
-    MPI_File tfile;
     MPI_Datatype dataarray;
     MPI_Datatype filearray;
     MPI_Comm comm;

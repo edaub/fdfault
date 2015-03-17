@@ -7,9 +7,11 @@
 #include "outputunit.hpp"
 #include <mpi.h>
 
+using namespace std;
+
 outputunit::outputunit(const int tm_in, const int tp_in,
                        const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
-                       std::string field_in, std::string name, domain& d) {
+                       string field_in, string name, domain& d) {
     // constructor
     
     assert(ts_in > 0);
@@ -284,30 +286,16 @@ outputunit::outputunit(const int tm_in, const int tp_in,
     }
     
     if (master) {
-        filename = new char [("data/"+name+"_t.dat").size()+1];
-        memcpy(filename, ("data/"+name+"_t.dat").c_str(), ("data/"+name+"_t.dat").size()+1);
         
-        rc = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &tfile);
+        tfile = new ofstream;
         
-        delete[] filename;
+        tfile->open (("data/"+name+"_t.dat").c_str(), ios::out | ios::binary);
         
-        if(rc != MPI_SUCCESS){
-            std::cerr << "Error opening file in outputunit.cpp\n";
-            MPI_Abort(MPI_COMM_WORLD, rc);
+        if (!tfile->is_open()) {
+            cerr << "Error opening file in outputunit.cpp\n";
+            MPI_Abort(MPI_COMM_WORLD, -1);
         }
         
-        // delete contents
-        
-        rc = MPI_File_set_size(tfile, (MPI_Offset)0);
-        
-        if(rc != MPI_SUCCESS){
-            std::cerr << "Error deleting file in outputunit.cpp\n";
-            MPI_Abort(MPI_COMM_WORLD, rc);
-        }
-        
-        // set view to beginning
-        
-        MPI_File_set_view(tfile, (MPI_Offset)0, MPI_DOUBLE, MPI_DOUBLE, filetype, MPI_INFO_NULL);
     }
     
     // wait for all processes to finish initializing output
@@ -318,6 +306,11 @@ outputunit::outputunit(const int tm_in, const int tp_in,
 
 void outputunit::close_file() {
     // closes output file and frees MPI datatytpes
+    
+    if (master) {
+        tfile->close();
+        delete tfile;
+    }
     
     if (no_data) { return; }
     
@@ -342,13 +335,15 @@ void outputunit::set_next_unit(outputunit* nextunit) {
 void outputunit::write_unit(const int tstep, const double dt, domain& d) const {
     // writes output data to file
     
+    // check if within time limits
+    
     if (tstep < tm || tstep >= tp || (tstep-tm)%ts != 0) { return; }
     
     // write time data if master
     
     if (master) {
         double t = (double)tstep*dt;
-        MPI_File_write(tfile, &t, 1, MPI_DOUBLE, MPI_STATUS_IGNORE);
+        tfile->write((char*) &t, sizeof(double));
     }
     
     // write data if process contains data
