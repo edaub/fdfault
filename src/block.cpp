@@ -65,7 +65,6 @@ block::block(const string filename, const int ndim_in, const int mode_in, const 
         MPI_Abort(MPI_COMM_WORLD,-1);
     }
     paramfile.close();
-
     
 	assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);

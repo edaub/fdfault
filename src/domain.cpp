@@ -15,7 +15,7 @@
 
 using namespace std;
 
-domain::domain(const string filename, int** blockm, int** blockp, int* direction) {
+domain::domain(const string filename) {
     // constructor, no default as need to allocate memory
     
     int sbporder;
@@ -120,7 +120,7 @@ domain::domain(const string filename, int** blockm, int** blockp, int* direction
     
     // allocate memory and create interfaces
     
-    allocate_interfaces(blockm, blockp, direction, iftype);
+    allocate_interfaces(filename, iftype);
 
     // exchange neighbors to fill in ghost cells
     
@@ -296,7 +296,7 @@ void domain::allocate_blocks(const string filename, int** nx_block, int** xm_blo
 
 }
 
-void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, string* iftype) {
+void domain::allocate_interfaces(const string filename, string* iftype) {
     // allocate memory for interfaces
     
     for (int i=0; i<nifaces; i++) {
@@ -307,20 +307,11 @@ void domain::allocate_interfaces(int** blockm, int** blockp, int* direction, str
     
     for (int i=0; i<nifaces; i++) {
         if (iftype[i] == "locked") {
-            interfaces[i] = new interface(ndim, mode, direction[i],
-                                      *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                      *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                      *f, *cart, *fd);
+            interfaces[i] = new interface(filename, ndim, mode, i, blocks, *f, *cart, *fd);
         } else if (iftype[i] == "frictionless") {
-            interfaces[i] = new friction(ndim, mode, direction[i],
-                                          *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                          *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                          *f, *cart, *fd);
+            interfaces[i] = new friction(filename, ndim, mode, i, blocks, *f, *cart, *fd);
         } else { // slip weakening
-            interfaces[i] = new slipweak(ndim, mode, direction[i],
-                                         *blocks[blockm[i][0]][blockm[i][1]][blockm[i][2]],
-                                         *blocks[blockp[i][0]][blockp[i][1]][blockp[i][2]],
-                                         *f, *cart, *fd);
+            interfaces[i] = new slipweak(filename, ndim, mode, i, blocks, *f, *cart, *fd);
         }
     }
 }

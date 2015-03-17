@@ -13,7 +13,7 @@
 class domain
 { friend class outputunit;
 public:
-    domain(const std::string filename, int** blockm, int** blockp, int* direction);
+    domain(const std::string filename);
     ~domain();
     int get_ndim() const;
     int get_mode() const;
@@ -36,7 +36,7 @@ private:
 	cartesian* cart;
     fields* f;
     void allocate_blocks(const std::string filename, int** nx_block, int** xm_block);
-    void allocate_interfaces(int** blockm, int** blockp, int* direction, std::string* iftype);
+    void allocate_interfaces(const std::string filename, std::string* iftype);
     void deallocate_blocks();
     void deallocate_interfaces();
 };

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 #include "block.hpp"
 #include "cartesian.hpp"
@@ -10,13 +12,45 @@
 
 using namespace std;
 
-slipweak::slipweak(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                   const fields& f, const cartesian& cart, const fd_type& fd) : friction(ndim_in, mode_in, direction_in, b1, b2, f, cart, fd) {
+slipweak::slipweak(const string filename, const int ndim_in, const int mode_in, const int niface,
+                   block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : friction(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface
     
-    dc = 0.4;
-    mus = 0.7;
-    mud = 0.6;
+    stringstream ss;
+    
+    ss << niface;
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of appropriate slipweak list
+        // note that the file first scans to interfacex, were x is the number of this interface
+        // then it scans to the slipweak line (so that you can specify multiple interfaces with the same parameters)
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.interface"+ss.str()+"]") {
+                break;
+            }
+        }
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.slipweak]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading slipweak from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read slipweak parameters
+            paramfile >> dc;
+            paramfile >> mus;
+            paramfile >> mud;
+        }
+    } else {
+        cerr << "Error opening input file in slipweak.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+
     
 }
 

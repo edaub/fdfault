@@ -1,6 +1,9 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cassert>
 #include <cmath>
+#include <string>
 #include "block.hpp"
 #include "boundary.hpp"
 #include "cartesian.hpp"
@@ -10,24 +13,76 @@
 #include "surface.hpp"
 #include <mpi.h>
 
-interface::interface(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-                     const fields& f, const cartesian& cart, const fd_type& fd) {
+using namespace std;
+
+interface::interface(const string filename, const int ndim_in, const int mode_in, const int niface,
+                     block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) {
     // constructor
     
+    int index1[3], index2[3];
+    string direction_in, surffile;
+    
+    stringstream ss;
+    
+    ss << niface;
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of appropriate interface list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.interface"+ss.str()+"]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading interface "+ss.str()+" from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read interface variables
+            paramfile >> direction_in;
+            for (int i=0; i<3; i++) {
+                paramfile >> index1[i];
+            }
+            for (int i=0; i<3; i++) {
+                paramfile >> index2[i];
+            }
+            paramfile >> surffile;
+        }
+    } else {
+        cerr << "Error opening input file in interface.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+
     assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
-    assert(direction_in >=0 && direction_in < ndim_in);
+    assert(direction_in == "x" || direction_in == "y" || direction_in == "z");
     
     ndim = ndim_in;
     mode = mode_in;
-    direction = direction_in;
+    if (direction_in == "x") {
+        direction = 0;
+    } else if (direction_in == "y") {
+        direction = 1;
+    } else {
+        direction = 2;
+    }
+    
+    // set pointers to blocks
+    
+    block* b1;
+    block* b2;
+    
+    b1 = blocks[index1[0]][index1[1]][index1[2]];
+    b2 = blocks[index2[0]][index2[1]][index2[2]];
     
     // check if interface has point in this process
     
     no_data = true;
     
-    if ((b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) ||
-         (b2.get_nx_loc(direction) != 0 && b2.get_xm(direction) == b2.get_xm_loc(direction))) {
+    if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) ||
+         (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
         no_data = false;
     }
     
@@ -46,34 +101,34 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     switch (direction) {
         case 0:
             // first index is y, second is z
-            assert(b1.get_nx(1) == b2.get_nx(1));
-            assert(b1.get_nx(2) == b2.get_nx(2));
-            n[0] = b1.get_nx(1);
-            n[1] = b2.get_nx(2);
-            if ((b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) &&
-                (b2.get_nx_loc(direction) != 0 && b2.get_xm(direction) == b2.get_xm_loc(direction))) {
+            assert(b1->get_nx(1) == b2->get_nx(1));
+            assert(b1->get_nx(2) == b2->get_nx(2));
+            n[0] = b1->get_nx(1);
+            n[1] = b2->get_nx(2);
+            if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
+                (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
-                assert(b1.get_nx_loc(1) == b2.get_nx_loc(1));
-                assert(b1.get_nx_loc(2) == b2.get_nx_loc(2));
-                n_loc[0] = b1.get_nx_loc(1);
-                n_loc[1] = b1.get_nx_loc(2);
-                mlb[0] = b1.get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
-            } else if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
+                assert(b1->get_nx_loc(1) == b2->get_nx_loc(1));
+                assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
+                n_loc[0] = b1->get_nx_loc(1);
+                n_loc[1] = b1->get_nx_loc(2);
+                mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+            } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
-                n_loc[0] = b1.get_nx_loc(1);
-                n_loc[1] = b1.get_nx_loc(2);
-                mlb[0] = b1.get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+                n_loc[0] = b1->get_nx_loc(1);
+                n_loc[1] = b1->get_nx_loc(2);
+                mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
-                n_loc[0] = b2.get_nx_loc(1);
-                n_loc[1] = b2.get_nx_loc(2);
-                mlb[0] = b2.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0)-1;
-                mlb[1] = b2.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b2.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+                n_loc[0] = b2->get_nx_loc(1);
+                n_loc[1] = b2->get_nx_loc(2);
+                mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0)-1;
+                mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             }
             prb[0] = mlb[0]+1;
             prb[1] = mlb[1]+n_loc[0];
@@ -84,34 +139,34 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
             break;
         case 1:
             // first index is x, second is z
-            assert(b1.get_nx(0) == b2.get_nx(0));
-            assert(b1.get_nx(2) == b2.get_nx(2));
-            n[0] = b1.get_nx(0);
-            n[1] = b2.get_nx(2);
-            if ((b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) &&
-                (b2.get_nx_loc(direction) != 0 && b2.get_xm(direction) == b2.get_xm_loc(direction))) {
+            assert(b1->get_nx(0) == b2->get_nx(0));
+            assert(b1->get_nx(2) == b2->get_nx(2));
+            n[0] = b1->get_nx(0);
+            n[1] = b2->get_nx(2);
+            if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
+                (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
-                assert(b1.get_nx_loc(0) == b2.get_nx_loc(0));
-                assert(b1.get_nx_loc(2) == b2.get_nx_loc(2));
-                n_loc[0] = b1.get_nx_loc(0);
-                n_loc[1] = b1.get_nx_loc(2);
-                mlb[0] = b1.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
-            } else if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
+                assert(b1->get_nx_loc(0) == b2->get_nx_loc(0));
+                assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
+                n_loc[0] = b1->get_nx_loc(0);
+                n_loc[1] = b1->get_nx_loc(2);
+                mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+            } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
-                n_loc[0] = b1.get_nx_loc(0);
-                n_loc[1] = b1.get_nx_loc(2);
-                mlb[0] = b1.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+                n_loc[0] = b1->get_nx_loc(0);
+                n_loc[1] = b1->get_nx_loc(2);
+                mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
-                n_loc[0] = b2.get_nx_loc(0);
-                n_loc[1] = b2.get_nx_loc(2);
-                mlb[0] = b2.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b2.get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1)-1;
-                mlb[2] = b2.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+                n_loc[0] = b2->get_nx_loc(0);
+                n_loc[1] = b2->get_nx_loc(2);
+                mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b2->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1)-1;
+                mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             }
             prb[0] = mlb[0]+n_loc[0];
             prb[1] = mlb[1]+1;
@@ -122,34 +177,34 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
             break;
         case 2:
             // first index is x, second is y
-            assert(b1.get_nx(0) == b2.get_nx(0));
-            assert(b1.get_nx(1) == b2.get_nx(1));
-            n[0] = b1.get_nx(0);
-            n[1] = b2.get_nx(1);
-            if ((b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) &&
-                (b2.get_nx_loc(direction) != 0 && b2.get_xm(direction) == b2.get_xm_loc(direction))) {
+            assert(b1->get_nx(0) == b2->get_nx(0));
+            assert(b1->get_nx(1) == b2->get_nx(1));
+            n[0] = b1->get_nx(0);
+            n[1] = b2->get_nx(1);
+            if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
+                (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
-                assert(b1.get_nx_loc(0) == b2.get_nx_loc(0));
-                assert(b1.get_nx_loc(1) == b2.get_nx_loc(1));
-                n_loc[0] = b1.get_nx_loc(0);
-                n_loc[1] = b1.get_nx_loc(1);
-                mlb[0] = b1.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
-            } else if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
+                assert(b1->get_nx_loc(0) == b2->get_nx_loc(0));
+                assert(b1->get_nx_loc(1) == b2->get_nx_loc(1));
+                n_loc[0] = b1->get_nx_loc(0);
+                n_loc[1] = b1->get_nx_loc(1);
+                mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+            } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
-                n_loc[0] = b1.get_nx_loc(0);
-                n_loc[1] = b1.get_nx_loc(1);
-                mlb[0] = b1.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b1.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b1.get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
+                n_loc[0] = b1->get_nx_loc(0);
+                n_loc[1] = b1->get_nx_loc(1);
+                mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
-                n_loc[0] = b2.get_nx_loc(0);
-                n_loc[1] = b2.get_nx_loc(1);
-                mlb[0] = b2.get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
-                mlb[1] = b2.get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
-                mlb[2] = b2.get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2)-1;
+                n_loc[0] = b2->get_nx_loc(0);
+                n_loc[1] = b2->get_nx_loc(1);
+                mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
+                mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
+                mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2)-1;
             }
             prb[0] = mlb[0]+n_loc[0];
             prb[1] = mlb[1]+n_loc[1];
@@ -162,14 +217,14 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     
     // set material parameters
     
-    cp1 = b1.get_cp();
-    cs1 = b1.get_cs();
-    zp1 = b1.get_zp();
-    zs1 = b1.get_zs();
-    cp2 = b2.get_cp();
-    cs2 = b2.get_cs();
-    zp2 = b2.get_zp();
-    zs2 = b2.get_zs();
+    cp1 = b1->get_cp();
+    cs1 = b1->get_cs();
+    zp1 = b1->get_zp();
+    zs1 = b1->get_zs();
+    cp2 = b2->get_cp();
+    cs2 = b2->get_cs();
+    zp2 = b2->get_zp();
+    zs2 = b2->get_zs();
     
     // create surface for interface
     
@@ -177,29 +232,29 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     double x_block[3];
     double l_block[3];
     
-    if (b1.get_nx_loc(direction) != 0 && b1.get_xp(direction) == b1.get_xp_loc(direction)) {
+    if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
         // use block 1 data
         for (int i=0; i<3; i++) {
-            c.set_nx(i,b1.get_nx(i));
-            c.set_nx_loc(i,b1.get_nx_loc(i));
-            c.set_xm(i,b1.get_xm(i));
-            c.set_xm_loc(i,b1.get_xm_loc(i));
-            c.set_xm_ghost(i,b1.get_xm_ghost(i));
-            c.set_xp_ghost(i,b1.get_xp_ghost(i));
-            x_block[i] = b1.get_x(i);
-            l_block[i] = b1.get_l(i);
+            c.set_nx(i,b1->get_nx(i));
+            c.set_nx_loc(i,b1->get_nx_loc(i));
+            c.set_xm(i,b1->get_xm(i));
+            c.set_xm_loc(i,b1->get_xm_loc(i));
+            c.set_xm_ghost(i,b1->get_xm_ghost(i));
+            c.set_xp_ghost(i,b1->get_xp_ghost(i));
+            x_block[i] = b1->get_x(i);
+            l_block[i] = b1->get_l(i);
         }
     } else {
         // use block 2 data
         for (int i=0; i<3; i++) {
-            c.set_nx(i,b2.get_nx(i));
-            c.set_nx_loc(i,b2.get_nx_loc(i));
-            c.set_xm(i,b2.get_xm(i));
-            c.set_xm_loc(i,b2.get_xm_loc(i));
-            c.set_xm_ghost(i,b2.get_xm_ghost(i));
-            c.set_xp_ghost(i,b2.get_xp_ghost(i));
-            x_block[i] = b2.get_x(i);
-            l_block[i] = b2.get_l(i);
+            c.set_nx(i,b2->get_nx(i));
+            c.set_nx_loc(i,b2->get_nx_loc(i));
+            c.set_xm(i,b2->get_xm(i));
+            c.set_xm_loc(i,b2->get_xm_loc(i));
+            c.set_xm_ghost(i,b2->get_xm_ghost(i));
+            c.set_xp_ghost(i,b2->get_xp_ghost(i));
+            x_block[i] = b2->get_x(i);
+            l_block[i] = b2->get_l(i);
         }
     }
     
@@ -210,8 +265,8 @@ interface::interface(const int ndim_in, const int mode_in, const int direction_i
     double dx1[3], dx2[3];
     
     for (int i=0; i<3; i++) {
-        dx1[i] = b1.get_dx(i);
-        dx2[i] = b2.get_dx(i);
+        dx1[i] = b1->get_dx(i);
+        dx2[i] = b2->get_dx(i);
     }
     
     allocate_normals(dx1,dx2,f,surf,fd);

@@ -11,8 +11,8 @@
 class friction: public interface
 { friend class outputunit;
 public:
-    friction(const int ndim_in, const int mode_in, const int direction_in, block& b1, block& b2,
-             const fields& f, const cartesian& cart, const fd_type& fd);
+    friction(const std::string filename, const int ndim_in, const int mode_in, const int niface,
+             block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~friction();
     virtual void scale_df(const double A);
     virtual void calc_df(const double dt);

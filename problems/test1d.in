@@ -9,14 +9,9 @@
 [fdfault.domain]
 2
 2
-402
-401
-1
-2
-1
-1
-201
-201
+402 401 1
+2 1 1
+201 201
 401
 1
 1
@@ -25,18 +20,12 @@ slipweak
 
 [fdfault.fields]
 elastic
-0.
-0.
-0.
+0. 0. 0.
 
 [fdfault.block000]
-1.
-1.
-1.
-0.
-0.
-0.5
-1.
+1. 1. 1.
+0. 0.
+0.5 1.
 absorbing
 none
 absorbing
@@ -47,13 +36,9 @@ none
 none
 
 [fdfault.block100]
-1.
-1.
-1.
-0.5
-0.
-0.5
-1.
+1. 1. 1.
+0.5 0.
+0.5 1.
 none
 absorbing
 absorbing
@@ -62,6 +47,17 @@ none
 none
 none
 none
+
+[fdfault.interface0]
+x
+0 0 0
+1 0 0
+none
+
+[fdfault.slipweak]
+0.4
+0.7
+0.6
 
 [fdfault.outputlist]
 test
