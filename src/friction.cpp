@@ -259,7 +259,7 @@ void friction::write_fields() {
     ss << id;
     
     fstream myFile;
-    myFile.open (("i"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    myFile.open (("data/i"+ss.str()+".dat").c_str(), ios::out | ios::binary);
     
     myFile.write((char*) ux, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);
     myFile.write((char*) vx, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);

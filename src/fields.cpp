@@ -182,25 +182,25 @@ void fields::write_fields() const {
 	ss << id;
 	
 	fstream myFile;
-    myFile.open (("f"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    myFile.open (("data/f"+ss.str()+".dat").c_str(), ios::out | ios::binary);
 	
 	myFile.write((char*) f, sizeof(double)*ndataf);
 	
 	myFile.close();
     
-    myFile.open (("x"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    myFile.open (("data/x"+ss.str()+".dat").c_str(), ios::out | ios::binary);
     
     myFile.write((char*) x, sizeof(double)*ndatax);
     
     myFile.close();
     
-    myFile.open (("metric"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    myFile.open (("data/metric"+ss.str()+".dat").c_str(), ios::out | ios::binary);
     
     myFile.write((char*) metric, sizeof(double)*ndatametric);
     
     myFile.close();
     
-    myFile.open (("jac"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    myFile.open (("data/jac"+ss.str()+".dat").c_str(), ios::out | ios::binary);
     
     myFile.write((char*) jac, sizeof(double)*ndatajac);
     
