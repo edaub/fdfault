@@ -8,10 +8,12 @@ load::load(const std::string type_in, const double t0_in, const double x0_in, co
     // constructor
 	
     assert(type_in == "constant" || type_in == "gaussian" || type_in == "ellipse" || type_in == "boxcar");
+    assert(t0_in >= 0.);
     assert(dx_in >= 0.);
     assert(dy_in >= 0.);
     assert(direction_in == 0 || direction_in == 1 || direction_in == 2);
     
+    t0 = t0_in;
     x0 = x0_in;
     y0 = y0_in;
     dx = dx_in;

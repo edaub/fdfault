@@ -33,6 +33,8 @@ protected:
     int direction;
     int n[2];
     int n_loc[2];
+    double x[2];
+    double l[2];
     double cp1;
     double cs1;
     double zp1;

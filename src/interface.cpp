@@ -229,8 +229,6 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
     // create surface for interface
     
     coord c;
-    double x_block[3];
-    double l_block[3];
     
     if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
         // use block 1 data
@@ -241,8 +239,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
             c.set_xm_loc(i,b1->get_xm_loc(i));
             c.set_xm_ghost(i,b1->get_xm_ghost(i));
             c.set_xp_ghost(i,b1->get_xp_ghost(i));
-            x_block[i] = b1->get_x(i);
-            l_block[i] = b1->get_l(i);
+            x[i] = b1->get_x(i);
+            l[i] = b1->get_l(i);
         }
     } else {
         // use block 2 data
@@ -253,12 +251,12 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
             c.set_xm_loc(i,b2->get_xm_loc(i));
             c.set_xm_ghost(i,b2->get_xm_ghost(i));
             c.set_xp_ghost(i,b2->get_xp_ghost(i));
-            x_block[i] = b2->get_x(i);
-            l_block[i] = b2->get_l(i);
+            x[i] = b2->get_x(i);
+            l[i] = b2->get_l(i);
         }
     }
     
-    surface surf(ndim,c,direction,1., x_block, l_block, true);
+    surface surf(ndim,c,direction,1., x, l, true);
     
     // allocate memory for arrays for normal vectors and grid spacing
     
