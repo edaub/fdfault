@@ -1,5 +1,5 @@
 [fdfault.problem]
-10
+200
 0
 0
 0.3
@@ -54,6 +54,11 @@ x
 1 0 0
 none
 
+[fdfault.friction]
+2
+constant 0. 0.5 0.125 0. 1. -100. 62. 0.
+gaussian 0. 0.5 0.2 0. 1. 0. 8.1 0. 
+
 [fdfault.slipweak]
 0.4
 0.7
@@ -61,18 +66,12 @@ none
 
 [fdfault.outputlist]
 test
-vx
-0 10 1
-100 100 1
-100 100 1
+vy
+0 200 1
+150 251 1
+150 250 1
 0 1 1
 test2
-sxx
-0 10 1
-100 100 1
-100 100 1
-0 0 1
-test3
 sxx
 0 10 1
 100 100 1

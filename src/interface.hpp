@@ -35,8 +35,8 @@ protected:
     int n_loc[2];
     int xm[2];
     int xm_loc[2];
-    double x[2];
-    double l[2];
+    double x[3];
+    double l[3];
     double cp1;
     double cs1;
     double zp1;

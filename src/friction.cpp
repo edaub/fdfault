@@ -46,12 +46,110 @@ friction::friction(const string filename, const int ndim_in, const int mode_in, 
         }
     }
     
+    // read loads from input file
+    
+    string* ltype;
+    double* t0;
+    double* x0;
+    double* y0;
+    double* dx;
+    double* dy;
+    double* sn;
+    double* s2;
+    double* s3;
+    
+    stringstream ss;
+    
+    ss << niface;
+    
+    string line;
+    ifstream paramfile(filename, ios::in);
+    if (paramfile.is_open()) {
+        // scan to start of appropriate interface list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.interface"+ss.str()+"]") {
+                break;
+            }
+        }
+        // scan to start of next friction list
+        // note does not include interface number, so can specify multiple frictional
+        // interfaces with the same input
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.friction]") {
+                break;
+            }
+        }
+        if (paramfile.eof()) {
+            cerr << "Error reading interface "+ss.str()+" from input file\n";
+            MPI_Abort(MPI_COMM_WORLD,-1);
+        } else {
+            // read interface variables
+            paramfile >> nloads;
+            ltype = new string [nloads];
+            t0 = new double [nloads];
+            x0 = new double [nloads];
+            y0 = new double [nloads];
+            dx = new double [nloads];
+            dy = new double [nloads];
+            sn = new double [nloads];
+            s2 = new double [nloads];
+            s3 = new double [nloads];
+            for (int i=0; i<nloads; i++) {
+                paramfile >> ltype[i];
+                paramfile >> t0[i];
+                paramfile >> x0[i];
+                paramfile >> dx[i];
+                paramfile >> y0[i];
+                paramfile >> dy[i];
+                paramfile >> sn[i];
+                paramfile >> s2[i];
+                paramfile >> s3[i];
+            }
+        }
+    } else {
+        cerr << "Error opening input file in interface.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD,-1);
+    }
+    paramfile.close();
+    
     nloads = 2;
     
     loads = new load* [nloads];
     
-    loads[0] = new load("constant", 0., 0.5, 0., 0.05, 1., -100., 62., 0., n, xm, xm_loc, x, l);
-    loads[1] = new load("gaussian", 0., 0.5, 0., 0.05, 1., 0., 8.1, 0., n, xm, xm_loc, x, l);
+    double x_2d[2], l_2d[2];
+    
+    switch (direction) {
+        case 0:
+            x_2d[0] = x[1];
+            x_2d[1] = x[2];
+            l_2d[0] = l[1];
+            l_2d[1] = l[2];
+            break;
+        case 1:
+            x_2d[0] = x[0];
+            x_2d[1] = x[2];
+            l_2d[0] = l[0];
+            l_2d[1] = l[2];
+            break;
+        case 2:
+            x_2d[0] = x[0];
+            x_2d[1] = x[1];
+            l_2d[0] = l[0];
+            l_2d[1] = l[1];
+    }
+    
+    for (int i=0; i<nloads; i++) {
+        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], sn[i], s2[i], s3[i], n, xm, xm_loc, x_2d, l_2d);
+    }
+    
+    delete[] t0;
+    delete[] x0;
+    delete[] y0;
+    delete[] dx;
+    delete[] dy;
+    delete[] sn;
+    delete[] s2;
+    delete[] s3;
     
 }
 

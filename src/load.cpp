@@ -4,8 +4,8 @@
 #include <string>
 #include "load.hpp"
 
-load::load(const std::string type_in, const double t0_in, const double x0_in, const double y0_in,
-           const double dx_in, const double dy_in, const double sn_in, const double s2_in,
+load::load(const std::string type_in, const double t0_in, const double x0_in, const double dx_in,
+           const double y0_in, const double dy_in, const double sn_in, const double s2_in,
            const double s3_in, const int n[2], const int xm[2], const int xm_loc[2],
            const double x[2], const double l[2]) {
     // constructor
@@ -36,10 +36,10 @@ load::load(const std::string type_in, const double t0_in, const double x0_in, co
     
     // calculate parameters
     
-    a = (double)(xm_loc[0]-xm[0])/(double) n[0]+x[0];
-    b = l[0]/(double) n[0];
-    c = (double)(xm_loc[1]-xm[1])/(double) n[1]+x[1];
-    d = l[1]/(double) n[1];
+    a = (double)(xm_loc[0]-xm[0])/(double)n[0]+x[0];
+    b = l[0]/(double)n[0];
+    c = (double)(xm_loc[1]-xm[1])/(double)n[1]+x[1];
+    d = l[1]/(double)n[1];
     
 }
 

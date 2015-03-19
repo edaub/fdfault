@@ -37,6 +37,7 @@ private:
     outputunit* next;
     std::ofstream* tfile;
     MPI_File outfile;
+    MPI_File xfile;
     MPI_Datatype dataarray;
     MPI_Datatype filearray;
     MPI_Comm comm;

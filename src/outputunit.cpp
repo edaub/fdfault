@@ -123,6 +123,15 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         nx[i] = (xp[i]-xm[i])/xs[i]+1;
     }
     
+    // override values if 2d problem
+    
+    if (ndim == 2) {
+        xm[2] = 0;
+        xp[2] = 0;
+        xs[2] = 1;
+        nx[2] = 1;
+    }
+    
     // set local spatial limits
     
     no_data = false;
@@ -144,7 +153,7 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         } else {
             xp_loc[i] = xp[i];
         }
-        nx_loc[i] = (xp_loc[i]-xm_loc[i])%xs[i]+1;
+        nx_loc[i] = (xp_loc[i]-xm_loc[i])/xs[i]+1;
     }
     
     if (no_data) {
@@ -217,23 +226,37 @@ outputunit::outputunit(const int tm_in, const int tp_in,
     char filetype[] = "native";
     
     if (!no_data) {
+
+        // dataarray uses indexed block type to describe layout in memory
     
-        int starts[3];
-    
-        for (int i=0; i<3; i++) {
-            starts[i] = xm_loc[i]-xm[i];
-        }
-    
-        // dataarray uses indexed type to describe layout in memory
-    
-        int ntot = nx_loc[0]*nx_loc[1]*nx_loc[2];
+        int count, ntot = nx_loc[0]*nx_loc[1]*nx_loc[2];
     
         int* disp;
     
         disp = new int [ntot];
-    
+
+        count = 0;
+        
+        disp[count] = 0;
+        
+        count++;
+        
+        for (int i=1; i<ntot; i++) {
+            if (i%(nx_loc[1]*nx_loc[2]) == 0) {
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1]))+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)*(xs[0]-1);
+            } else if (i%nx_loc[1] == 0) {
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(2)*(xs[1]-1);
+            } else {
+                disp[i] = disp[i-1]+xs[2];
+            }
+        }
+        
         for (int i=0; i<ntot; i++) {
-            disp[i] = 1;
+            int xstart = (0*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
+                          (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
+            cout << d.f->x[xstart+disp[i]] << "\n";
         }
     
         MPI_Type_create_indexed_block(ntot, 1, disp, MPI_DOUBLE, &dataarray);
@@ -243,6 +266,12 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         delete[] disp;
     
         // filearray uses subarray to describe layout in file
+        
+        int starts[3];
+        
+        for (int i=0; i<3; i++) {
+            starts[i] = xm_loc[i]-xm[i];
+        }
     
         MPI_Type_create_subarray(3, nx, nx_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
     
@@ -273,7 +302,58 @@ outputunit::outputunit(const int tm_in, const int tp_in,
                                 
         // set view to beginning
         
-        MPI_File_set_view(outfile, (MPI_Offset)0, MPI_DOUBLE, MPI_DOUBLE, filetype, MPI_INFO_NULL);
+        MPI_File_set_view(outfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+        
+        // write position data to file if more than on spatial point
+        
+        string xyzstr[3] = {"x", "y", "z"};
+        
+        for (int i=0; i<3; i++) {
+        
+            if (nx[i] > 1) {
+                filename = new char [("data/"+name+"_"+xyzstr[i]+".dat").size()+1];
+                memcpy(filename, ("data/"+name+"_"+xyzstr[i]+".dat").c_str(), ("data/"+name+"_"+xyzstr[i]+".dat").size()+1);
+                
+                rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
+                
+                delete[] filename;
+                
+                if(rc != MPI_SUCCESS){
+                    std::cerr << "Error opening file in outputunit.cpp\n";
+                    MPI_Abort(MPI_COMM_WORLD, rc);
+                }
+                
+                // delete contents
+                
+                rc = MPI_File_set_size(xfile, (MPI_Offset)0);
+                
+                if(rc != MPI_SUCCESS){
+                    std::cerr << "Error deleting file in outputunit.cpp\n";
+                    MPI_Abort(MPI_COMM_WORLD, rc);
+                }
+                
+                // set view to beginning
+                
+                MPI_File_set_view(xfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+                
+                // calculate start position of data to be written
+        
+                int xstart = (i*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                              (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                              (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
+                              (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
+                
+                // write data
+                
+                MPI_File_write(xfile, &(d.f->x[xstart]), 1, dataarray, MPI_STATUS_IGNORE);
+                
+                // close file
+                
+                MPI_File_close(&xfile);
+                
+            }
+            
+        }
         
     }
     
@@ -285,7 +365,7 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         master = false;
     }
     
-    if (master) {
+    if (master && tp > tm) {
         
         tfile = new ofstream;
         
@@ -307,7 +387,7 @@ outputunit::outputunit(const int tm_in, const int tp_in,
 void outputunit::close_file() {
     // closes output file and frees MPI datatytpes
     
-    if (master) {
+    if (master && tp > tm) {
         tfile->close();
         delete tfile;
     }
@@ -337,7 +417,7 @@ void outputunit::write_unit(const int tstep, const double dt, domain& d) const {
     
     // check if within time limits
     
-    if (tstep < tm || tstep >= tp || (tstep-tm)%ts != 0) { return; }
+    if (tstep < tm || tstep >= tp || tp == tm || (tstep-tm)%ts != 0) { return; }
     
     // write time data if master
     

@@ -792,14 +792,14 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     for (int n=0; n<2*fd.sbporder-1; n++) {
         for (int i=mc[0]; i<mrb[0]; i++) {
             for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
                                                                          f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.f[3*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                          f.f[3*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
@@ -825,14 +825,14 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     for (int n=0; n<3*(fd.sbporder-1); n++) {
         for (int i=mrb[0]; i<prb[0]; i++) {
             for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
                                                                        f.jac[(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.f[3*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.f[3*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
@@ -860,14 +860,14 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<mc[1]; j++) {
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
                                                                          f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
                                                                          f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
                                                                          f.jac[i*nxd[1]+(mlb[1]+n)]*
                                                                          f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
                                                                          f.f[3*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
                                                                          f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
                                                                          f.f[3*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
@@ -891,14 +891,14 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         
         for (int j=mc[1]; j<mrb[1]; j++) {
             for (int n=0; n<2*fd.sbporder-1; n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
                                                                 f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.f[3*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.f[3*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
@@ -922,14 +922,14 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         
         for (int j=mrb[1]; j<prb[1]; j++) {
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
                                                                        f.jac[(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.f[3*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.f[3*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
@@ -981,7 +981,7 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     for (int n=0; n<2*fd.sbporder-1; n++) {
         for (int i=mc[0]; i<mrb[0]; i++) {
             for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                 f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
                                                                 f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
@@ -999,7 +999,7 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     for (int n=0; n<3*(fd.sbporder-1); n++) {
         for (int i=mrb[0]; i<prb[0]; i++) {
             for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
                                                                        f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
@@ -1019,7 +1019,7 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<mc[1]; j++) {
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
                                                                          f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
                                                                          f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
@@ -1035,7 +1035,7 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
         
         for (int j=mc[1]; j<mrb[1]; j++) {
             for (int n=0; n<2*fd.sbporder-1; n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
                                                                 f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
@@ -1051,7 +1051,7 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
         
         for (int j=mrb[1]; j<prb[1]; j++) {
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt/mat.get_rho()/f.jac[i*nxd[1]+j]*
+                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
                                               fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
                                                                        f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+

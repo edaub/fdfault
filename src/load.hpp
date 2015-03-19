@@ -6,8 +6,8 @@
 class load
 {
 public:
-    load(const std::string type_in, const double t0_in, const double x0_in, const double y0_in,
-         const double dx_in, const double dy_in, const double sn_in, const double s2_in,
+    load(const std::string type_in, const double t0_in, const double x0_in, const double dx_in,
+         const double y0_in, const double dy_in, const double sn_in, const double s2_in,
          const double s3_in, const int n[2], const int xm[2], const int xm_loc[2],
          const double x[2], const double l[2]);
     double get_sn(const int i, const int j, const double t);
