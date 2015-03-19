@@ -27,8 +27,8 @@ protected:
     double* vx;
     int nloads;
     load** loads;
-    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j);
-    virtual iffields solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);
+    virtual iffields solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j, const double t);
     virtual boundchar solve_fs(const double phi, const double eta, const double sn, const int i, const int j);
 };
 

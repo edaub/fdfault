@@ -104,7 +104,9 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
             assert(b1->get_nx(1) == b2->get_nx(1));
             assert(b1->get_nx(2) == b2->get_nx(2));
             n[0] = b1->get_nx(1);
-            n[1] = b2->get_nx(2);
+            n[1] = b1->get_nx(2);
+            xm[0] = b1->get_xm(1);
+            xm[1] = b1->get_xm(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -112,6 +114,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
+                xm_loc[0] = b1->get_xm_loc(1);
+                xm_loc[1] = b1->get_xm_loc(2);
                 mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -119,6 +123,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // negative side block in process, positive side block not
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
+                xm_loc[0] = b1->get_xm_loc(1);
+                xm_loc[1] = b1->get_xm_loc(2);
                 mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -126,6 +132,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // positive side block in process, negative side block not
                 n_loc[0] = b2->get_nx_loc(1);
                 n_loc[1] = b2->get_nx_loc(2);
+                xm_loc[0] = b2->get_xm_loc(1);
+                xm_loc[1] = b2->get_xm_loc(2);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0)-1;
                 mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -143,6 +151,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
             assert(b1->get_nx(2) == b2->get_nx(2));
             n[0] = b1->get_nx(0);
             n[1] = b2->get_nx(2);
+            xm[0] = b1->get_xm(0);
+            xm[1] = b1->get_xm(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -150,6 +160,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
+                xm_loc[0] = b1->get_xm_loc(0);
+                xm_loc[1] = b1->get_xm_loc(2);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -157,6 +169,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // negative side block in process, positive side block not
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
+                xm_loc[0] = b1->get_xm_loc(0);
+                xm_loc[1] = b1->get_xm_loc(2);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -164,6 +178,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // positive side block in process, negative side block not
                 n_loc[0] = b2->get_nx_loc(0);
                 n_loc[1] = b2->get_nx_loc(2);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(2);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b2->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1)-1;
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -181,6 +197,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
             assert(b1->get_nx(1) == b2->get_nx(1));
             n[0] = b1->get_nx(0);
             n[1] = b2->get_nx(1);
+            xm[0] = b1->get_xm(0);
+            xm[1] = b1->get_xm(1);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -188,6 +206,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 assert(b1->get_nx_loc(1) == b2->get_nx_loc(1));
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(1);
+                xm_loc[0] = b1->get_xm_loc(0);
+                xm_loc[1] = b1->get_xm_loc(1);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -195,6 +215,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // negative side block in process, positive side block not
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(1);
+                xm_loc[0] = b1->get_xm_loc(0);
+                xm_loc[1] = b1->get_xm_loc(1);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -202,6 +224,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // positive side block in process, negative side block not
                 n_loc[0] = b2->get_nx_loc(0);
                 n_loc[1] = b2->get_nx_loc(1);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(1);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2)-1;
@@ -373,7 +397,7 @@ void interface::deallocate_normals() {
     
 }
 
-void interface::apply_bcs(const double dt, fields& f) {
+void interface::apply_bcs(const double dt, const double t, fields& f) {
     // applies interface conditions
     
     // only proceed if boundary local to this process
@@ -508,7 +532,7 @@ void interface::apply_bcs(const double dt, fields& f) {
                 
                 iffields iffhat;
                 
-                iffhat = solve_interface(b_rot1, b_rot2, ii, jj);
+                iffhat = solve_interface(b_rot1, b_rot2, ii, jj, t);
                 
                 // rotate normal targets back to xyz
                 
@@ -652,7 +676,7 @@ void interface::apply_bcs(const double dt, fields& f) {
     
 }
 
-iffields interface::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j) {
+iffields interface::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t) {
     // solves boundary condition for a locked interface
     
     ifchar ifcp, ifcs1, ifcs2, ifchatp, ifchats1, ifchats2;

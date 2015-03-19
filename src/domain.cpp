@@ -209,7 +209,7 @@ double domain::get_min_dx() const {
     return dxmin_all;
 }
 
-void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
+void domain::do_rk_stage(const double dt, const int stage, const double t, rk_type& rk) {
     // advances domain fields for one RK stage of one time step
     
     // scale df by RK coefficient
@@ -218,8 +218,6 @@ void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
     
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->scale_df(rk.get_A(stage));
-        // calculate df for interfaces
-        interfaces[i]->calc_df(dt);
     }
     
     // calculate df for blocks
@@ -233,10 +231,16 @@ void domain::do_rk_stage(const double dt, const int stage, rk_type& rk) {
         }
     }
     
+    // calculate df for interfaces
+    
+    for (int i=0; i<nifaces; i++) {
+        interfaces[i]->calc_df(dt);
+    }
+        
     // apply interface conditions
     
     for (int i=0; i<nifaces; i++) {
-        interfaces[i]->apply_bcs(dt,*f);
+        interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);
         // update interfaces
         interfaces[i]->update(rk.get_B(stage));
     }

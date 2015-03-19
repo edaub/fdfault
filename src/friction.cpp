@@ -50,8 +50,8 @@ friction::friction(const string filename, const int ndim_in, const int mode_in, 
     
     loads = new load* [nloads];
     
-    loads[0] = new load("constant", 0., 0.5, 0., 0.05, 1., -100., 62., 0., 0);
-    loads[1] = new load("gaussian", 0., 0.5, 0., 0.05, 1., 0., 8.1, 0., 0);
+    loads[0] = new load("constant", 0., 0.5, 0., 0.05, 1., -100., 62., 0., n, xm, xm_loc, x, l);
+    loads[1] = new load("gaussian", 0., 0.5, 0., 0.05, 1., 0., 8.1, 0., n, xm, xm_loc, x, l);
     
 }
 
@@ -76,7 +76,7 @@ friction::~friction() {
 
 }
 
-iffields friction::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j) {
+iffields friction::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t) {
     // solves boundary conditions for a frictionless interface
     
     ifchar ifcp, ifchatp;
@@ -99,7 +99,7 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     iffin.s13 = b1.s13;
     iffin.s23 = b2.s13;
     
-    iffout = solve_friction(iffin, ifchatp.s1, zs1, zs2, i, j);
+    iffout = solve_friction(iffin, ifchatp.s1, zs1, zs2, i, j, t);
     
     iffout.v11 = ifchatp.v1;
     iffout.v21 = ifchatp.v2;
@@ -110,18 +110,18 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     
 }
 
-iffields friction::solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j) {
+iffields friction::solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j, const double t) {
     // solve friction law for shear tractions and slip velocities
     
     const double eta = z1*z2/(z1+z2);
     double phi, phi2, phi3, v2, v3;
     
     for (int k=0; k<nloads; k++) {
-        sn += loads[k]->get_sn(i,j);
-        iffin.s12 += loads[k]->get_s2(i,j);
-        iffin.s22 += loads[k]->get_s2(i,j);
-        iffin.s13 += loads[k]->get_s3(i,j);
-        iffin.s23 += loads[k]->get_s3(i,j);
+        sn += loads[k]->get_sn(i,j,t);
+        iffin.s12 += loads[k]->get_s2(i,j,t);
+        iffin.s22 += loads[k]->get_s2(i,j,t);
+        iffin.s13 += loads[k]->get_s3(i,j,t);
+        iffin.s23 += loads[k]->get_s3(i,j,t);
     }
     
     phi2 = eta*(iffin.s12/z1-iffin.v12+iffin.s22/z2+iffin.v22);
@@ -169,10 +169,10 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
     
     for (int k=0; k<nloads; k++) {
-        iffout.s12 -= loads[k]->get_s2(i,j);
-        iffout.s22 -= loads[k]->get_s2(i,j);
-        iffout.s13 -= loads[k]->get_s3(i,j);
-        iffout.s23 -= loads[k]->get_s3(i,j);
+        iffout.s12 -= loads[k]->get_s2(i,j,t);
+        iffout.s22 -= loads[k]->get_s2(i,j,t);
+        iffout.s13 -= loads[k]->get_s3(i,j,t);
+        iffout.s23 -= loads[k]->get_s3(i,j,t);
     }
 
     return iffout;

@@ -22,7 +22,7 @@ public:
     interface(const std::string filename, const int ndim_in, const int mode_in, const int niface,
               block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~interface();
-    void apply_bcs(const double dt, fields&f);
+    void apply_bcs(const double dt, const double t, fields&f);
     virtual void scale_df(const double A);
     virtual void calc_df(const double dt);
     virtual void update(const double B);
@@ -33,6 +33,8 @@ protected:
     int direction;
     int n[2];
     int n_loc[2];
+    int xm[2];
+    int xm_loc[2];
     double x[2];
     double l[2];
     double cp1;
@@ -53,7 +55,7 @@ protected:
     bool no_data;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd);
     void deallocate_normals();
-    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);
     ifchar solve_locked(const ifchar ifc, const double z1, const double z2);
 };
 
