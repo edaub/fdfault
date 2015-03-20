@@ -138,7 +138,7 @@ outputunit::outputunit(const int tm_in, const int tp_in,
     
     for (int i=0; i<3; i++) {
         if (xm[i] < d.cart->get_xm_loc(i)) {
-            xm_loc[i] = d.cart->get_xm_loc(i)+(d.cart->get_xm_loc(i)-xm[i])%xs[i];
+            xm_loc[i] = d.cart->get_xm_loc(i)+(xs[i]-(d.cart->get_xm_loc(i)-xm[i])%xs[i]);
         } else if (xm[i] > d.cart->get_xp_loc(i)) {
             xm_loc[i] = xm[i];
             no_data = true;
@@ -243,20 +243,12 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         
         for (int i=1; i<ntot; i++) {
             if (i%(nx_loc[1]*nx_loc[2]) == 0) {
-                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1]))+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)*(xs[0]-1);
-            } else if (i%nx_loc[1] == 0) {
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1])-1)+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)*(xs[0]-1);
+            } else if (i%nx_loc[2] == 0) {
                 disp[i] = disp[i-1]+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(2)*(xs[1]-1);
             } else {
                 disp[i] = disp[i-1]+xs[2];
             }
-        }
-        
-        for (int i=0; i<ntot; i++) {
-            int xstart = (0*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
-                          (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
-                          (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
-                          (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
-            cout << d.f->x[xstart+disp[i]] << "\n";
         }
     
         MPI_Type_create_indexed_block(ntot, 1, disp, MPI_DOUBLE, &dataarray);
@@ -270,7 +262,7 @@ outputunit::outputunit(const int tm_in, const int tp_in,
         int starts[3];
         
         for (int i=0; i<3; i++) {
-            starts[i] = xm_loc[i]-xm[i];
+            starts[i] = (xm_loc[i]-xm[i])/xs[i];
         }
     
         MPI_Type_create_subarray(3, nx, nx_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
