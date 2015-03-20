@@ -219,6 +219,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->scale_df(rk.get_A(stage));
     }
+
     
     // calculate df for blocks
     

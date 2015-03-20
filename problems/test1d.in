@@ -56,8 +56,8 @@ none
 
 [fdfault.friction]
 2
-constant 0. 0.5 0.125 0. 1. -100. 62. 0.
-gaussian 0. 0.5 0.2 0. 1. 0. 8.1 0. 
+constant 0. 0.5 0.125 0. 1. 0. 0. 0.
+gaussian 0. 0.5 0.2 0. 1. 0. 0. 0. 
 
 [fdfault.slipweak]
 0.4
@@ -68,8 +68,8 @@ gaussian 0. 0.5 0.2 0. 1. 0. 8.1 0.
 test
 vy
 0 200 1
-150 251 4
-201 201 1
+150 251 1
+150 250 1
 0 1 1
 test2
 sxx

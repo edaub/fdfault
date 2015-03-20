@@ -259,6 +259,12 @@ void fields::write_fields() const {
 	
 	myFile.close();
     
+    myFile.open (("data/df"+ss.str()+".dat").c_str(), ios::out | ios::binary);
+    
+    myFile.write((char*) df, sizeof(double)*ndataf);
+    
+    myFile.close();
+    
     myFile.open (("data/x"+ss.str()+".dat").c_str(), ios::out | ios::binary);
     
     myFile.write((char*) x, sizeof(double)*ndatax);

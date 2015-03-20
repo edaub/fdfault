@@ -9,6 +9,7 @@
 #include "friction.hpp"
 #include "interface.hpp"
 #include "load.hpp"
+#include <mpi.h>
 
 using namespace std;
 
