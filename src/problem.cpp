@@ -131,7 +131,7 @@ void problem::solve() {
     for (int i=0; i<nt; i++) {
         // advance domain by a time step by looping over RK stages
         
-        for (int stage=0; stage<1; stage++) {
+        for (int stage=0; stage<nstages; stage++) {
             d->do_rk_stage(dt,stage,(double)i*nt,*rk);
         }
         
@@ -149,7 +149,7 @@ void problem::solve() {
         
     }
     
-//    d->write_fields();
+    d->write_fields();
     
     // close output files
     

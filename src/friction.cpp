@@ -255,7 +255,6 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
             }
     }
     
-    
     iffields iffout;
     
     iffout.s12 = phi2-eta*v2;
@@ -273,7 +272,7 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
         iffout.s13 -= loads[k]->get_s3(i,j,t);
         iffout.s23 -= loads[k]->get_s3(i,j,t);
     }
-
+    
     return iffout;
     
 }
@@ -312,6 +311,10 @@ void friction::scale_df(const double A) {
 void friction::calc_df(const double dt) {
     // calculate df for state variables for rk time step
     
+    
+    int id;
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+    
     for (int i=0; i<ndim-1; i++) {
         for (int j=0; j<n_loc[0]; j++) {
             for (int k=0; k<n_loc[1]; k++) {
@@ -344,6 +347,7 @@ void friction::update(const double B) {
             u[i*n_loc[1]+j] += B*du[i*n_loc[1]+j];
         }
     }
+    
 }
 
 void friction::write_fields() {

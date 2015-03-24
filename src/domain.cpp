@@ -141,7 +141,7 @@ domain::~domain() {
     
     deallocate_blocks();
     
-    deallocate_interfaces();
+//    deallocate_interfaces();
     
     delete fd;
 	

@@ -53,6 +53,8 @@ protected:
     int prb[3];
     int delta[3];
     bool no_data;
+    bool data1;
+    bool data2;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd);
     void deallocate_normals();
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);

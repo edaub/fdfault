@@ -112,6 +112,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // both block data are meaningful
                 assert(b1->get_nx_loc(1) == b2->get_nx_loc(1));
                 assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
+                data1 = true;
+                data2 = true;
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
                 xm_loc[0] = b1->get_xm_loc(1);
@@ -121,6 +123,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
+                data1 = true;
+                data2 = false;
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
                 xm_loc[0] = b1->get_xm_loc(1);
@@ -130,6 +134,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
+                data1 = false;
+                data2 = true;
                 n_loc[0] = b2->get_nx_loc(1);
                 n_loc[1] = b2->get_nx_loc(2);
                 xm_loc[0] = b2->get_xm_loc(1);
@@ -158,6 +164,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // both block data are meaningful
                 assert(b1->get_nx_loc(0) == b2->get_nx_loc(0));
                 assert(b1->get_nx_loc(2) == b2->get_nx_loc(2));
+                data1 = true;
+                data2 = true;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
                 xm_loc[0] = b1->get_xm_loc(0);
@@ -167,6 +175,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
+                data1 = true;
+                data2 = false;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
                 xm_loc[0] = b1->get_xm_loc(0);
@@ -176,6 +186,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
+                data1 = false;
+                data2 = true;
                 n_loc[0] = b2->get_nx_loc(0);
                 n_loc[1] = b2->get_nx_loc(2);
                 xm_loc[0] = b2->get_xm_loc(0);
@@ -204,6 +216,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 // both block data are meaningful
                 assert(b1->get_nx_loc(0) == b2->get_nx_loc(0));
                 assert(b1->get_nx_loc(1) == b2->get_nx_loc(1));
+                data1 = true;
+                data2 = true;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(1);
                 xm_loc[0] = b1->get_xm_loc(0);
@@ -213,6 +227,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
                 // negative side block in process, positive side block not
+                data1 = true;
+                data2 = false;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(1);
                 xm_loc[0] = b1->get_xm_loc(0);
@@ -222,6 +238,8 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
             } else {
                 // positive side block in process, negative side block not
+                data1 = false;
+                data2 = true;
                 n_loc[0] = b2->get_nx_loc(0);
                 n_loc[1] = b2->get_nx_loc(1);
                 xm_loc[0] = b2->get_xm_loc(0);
@@ -254,7 +272,7 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
     
     coord c;
     
-    if (b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) {
+    if (data1) {
         // use block 1 data
         for (int i=0; i<3; i++) {
             c.set_nx(i,b1->get_nx(i));
@@ -329,43 +347,65 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
         }
     }
     
-    // allocate memory for grid spacing
+    // allocate memory for grid spacing if necessary
     
-    dl1 = new double* [n_loc[0]];
-    dl2 = new double* [n_loc[0]];
+    if (data1) {
+        dl1 = new double* [n_loc[0]];
     
-    for (int i=0; i<n_loc[0]; i++) {
-        dl1[i] = new double [n_loc[1]];
-        dl2[i] = new double [n_loc[1]];
+        for (int i=0; i<n_loc[0]; i++) {
+            dl1[i] = new double [n_loc[1]];
+        }
+    }
+    
+    if (data2) {
+        dl2 = new double* [n_loc[0]];
+
+        for (int i=0; i<n_loc[0]; i++) {
+            dl2[i] = new double [n_loc[1]];
+        }
     }
     
     // get grid spacings
     
     for (int i=0; i<n_loc[0]; i++) {
         for (int j=0; j<n_loc[1]; j++) {
-            dl1[i][j] = 0.;
-            dl2[i][j] = 0.;
-            if (direction == 0) {
-                for (int k=0; k<ndim; k++) {
-                    dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
-                    dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+            if (data1) {
+                dl1[i][j] = 0.;
+                if (direction == 0) {
+                    for (int k=0; k<ndim; k++) {
+                        dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+                    }
+                    dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[0];
+                } else if (direction == 1) {
+                    for (int k=0; k<ndim; k++) {
+                        dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
+                    }
+                    dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
+                } else { // direction == 2
+                    for (int k=0; k<ndim; k++) {
+                        dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
+                    }
+                    dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
                 }
-                dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx2[0];
-                dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
-            } else if (direction == 1) {
-                for (int k=0; k<ndim; k++) {
-                    dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
-                    dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
+            }
+            if (data2) {
+                dl2[i][j] = 0.;
+                if (direction == 0) {
+                    for (int k=0; k<ndim; k++) {
+                        dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+                    }
+                    dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
+                } else if (direction == 1) {
+                    for (int k=0; k<ndim; k++) {
+                        dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
+                    }
+                    dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
+                } else { // direction == 2
+                    for (int k=0; k<ndim; k++) {
+                        dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]+1,2);
+                    }
+                    dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
                 }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
-            } else { // direction == 2
-                for (int k=0; k<ndim; k++) {
-                    dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
-                    dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]+1,2);
-                }
-                dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
-                dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
             }
         }
     }
@@ -387,13 +427,25 @@ void interface::deallocate_normals() {
     
     delete[] nx;
     
-    for (int i=0; i<n_loc[0]; i++) {
-        delete[] dl1[i];
-        delete[] dl2[i];
+    if (data1) {
+    
+        for (int i=0; i<n_loc[0]; i++) {
+            delete[] dl1[i];
+        }
+    
+        delete[] dl1;
+
     }
     
-    delete[] dl1;
-    delete[] dl2;
+    if (data2) {
+        
+        for (int i=0; i<n_loc[0]; i++) {
+            delete[] dl2[i];
+        }
+        
+        delete[] dl2;
+        
+    }
     
 }
 
@@ -403,7 +455,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
     // only proceed if boundary local to this process
     
     if (no_data) { return; }
-    
+
     int ii, jj;
     double nn[3] = {0., 0., 0.}, t1[3], t2[3], h1, h2;
     
@@ -427,8 +479,12 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                         jj = j-mlb[1];
                 }
                 
-                h1 = dt*dl1[ii][jj];
-                h2 = dt*dl2[ii][jj];
+                if (data1) {
+                    h1 = dt*dl1[ii][jj];
+                }
+                if (data2) {
+                    h2 = dt*dl2[ii][jj];
+                }
                 
                 for (int l=0; l<ndim; l++) {
                     nn[l] = nx[l][ii][jj];
@@ -562,38 +618,46 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s33;
-                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
-                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
-                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v3;
-                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
-                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
-                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s13;
-                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
-                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s23;
-                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s33;
+                        if (data1) {
+                            f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
+                            f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
+                            f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v3;
+                            f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
+                            f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
+                            f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s13;
+                            f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
+                            f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s23;
+                            f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s33;
+                        }
+                        if (data2) {
+                            f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
+                            f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
+                            f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v3;
+                            f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
+                            f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
+                            f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s13;
+                            f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
+                            f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s23;
+                            f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s33;
+                        }
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                             f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
-                             f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
-                             f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
-                             f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
-                             f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
-                             f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
-                             f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
-                             f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
-                             f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
-                             f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
+                                if (data1) {
+                                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v1;
+                                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.v2;
+                                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s11;
+                                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s12;
+                                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cp1*h1*b1.s22;
+                                }
+                                if (data2) {
+                                    f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v1;
+                                    f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.v2;
+                                    f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s11;
+                                    f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s12;
+                                    f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cp2*h2*b2.s22;
+                                }
                         }
                 }
                 
@@ -625,47 +689,60 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
-                        f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
-                        f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
-                        f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
-                        f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
-                        f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
-                        f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
-                        f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
-                        f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s33;
-                        f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
-                        f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
-                        f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
-                        f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
-                        f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
-                        f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
-                        f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
-                        f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
-                        f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s33;
+                        if (data1) {
+                            f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
+                            f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
+                            f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
+                            f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
+                            f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
+                            f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
+                            f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
+                            f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
+                            f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s33;
+                        }
+                        if (data2) {
+                            f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
+                            f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
+                            f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
+                            f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
+                            f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
+                            f.df[5*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
+                            f.df[6*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
+                            f.df[7*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
+                            f.df[8*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s33;
+                        }
                         break;
                     case 2:
                         switch (mode) {
                             case 2:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
-                                f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
-                                f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
-                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
-                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
-                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
-                                f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
-                                f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
+                                if (data1) {
+                                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v1;
+                                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v2;
+                                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s11;
+                                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s12;
+                                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s22;
+                                }
+                                if (data2) {
+                                    f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v1;
+                                    f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v2;
+                                    f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s11;
+                                    f.df[3*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s12;
+                                    f.df[4*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s22;
+                                }
                                 break;
                             case 3:
-                                f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
-                                f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
-                                f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
-                                f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
-                                f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
-                                f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
+                                if (data1) {
+                                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.v3;
+                                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s13;
+                                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs1*h1*b1.s23;
+                                }
+                                if (data2) {
+                                    f.df[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.v3;
+                                    f.df[1*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s13;
+                                    f.df[2*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] -= cs2*h2*b2.s23;
+                                }
                         }
+                        
                 }
                 
             }
