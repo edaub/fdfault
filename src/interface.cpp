@@ -364,7 +364,7 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
             dl2[i] = new double [n_loc[1]];
         }
     }
-    
+	
     // get grid spacings
     
     for (int i=0; i<n_loc[0]; i++) {
@@ -485,7 +485,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 if (data2) {
                     h2 = dt*dl2[ii][jj];
                 }
-                
+				
                 for (int l=0; l<ndim; l++) {
                     nn[l] = nx[l][ii][jj];
                 }

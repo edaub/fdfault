@@ -9,16 +9,14 @@
 
 using namespace std;
 
-outputunit::outputunit(const int tm_in, const int tp_in,
-                       const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
+outputunit::outputunit(const int tm_in, const int tp_in, const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
                        string field_in, string name, domain& d) {
     // constructor
     
     assert(ts_in > 0);
     assert(tp_in >= tm_in);
     for (int i=0; i<3; i++) {
-        assert(xm_in[i] >= 0);
-        assert(xm_in[i] <= d.cart->get_nx(i));
+        assert(xm_in[i] < d.cart->get_nx(i));
         assert(xs_in[i] > 0);
         assert(xp_in[i] >= xm_in[i]);
     }
@@ -117,8 +115,16 @@ outputunit::outputunit(const int tm_in, const int tp_in,
     // set global spatial limits
     
     for (int i=0; i<3; i++) {
-        xm[i] = xm_in[i];
-        xp[i] = xp_in[i]-(xp_in[i]-xm_in[i])%xs_in[i];
+        if (xm_in[i] < 0) {
+            xm[i] = 0;
+        } else {
+            xm[i] = xm_in[i];
+        }
+        if (xp_in[i] >= d.cart->get_nx(i)) {
+            xp[i] = d.cart->get_nx(i)-1;
+        } else {
+            xp[i] = xp_in[i]-(xp_in[i]-xm_in[i])%xs_in[i];
+        }
         xs[i] = xs_in[i];
         nx[i] = (xp[i]-xm[i])/xs[i]+1;
     }
@@ -138,7 +144,11 @@ outputunit::outputunit(const int tm_in, const int tp_in,
     
     for (int i=0; i<3; i++) {
         if (xm[i] < d.cart->get_xm_loc(i)) {
-            xm_loc[i] = d.cart->get_xm_loc(i)+(xs[i]-(d.cart->get_xm_loc(i)-xm[i])%xs[i]);
+            if ((d.cart->get_xm_loc(i)-xm[i])%xs[i] == 0) {
+                xm_loc[i] = d.cart->get_xm_loc(i);
+            } else {
+                xm_loc[i] = d.cart->get_xm_loc(i)+(xs[i]-(d.cart->get_xm_loc(i)-xm[i])%xs[i]);
+            }
         } else if (xm[i] > d.cart->get_xp_loc(i)) {
             xm_loc[i] = xm[i];
             no_data = true;
@@ -409,11 +419,11 @@ void outputunit::write_unit(const int tstep, const double dt, domain& d) const {
     
     // check if within time limits
     
-    if (tstep < tm || tstep >= tp || tp == tm || (tstep-tm)%ts != 0) { return; }
+    if (tstep < tm || tstep > tp || (tstep-tm)%ts != 0) { return; }
     
-    // write time data if master
+    // write time data if master and limits are not identical
     
-    if (master) {
+    if (master && tp > tm) {
         double t = (double)tstep*dt;
         tfile->write((char*) &t, sizeof(double));
     }

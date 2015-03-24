@@ -497,16 +497,13 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
     // for transfinite interpolation). nx, ny, nz are also full-block sizes
     // if only considering a 2D problem, omit some terms (z values are not used)
     
-    int id;
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
     for (int i=0; i<ndim; i++) {
         for (int j=mlb[0]-nxm; j<prb[0]+nxp; j++) {
             for (int k=mlb[1]-nym; k<prb[1]+nyp; k++) {
                 for (int l=mlb[2]-nzm; l<prb[2]+nzp; l++) {
-                    jj = xm_loc+j-nxm-mlb[0];
-                    kk = ym_loc+k-nym-mlb[1];
-                    ll = zm_loc+l-nzm-mlb[2];
+                    jj = xm_loc+j-mlb[0];
+                    kk = ym_loc+k-mlb[1];
+                    ll = zm_loc+l-mlb[2];
                     p = (double)jj*dx[0];
                     q = (double)kk*dx[1];
                     r = (double)ll*dx[2];
