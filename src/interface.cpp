@@ -687,6 +687,10 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 
                 // add SAT term for tangential characteristics
                 
+                if (ii == 401) {
+                    cout << f.f[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] << "\n";
+                }
+                
                 switch (ndim) {
                     case 3:
                         if (data1) {

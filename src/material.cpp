@@ -119,11 +119,11 @@ double material::get_cp() const {
 double material::get_zs() const {
     // returns shear wave speed
     
-    return sqrt(g*rho);
+    return rho*get_cs();
 }
 
 double material::get_zp() const {
     // returns dilatational wave speed
     
-    return sqrt((lambda+2.*g)*rho);
+    return rho*get_cp();
 }

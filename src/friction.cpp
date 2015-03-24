@@ -266,11 +266,16 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
     iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
     
+    
     for (int k=0; k<nloads; k++) {
         iffout.s12 -= loads[k]->get_s2(i,j,t);
         iffout.s22 -= loads[k]->get_s2(i,j,t);
         iffout.s13 -= loads[k]->get_s3(i,j,t);
         iffout.s23 -= loads[k]->get_s3(i,j,t);
+    }
+    
+    if (i == 401) {
+        cout << iffout.s12 << "\n";
     }
     
     return iffout;
