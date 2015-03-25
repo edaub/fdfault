@@ -274,10 +274,6 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
         iffout.s23 -= loads[k]->get_s3(i,j,t);
     }
     
-    if (i == 401) {
-        cout << iffout.s12 << "\n";
-    }
-    
     return iffout;
     
 }

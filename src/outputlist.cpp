@@ -7,7 +7,7 @@
 
 using namespace std;
 
-outputlist::outputlist(string filename, domain& d) {
+outputlist::outputlist(const string filename, const string probname, const string datadir, const domain& d) {
     // constructor
     
     rootunit = 0;
@@ -54,7 +54,7 @@ outputlist::outputlist(string filename, domain& d) {
                     // skip over newline
                     getline(paramfile, line);
                     // traverse list and add onto end
-                    cunit = new outputunit(tm, tp, ts, xm, xp, xs, field, name, d);
+                    cunit = new outputunit(probname, datadir, tm, tp, ts, xm, xp, xs, field, name, d);
                     if (!rootunit) {
                         rootunit = cunit;
                         nunit = rootunit;
@@ -85,7 +85,7 @@ outputlist::~outputlist() {
     }
 }
 
-void outputlist::write_list(const int tstep, const double dt, domain& d) {
+void outputlist::write_list(const int tstep, const double dt, const domain& d) {
     // writes outputlist units
     
     outputunit* cunit = rootunit;

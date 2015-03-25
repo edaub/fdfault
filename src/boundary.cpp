@@ -197,17 +197,17 @@ void boundary::allocate_normals(const double dx[3], fields& f, const surface& su
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                 }
-                dl[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl[i][j])/fd.get_h0()/dx[0];
+                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[0];
             } else if (location == 2 || location == 3) {
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
                 }
-                dl[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl[i][j])/fd.get_h0()/dx[1];
+                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[1];
             } else { // location == 4 or location == 5
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
                 }
-                dl[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl[i][j])/fd.get_h0()/dx[2];
+                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[2];
             }
         }
     }
@@ -354,7 +354,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 bchars2.s = b_rot.s13;
                     
                 bhats2 = calc_hat(bchars2,zs);
-                    
+                
                 // rotate normal targets back to xyz
                     
                 b_rot.v1 -= bhatp.v;
@@ -437,7 +437,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                                 f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= cs*h*b.s23;
                         }
                 }
-                    
+                
             }
                 
         }

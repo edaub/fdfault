@@ -14,6 +14,8 @@ public:
     int get_nt() const;
     void solve();
 private:
+    std::string name;
+    std::string datadir;
     int nt;
     int ninfo;
     double dt;

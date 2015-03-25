@@ -16,7 +16,6 @@ problem::problem(const string filename) {
     // constructor
 
     int rkorder;
-    string name, datadir;
     
     // open input file, find appropriate place and read in parameters
     
@@ -63,7 +62,7 @@ problem::problem(const string filename) {
     
     // create output list
 	
-	out = new outputlist(filename, *d);
+	out = new outputlist(filename, name, datadir, *d);
     
 }
 

@@ -375,17 +375,17 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                     }
-                    dl1[i][j] = f.jac[mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[0];
+                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[0];
                 } else if (direction == 1) {
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
                     }
-                    dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
+                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
                 } else { // direction == 2
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
                     }
-                    dl1[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]*sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
+                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
                 }
             }
             if (data2) {
@@ -394,17 +394,17 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
                     }
-                    dl2[i][j] = f.jac[(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
+                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
                 } else if (direction == 1) {
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
                     }
-                    dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]]*sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
+                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
                 } else { // direction == 2
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]]+1,2);
                     }
-                    dl2[i][j] = f.jac[(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1]*sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
+                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
                 }
             }
         }
@@ -686,10 +686,6 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 b2 = rotate_nt_xy(b_rots2,nn,t1,t2);
                 
                 // add SAT term for tangential characteristics
-                
-                if (ii == 401) {
-                    cout << f.f[0*nxd[0]+(i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2]] << "\n";
-                }
                 
                 switch (ndim) {
                     case 3:

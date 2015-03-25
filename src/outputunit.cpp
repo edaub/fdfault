@@ -9,8 +9,8 @@
 
 using namespace std;
 
-outputunit::outputunit(const int tm_in, const int tp_in, const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
-                       string field_in, string name, domain& d) {
+outputunit::outputunit(const string probname, const string datadir, const int tm_in, const int tp_in, const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
+                       const string field_in, const string name, const domain& d) {
     // constructor
     
     assert(ts_in > 0);
@@ -281,8 +281,8 @@ outputunit::outputunit(const int tm_in, const int tp_in, const int ts_in, const 
     
         // all processes open distributed file for data output
         
-        filename = new char [("data/"+name+"_"+field_in+".dat").size()+1];
-        memcpy(filename, ("data/"+name+"_"+field_in+".dat").c_str(), ("data/"+name+"_"+field_in+".dat").size()+1);
+        filename = new char [(datadir+probname+"_"+name+"_"+field_in+".dat").size()+1];
+        memcpy(filename, (datadir+probname+"_"+name+"_"+field_in+".dat").c_str(), (datadir+probname+"_"+name+"_"+field_in+".dat").size()+1);
         
         rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &outfile);
         
@@ -313,8 +313,8 @@ outputunit::outputunit(const int tm_in, const int tp_in, const int ts_in, const 
         for (int i=0; i<3; i++) {
         
             if (nx[i] > 1) {
-                filename = new char [("data/"+name+"_"+xyzstr[i]+".dat").size()+1];
-                memcpy(filename, ("data/"+name+"_"+xyzstr[i]+".dat").c_str(), ("data/"+name+"_"+xyzstr[i]+".dat").size()+1);
+                filename = new char [(datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1];
+                memcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str(), (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1);
                 
                 rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
                 
@@ -371,7 +371,7 @@ outputunit::outputunit(const int tm_in, const int tp_in, const int ts_in, const 
         
         tfile = new ofstream;
         
-        tfile->open (("data/"+name+"_t.dat").c_str(), ios::out | ios::binary);
+        tfile->open ((datadir+probname+"_"+name+"_t.dat").c_str(), ios::out | ios::binary);
         
         if (!tfile->is_open()) {
             cerr << "Error opening file in outputunit.cpp\n";
@@ -414,7 +414,7 @@ void outputunit::set_next_unit(outputunit* nextunit) {
     next = nextunit;
 }
 
-void outputunit::write_unit(const int tstep, const double dt, domain& d) const {
+void outputunit::write_unit(const int tstep, const double dt, const domain& d) const {
     // writes output data to file
     
     // check if within time limits

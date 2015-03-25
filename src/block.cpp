@@ -212,9 +212,18 @@ block::block(const string filename, const int ndim_in, const int mode_in, const 
     }
     
     delete[] surf;
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] = exp(-pow((f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-1.5)/0.125,2)-pow((f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-4.)/0.125,2));
+                f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] = exp(-pow((f.x[0*nxd[0]+i*nxd[1]+j*nxd[2]+k]-1.5)/0.125,2)-pow((f.x[1*nxd[0]+i*nxd[1]+j*nxd[2]+k]-4.)/0.125,2));
+            }
+        }
+    }
 
 }
-    
+
 block::~block() {
     // destructor, deallocates memory
     
