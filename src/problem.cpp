@@ -16,6 +16,7 @@ problem::problem(const string filename) {
     // constructor
 
     int rkorder;
+    string name, datadir;
     
     // open input file, find appropriate place and read in parameters
     
@@ -33,6 +34,8 @@ problem::problem(const string filename) {
             MPI_Abort(MPI_COMM_WORLD,-1);
         } else {
             // read problem variables
+            paramfile >> name;
+            paramfile >> datadir;
             paramfile >> nt;
             paramfile >> dt;
             paramfile >> ttot;
@@ -83,7 +86,7 @@ void problem::set_time_step() {
     
     double dx = d->get_min_dx();
     
-    if ((ttot > 0. && nt > 0) && (dt == 0 && cfl ==0.)) {
+    if ((ttot > 0. && nt > 0) && (dt == 0 && cfl == 0.)) {
         // if supplied ttot, nt but not dt, cfl, use ttot and nt
         dt = ttot/(double)nt;
         cfl = dt/dx;

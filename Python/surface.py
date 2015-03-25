@@ -162,14 +162,14 @@ class surface:
         return 'Surface with normal direction ' + self.direction +' and n1 = ' + str(self.n1) + ', n2 = ' + str(self.n2)
 
 
-x1 = np.linspace(0., 1.)
-y, x = np.meshgrid(x1,x1)
-z = np.zeros((50,50))
-nx = np.zeros((50,50))
-ny = np.zeros((50,50))
-nz = np.ones((50,50))
-
-s = surface(50,50,'z',x,y,z,nx,ny,nz)
-s1 = surface(50,50,'x',z+1.,x,y,nz,nx,ny)
-
-print(s.has_same_edge(3,0,s1))
+##x1 = np.linspace(0., 1.)
+##y, x = np.meshgrid(x1,x1)
+##z = np.zeros((50,50))
+##nx = np.zeros((50,50))
+##ny = np.zeros((50,50))
+##nz = np.ones((50,50))
+##
+##s = surface(50,50,'z',x,y,z,nx,ny,nz)
+##s1 = surface(50,50,'x',z+1.,x,y,nz,nx,ny)
+##
+##print(s.has_same_edge(3,0,s1))

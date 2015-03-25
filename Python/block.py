@@ -1,6 +1,6 @@
 from __future__ import division, print_function
-import surface as *
-import material as *
+from .surface import surface
+from .material import material
 
 import numpy as np
 
