@@ -7,13 +7,15 @@ class material:
     material class
     describes material parameters (elastic and plastic) for dynamic rupture
     '''
-    def __init__(self, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, beta = 0.2867, eta = 0.2775):
+    def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, beta = 0.2867, eta = 0.2775):
+        assert mattype == "elastic" or mat == "plastic", "Material type must be elastic or plastic"
         assert(rho > 0.)
         assert(lam > 0.)
         assert(g > 0.)
         assert(mu > 0.)
         assert(beta > 0.)
         assert(eta > 0.)
+        self.mattype = mattype
         self.rho = rho
         self.lam = lam
         self.g = g
@@ -123,11 +125,20 @@ class material:
         assert(eta > 0.)
         self.eta = float(eta)
 
+    def write_input(self,f):
+        "Writes material properties to input file"
+        if self.mattype == "elastic":
+            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+"\n")
+        else:
+            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+str(self.get_mu())+" "+str(self.get_beta())+" "+str(self.m.get_eta())+"\n")
+
     def __str__(self):
         '''
         returns string representation for printing
         '''
-        return ('Material properties: density = ' + str(self.rho) + ', Lame parameter = ' + str(self.lam) +
-                ', shear modulus = ' + str(self.g) + '\nInternal friction angle = ' + str(self.mu) +
-                ', plastic dilatancy = ' + str(self.beta) + ', plastic viscosity = ' + str(self.eta))
+        outstring = ('Material:\nrho = ' + str(self.rho) + '\nlam = ' + str(self.lam) +
+                '\ng = ' + str(self.g))
+        if self.mattype == "plastic":
+            outstring += ('\nmu = ' + str(self.mu) + '\nbeta = ' + str(self.beta) + '\neta = ' + str(self.eta))
+        return outstring
 

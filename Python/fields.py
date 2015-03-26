@@ -4,6 +4,8 @@ class fields:
     "Class representing fields in a dynamic rupture problem"
     def __init__(self, ndim, mode):
         "Initializes fields for a given number of dimensions and rupture mode"
+        assert(ndim == 2 or ndim == 3), "ndim must be 2 or 3"
+        assert(mode == 2 or mode == 3), "mode must be 2 or 3"
         self.ndim = ndim
         self.mode = mode
         self.material = "elastic"

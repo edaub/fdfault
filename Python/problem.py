@@ -92,7 +92,7 @@ class problem:
     def write_input(self, filename = None):
         "Writes problem to input file"
 
-        assert (self.ttot > 0. and self.nt > 0) or ((self.ttot > 0. or self.nt > 0) and (self.dt > 0. or self.cfl > 0.)), "Must specify two of nt, dt, ttot, or cfl (except dt and cfl)"
+        self.check()
 
         if (filename is None):
             f = open("problems/"+self.name+".in",'w')
@@ -112,6 +112,13 @@ class problem:
         self.d.write_input(f)
 
         f.close()
+
+    def check(self):
+        "Checks problem for errors"
+
+        assert (self.ttot > 0. and self.nt > 0) or ((self.ttot > 0. or self.nt > 0) and (self.dt > 0. or self.cfl > 0.)), "Must specify two of nt, dt, ttot, or cfl (except dt and cfl)"
+
+        self.d.check()
     
     def __str__(self):
         return ("Problem '"+self.name+"':\ndatadir = "+self.datadir+
