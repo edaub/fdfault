@@ -14,7 +14,3 @@ class output:
     def __str__(self):
         return 'Output'
 
-class problem:
-    def __str__(self):
-        return 'Problem with:\n'
-

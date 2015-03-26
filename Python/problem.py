@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+from .domain import domain
+
 class problem:
     """
     Class describing a dynamic rupture problem
@@ -18,6 +20,7 @@ class problem:
         self.cfl = 0.
         self.ninfo = 10
         self.rkorder = 1
+        self.d = domain()
 
     def get_name(self):
         "Returns problem name"
@@ -104,11 +107,13 @@ class problem:
         f.write(str(self.ttot)+"\n")
         f.write(str(self.cfl)+"\n")
         f.write(str(self.ninfo)+"\n")
-        f.write(str(self.rkorder)+"\n\n")
+        f.write(str(self.rkorder)+"\n")
+        f.write("\n")
+        self.d.write_input(f)
 
         f.close()
     
     def __str__(self):
         return ("Problem '"+self.name+"':\ndatadir = "+self.datadir+
                 "\nnt = "+str(self.nt)+"\ndt = "+str(self.dt)+"\nttot = "+str(self.ttot)+"\ncfl = "+str(self.cfl)+
-                "\nninfo = "+str(self.ninfo)+"\nrkorder = "+str(self.rkorder))
+                "\nninfo = "+str(self.ninfo)+"\nrkorder = "+str(self.rkorder)+"\n\n"+str(self.d))

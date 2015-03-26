@@ -1,20 +1,20 @@
 [fdfault.problem]
 test
 data/
-100
+1600
 0
 0
 0.3
-10
+50
 4
 
 [fdfault.domain]
 2
 2
-602 801 1
+1202 1601 1
 2 1 1
-301 301
-801
+601 601
+1601
 1
 1
 slipweak
@@ -27,7 +27,7 @@ elastic
 [fdfault.block000]
 2.67 32.04 32.04
 0. 0.
-3. 8.
+30. 80.
 absorbing
 none
 absorbing
@@ -39,8 +39,8 @@ none
 
 [fdfault.block100]
 2.67 32.04 32.04
-3. 0.
-3. 8.
+30. 0.
+30. 80.
 none
 absorbing
 absorbing
@@ -59,7 +59,7 @@ none
 [fdfault.friction]
 2
 constant 0. 0. 0.125 0. 1. -120. 70. 0.
-boxcar 0. 4. 3. 0. 1. 0. 11.6 0. 
+boxcar 0. 40. 1.5 0. 1. 0. 11.6 0. 
 
 [fdfault.slipweak]
 0.4
@@ -69,32 +69,32 @@ boxcar 0. 4. 3. 0. 1. 0. 11.6 0.
 [fdfault.outputlist]
 test
 vx
-0 800 1
-0 601 1
-0 801 1
+0 1600 20
+0 1201 2
+0 1600 2
 0 1 1
 test1
 vy
-0 800 1
-0 601 1
-0 801 1
+0 1600 20
+0 1201 2
+0 1600 2
 0 1 1
 test2
 sxx
-0 800 1
-0 601 1
-0 801 1
+0 1600 20
+0 1201 2
+0 1600 2
 0 1 1
 test3
 sxy
-0 800 1
-0 601 1
-0 801 1
+0 1600 20
+0 1201 2
+0 1600 2
 0 1 1
 test4
 syy
-0 800 1
-0 601 1
-0 801 1
+0 1600 20
+0 1201 2
+0 1600 2
 0 1 1
 
