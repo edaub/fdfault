@@ -11,12 +11,13 @@ data/
 [fdfault.domain]
 2
 2
-601 801 1
-1 1 1
-601
+602 801 1
+2 1 1
+301 301
 801
 1
-0
+1
+slipweak
 4
 
 [fdfault.fields]
@@ -26,9 +27,9 @@ elastic
 [fdfault.block000]
 2.67 32.04 32.04
 0. 0.
-6. 8.
+3. 8.
 absorbing
-absorbing
+none
 absorbing
 absorbing
 none
@@ -58,7 +59,7 @@ none
 [fdfault.friction]
 2
 constant 0. 0. 0.125 0. 1. -120. 70. 0.
-gaussian 0. 4. 1.5 0. 1. 0. 11.6 0. 
+boxcar 0. 4. 3. 0. 1. 0. 11.6 0. 
 
 [fdfault.slipweak]
 0.4
@@ -72,8 +73,26 @@ vx
 0 601 1
 0 801 1
 0 1 1
+test1
+vy
+0 800 1
+0 601 1
+0 801 1
+0 1 1
 test2
 sxx
+0 800 1
+0 601 1
+0 801 1
+0 1 1
+test3
+sxy
+0 800 1
+0 601 1
+0 801 1
+0 1 1
+test4
+syy
 0 800 1
 0 601 1
 0 801 1

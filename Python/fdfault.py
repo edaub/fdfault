@@ -2,10 +2,6 @@ from __future__ import division, print_function
 
 import numpy as np
 
-class domain:
-    def __str__(self):
-        return 'Domain'
-
 class interface:
     def __str__(self):
         return 'Interface'
