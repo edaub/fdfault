@@ -15,7 +15,7 @@
 
 using namespace std;
 
-domain::domain(const string filename) {
+domain::domain(const char* filename) {
     // constructor, no default as need to allocate memory
     
     int sbporder;
@@ -30,7 +30,7 @@ domain::domain(const string filename) {
     // open input file, find appropriate place and read in parameters
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of domain list
         while (getline(paramfile,line)) {
@@ -263,7 +263,7 @@ void domain::write_fields() {
     }
 }
 
-void domain::allocate_blocks(const string filename, int** nx_block, int** xm_block) {
+void domain::allocate_blocks(const char* filename, int** nx_block, int** xm_block) {
     // allocate memory for blocks and initialize
 
     int nxtmp[3];
@@ -301,7 +301,7 @@ void domain::allocate_blocks(const string filename, int** nx_block, int** xm_blo
 
 }
 
-void domain::allocate_interfaces(const string filename, string* iftype) {
+void domain::allocate_interfaces(const char* filename, string* iftype) {
     // allocate memory for interfaces
     
     for (int i=0; i<nifaces; i++) {

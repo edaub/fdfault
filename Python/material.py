@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 import numpy as np
 
-class material:
+class material(object):
     '''
     material class
     describes material parameters (elastic and plastic) for dynamic rupture

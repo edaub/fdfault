@@ -7,7 +7,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 	
-	string inputfile;
     int np, id, rc;
 	MPI_Status stat;
     time_t rawtime;
@@ -29,7 +28,7 @@ int main(int argc, char* argv[]) {
 	
     // get input file from command line
     
-    inputfile = argv[1];
+    const char* inputfile = argv[1];
     
     if (id==0) {
         cout << "Reading from input file " << inputfile << "\n";

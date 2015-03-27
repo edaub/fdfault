@@ -12,7 +12,7 @@
 
 using namespace std;
 
-problem::problem(const string filename) {
+problem::problem(const char* filename) {
     // constructor
 
     int rkorder;
@@ -20,7 +20,7 @@ problem::problem(const string filename) {
     // open input file, find appropriate place and read in parameters
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of problem list
         while (getline(paramfile,line)) {

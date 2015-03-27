@@ -89,6 +89,99 @@ class problem:
         "Returns rkorder"
         return self.rkorder
 
+    def get_sbporder(self):
+        "Returns finite difference order"
+        return self.d.get_sbporder()
+
+    def set_spborder(self,sbporder):
+        "Sets finite difference order"
+        self.d.set_sbporder(sbporder)
+
+    def get_ndim(self):
+        "Returns number of dimensions"
+        return self.d.get_ndim()
+
+    def set_ndim(self,ndim):
+        "Sets number of dimensions"
+        self.d.set_ndim(ndim)
+
+    def get_mode(self):
+        "Returns rupture mode"
+        return self.d.get_mode()
+
+    def set_mode(self, mode):
+        "Sets rupture mode"
+        self.d.set_mode(mode)
+
+    def get_nx(self):
+        "Returns number of spatial grid points"
+        return self.d.get_nx()
+
+    def set_nx(self, nx):
+        "Sets number of spatial grid points"
+        self.d.set_nx(nx)
+
+    def get_nblocks_tot(self):
+        "Returns total number of blocks"
+        return self.d.get_nblocks_tot()
+
+    def get_nblocks(self):
+        "Returns number of blocks in each spatial dimension"
+        return self.d.get_nblocks()
+
+    def set_nblocks(self, nblocks):
+        """
+        Sets number of blocks
+        Adds or deletes blocks from the list of blocks as needed
+        """
+        self.d.set_nblocks(nblocks)
+
+    def get_nx_block(self):
+        "Returns number of grid points in each block for each dimension (list of lists)"
+        return self.d.get_nx_block()
+
+    def set_nx_block(self,nx_block):
+        """
+        Set number of grid points in each block as a list of lists
+        Input must be a list or tuple of length 3, with each item a list of integers representing
+        the number of grid points for each block along the respective dimension
+        For example, if nblocks = (3,2,1), then nblock[0] has length 3, nblock[1] has length 2,
+        and nblock[2] has length 1
+        """
+        self.d.set_nx_block(nx_block)
+
+    def get_block_lx(self,coords):
+        "Returns size of block with coordinates coords"
+        return self.d.get_block_lx(coords)
+
+    def set_block_lx(self,coords,lx):
+        "Sets block with coordinates coords to have dimension lx"
+        self.d.set_block_lx(coords, lx)
+
+    def get_block_xm(self,coords):
+        "Returns location of block with coordinates coords"
+        return self.d.get_block_xm(coords)
+
+    def set_domain_xm(self,xm):
+        "Sets lower left corner of domain to xm"
+        self.d.set_domain_xm(xm)
+
+    def get_nifaces(self):
+        "Returns number of interfaces"
+        return self.d.get_nifaces()
+
+    def set_iftype(self,index,iftype):
+        "Sets iftype of interface index"
+        self.d.set_iftype(index,iftype)
+
+    def get_nloads(self, index):
+        "Returns number of loads on given interface"
+        self.d.get_nloads(index)
+
+    def add_load(self, index, newload):
+        "Adds load to interface with index (either integer index or iterable)"
+        self.d.add_load(index, newload)
+    
     def write_input(self, filename = None):
         "Writes problem to input file"
 

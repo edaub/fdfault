@@ -9,7 +9,7 @@
 class problem
 {
 public:
-    problem(const std::string filename);
+    problem(const char* filename);
     ~problem();
     int get_nt() const;
     void solve();

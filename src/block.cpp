@@ -16,7 +16,7 @@
 
 using namespace std;
 
-block::block(const string filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
+block::block(const char* filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
     // constructor, no default constructor due to necessary memory allocation
     
     // open input file, find appropriate place and read in parameters
@@ -31,7 +31,7 @@ block::block(const string filename, const int ndim_in, const int mode_in, const 
     }
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of appropriate block list
         while (getline(paramfile,line)) {

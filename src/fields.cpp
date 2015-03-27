@@ -10,7 +10,7 @@
 
 using namespace std;
 
-fields::fields(const string filename, const int ndim_in, const int mode, const cartesian& cart) {
+fields::fields(const char* filename, const int ndim_in, const int mode, const cartesian& cart) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in ==3);

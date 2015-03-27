@@ -7,7 +7,7 @@
 
 using namespace std;
 
-outputlist::outputlist(const string filename, const string probname, const string datadir, const domain& d) {
+outputlist::outputlist(const char* filename, const string probname, const string datadir, const domain& d) {
     // constructor
     
     rootunit = 0;
@@ -23,7 +23,7 @@ outputlist::outputlist(const string filename, const string probname, const strin
     
     // open input file, find appropriate place and read in parameters
     
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of outputlist
         while (getline(paramfile,line)) {

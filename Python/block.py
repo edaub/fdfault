@@ -4,7 +4,7 @@ from .material import material
 
 import numpy as np
 
-class block:
+class block(object):
     '''
     block class
     represents a block of material
@@ -35,7 +35,6 @@ class block:
         self.lx = (1., 1., 1.)
         if (self.ndim == 2):
             self.lx = (1., 1., 0.)
-        self.material = mat
         self.m = material(mat)
         self.bounds = 2*self.ndim*["none"]
         self.surfs = 2*self.ndim*[None]
@@ -85,7 +84,7 @@ class block:
 
     def set_xm(self,xm):
         "sets lower left coordinate"
-        assert len(xm) == 3, "xm must be a list or tuple of length 3 of floats"
+        assert len(xm) == 3 or (self.ndim == 2 and len(xm) == 2), "xm must be a list or tuple of length 3 of floats"
 
         self.xm = (float(xm[0]), float(xm[1]), float(xm[2]))
         if self.ndim == 2:
@@ -122,21 +121,30 @@ class block:
         "Returns boundary types"
         return self.bounds
 
-    def set_bounds(self,bounds):
-        "Sets boundary types"
-        assert len(bounds) == 2*self.ndim, "Must give 2*ndim boundary types"
-        for i in range(2*self.ndim):
+    def set_bounds(self,bounds, loc = None):
+        """
+        Sets boundary types
+        Can either provide a list of strings specifying boundary type, or a single string and a location (integer)
+        """
+        if loc is None:
+            assert len(bounds) == 2*self.ndim, "Must give 2*ndim boundary types"
+            for i in range(2*self.ndim):
+                assert (bounds[i] == "none") or (bounds[i] == "absorbing") or (bounds[i] == "free") or (bounds[i] == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
+            self.bounds = bounds
+        elif loc >=0 and loc < 2*self.ndim:
             assert (bounds[i] == "none") or (bounds[i] == "absorbing") or (bounds[i] == "free") or (bounds[i] == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
-        self.bounds = bounds
+            self.bounds[loc] = bounds
+        else:
+            raise TypeError, "loc must either be None or an integer location"
 
     def get_material(self):
         "Returns material type"
-        return self.material
+        return self.m
 
     def set_material(self,mat):
         "Sets material type to elastic or plastic"
-        assert mat == "elastic" or mat == "plastic"
-        self.material = mat
+        assert type(mat) is material
+        self.m = mat
 
     def write_input(self,f):
         "writes block information to input file"

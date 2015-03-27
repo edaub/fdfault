@@ -2,8 +2,9 @@ from __future__ import print_function
 
 from .fields import fields
 from .block import block
+from .interface import interface, friction, slipweak
 
-class domain:
+class domain(object):
     "Class describing rupture problem domain"
     def __init__(self):
         "Initialize problem, default configuration is one block with one grid point"
@@ -20,6 +21,7 @@ class domain:
         self.f = fields(self.ndim, self.mode)
         self.blocks = ([[[block(self.ndim, self.mode, (self.nx_block[0][0], self.nx_block[1][0], self.nx_block[2][0]),
                              self.f.get_material())]]])
+        self.interfaces = []
 
     def get_ndim(self):
         "Returns number of dimensions"
@@ -133,6 +135,9 @@ class domain:
         assert (len(nblocks) == 3), "nblocks must be a list or tuple of integers of length 3"
         assert (nblocks[0] > 0 and nblocks[1] > 0 and nblocks[2] > 0), "Number of blocks must be positive"
 
+        if (self.nblocks == nblocks):
+            return
+
         if self.ndim == 2:
             if (nblocks[2] > 1):
                 print("Warning: number of z blocks set to 1 as ndim = 2")
@@ -152,7 +157,7 @@ class domain:
 
         oldlen = len(self.blocks)
         if oldlen > self.nblocks[0]:
-            self.blocks[0:self.nblocks[0]] = []
+            self.blocks[self.nblocks[0]:] = []
         if oldlen < self.nblocks[0]:
             for i in range(self.nblocks[0]-oldlen):
                 self.blocks.append([])
@@ -177,6 +182,29 @@ class domain:
                         self.blocks[i][j][oldlen+k].set_coords((i,j,k))
 
         self.set_block_coords()
+
+        oldifaces = self.interfaces
+
+        self.nifaces = 0
+        self.iftype = []
+        self.interfaces = []
+
+        for i in range(self.nblocks[0]-1):
+            for j in range(self.nblocks[1]):
+                for k in range(self.nblocks[2]):
+                    notfound = True
+                    for iface in oldifaces:
+                        if (iface.get_bm() == (i,j,k) and iface.get_bp() == (i+1,j,k)):
+                            iface.set_index(self.nifaces)
+                            self.iftype.append(iface.get_type())
+                            self.interfaces.append(iface)
+                            self.nifaces += 1
+                            notfound = False
+                            break
+                    if notfound:
+                        self.iftype.append("locked")
+                        self.interfaces.append(interface(self.nifaces,"x",(i,j,k),(i+1,j,k)))
+                        self.nifaces += 1
 
     def get_nx_block(self):
         "Returns number of grid points in each block for each dimension (list of lists)"
@@ -211,7 +239,29 @@ class domain:
                 for k in range(self.nblocks[2]):
                     self.blocks[i][j][k].set_nx((self.nx_block[0][i], self.nx_block[1][j], self.nx_block[2][k]))
 
-    def set_block_size(self,coords,lx):
+    def get_block_xm(self, coords):
+        "Returns location of block with coordinates coords"
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+
+        return self.blocks[coords[0]][coords[1]][coords[2]].get_xm()
+
+    def set_domain_xm(self, xm):
+        "Sets lower left corner of domain to xm"
+        self.blocks[0][0][0].set_xm(xm)
+        self.set_block_coords()
+    
+
+    def get_block_lx(self, coords):
+        "Returns size of block with coordinates coords"
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+
+        return self.blocks[coords[0]][coords[1]][coords[2]].get_lx()
+
+    def set_block_lx(self,coords,lx):
         "Sets block with coordinates coords to have dimensions lx"
         assert len(coords) == 3, "block coordinates must have length 3"
         assert (len(lx) == 3 or (len(lx) == 2 and self.ndim == 2)), "block lengths have incorrect dimensions"
@@ -251,20 +301,39 @@ class domain:
         "Returns number of interfaces"
         return self.nifaces
 
-    def set_nifaces(self,nifaces):
-        """
-        Sets number of internal interfaces
-        If not the same as the length of the iftype list, changes the length of iftype to match
-        if len(iftype) > nifaces, only keeps the first nifaces
-        if len(iftype) < nifaces, adds locked interfaces onto the end
-        """
-        assert nifaces >= 0, "Number of interfaces must be a nonnegative integer"
-        self.nifaces = nifaces
-        if (len(self.iftype) != self.nifaces):
-            if (len(self.iftype) > self.nifaces):
-                self.iftype = self.iftype[0:self.nifaces]
-            while (len(self.iftype) != self.nifaces):
-                self.iftype += "locked"
+    def set_iftype(self,index,iftype):
+        "Sets iftype of interface index"
+        assert index >=0 and index < self.nifaces, "Index not in range"
+        assert (iftype == "locked" or iftype == "frictionless" or iftype == "slipweak")
+
+        if iftype == self.interfaces[index].get_type():
+            return
+
+        self.iftype[index] = iftype
+        direction = self.interfaces[index].get_direction()
+        bm = self.interfaces[index].get_bm()
+        bp = self.interfaces[index].get_bp()
+        if iftype == "locked":
+            self.interfaces[index] = interface(index, direction, bm, bp)
+        elif iftype == "frictionless":
+            self.interfaces[index] = friction(index, direction, bm, bp)
+        else:
+            self.interfaces[index] = slipweak(index,direction,bm,bp)
+
+    def get_nloads(self, index):
+        "Returns number of loads on given interface"
+        assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[index].get_nloads()
+
+    def add_load(self,index,newload):
+        "Adds load to interface with index (either integer index or iterable)"
+        try:
+            for i in index:
+                assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+                self.interfaces[i].add_load(newload)
+        except:
+            assert index is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
+            self.interfaces[index].add_load(newload)
 
     def write_input(self, f):
         "Writes domain information to input file"
@@ -292,6 +361,9 @@ class domain:
                 for b in b2:
                     b.write_input(f)
 
+        for iface in self.interfaces:
+            iface.write_input(f)
+
     def check(self):
         "Checks domain for errors"
         
@@ -303,9 +375,12 @@ class domain:
         for b1 in self.blocks:
             for b2 in b1:
                 for b in b2:
-                    blockstring += str(b)+"\n\n"
-        blockstring = blockstring[0:-1]
+                    blockstring += "\n\n"+str(b)
+        ifstring = ""
+        for iface in self.interfaces:
+            ifstring += "\n\n"+str(iface)
         return ("Domain:\nndim = "+str(self.ndim)+"\nmode = "+str(self.mode)+"\nnx = "+str(self.nx)
                 +"\nnblocks = "+str(self.nblocks)+"\nnx_block = "+str(self.nx_block)+
                 "\nxm_block = "+str(self.xm_block)+"\nnifaces = "+str(self.nifaces)+
-                "\niftype = "+str(self.iftype)+"\nsbporder = "+str(self.sbporder)+"\n\n"+str(self.f)+"\n\n"+blockstring)
+                "\niftype = "+str(self.iftype)+"\nsbporder = "+str(self.sbporder)+"\n\n"+str(self.f)+
+                blockstring+ifstring)

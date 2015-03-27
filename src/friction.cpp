@@ -13,7 +13,7 @@
 
 using namespace std;
 
-friction::friction(const string filename, const int ndim_in, const int mode_in, const int niface,
+friction::friction(const char* filename, const int ndim_in, const int mode_in, const int niface,
                    block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : interface(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface and then allocates memory for slip velocity and slip
     
@@ -64,7 +64,7 @@ friction::friction(const string filename, const int ndim_in, const int mode_in, 
     ss << niface;
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of appropriate interface list
         while (getline(paramfile,line)) {

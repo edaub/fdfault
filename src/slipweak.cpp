@@ -12,7 +12,7 @@
 
 using namespace std;
 
-slipweak::slipweak(const string filename, const int ndim_in, const int mode_in, const int niface,
+slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, const int niface,
                    block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : friction(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface
     
@@ -21,7 +21,7 @@ slipweak::slipweak(const string filename, const int ndim_in, const int mode_in, 
     ss << niface;
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of appropriate slipweak list
         // note that the file first scans to interfacex, were x is the number of this interface

@@ -15,7 +15,7 @@
 
 using namespace std;
 
-interface::interface(const string filename, const int ndim_in, const int mode_in, const int niface,
+interface::interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
                      block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) {
     // constructor
     
@@ -27,7 +27,7 @@ interface::interface(const string filename, const int ndim_in, const int mode_in
     ss << niface;
     
     string line;
-    ifstream paramfile(filename, ios::in);
+    ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of appropriate interface list
         while (getline(paramfile,line)) {

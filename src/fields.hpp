@@ -14,7 +14,7 @@ class fields
     friend class load;
     friend class outputunit;
 public:
-    fields(const std::string filename, const int ndim_in, const int mode, const cartesian& cart);
+    fields(const char* filename, const int ndim_in, const int mode, const cartesian& cart);
 	~fields();
     void scale_df(const double A);
     void update(const double B);

@@ -12,7 +12,7 @@
 class block
 {
 public:
-    block(const std::string filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3],
+    block(const char* filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3],
           const cartesian& cart, fields& f, const fd_type& fd);
     ~block();
     int get_nx(const int index) const;
