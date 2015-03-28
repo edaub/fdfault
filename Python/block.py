@@ -141,6 +141,10 @@ class block(object):
         "Returns material type"
         return self.m
 
+    def set_mattype(self, mattype):
+        "Sets material type of block material"
+        self.m.set_type(mattype)
+
     def set_material(self,mat):
         "Sets material type to elastic or plastic"
         assert type(mat) is material

@@ -28,6 +28,11 @@ class problem(object):
         "Returns problem name"
         return self.name
 
+    def set_name(self, name):
+        "Sets problem name"
+        assert type(name) is str, "Problem name must be a string"
+        self.name = name
+
     def set_datadir(self,datadir):
         "Sets problem data directory"
         assert type(datadir) is str, "Problem data directory must be a string"
@@ -119,10 +124,6 @@ class problem(object):
         "Returns number of spatial grid points"
         return self.d.get_nx()
 
-    def set_nx(self, nx):
-        "Sets number of spatial grid points"
-        self.d.set_nx(nx)
-
     def get_nblocks_tot(self):
         "Returns total number of blocks"
         return self.d.get_nblocks_tot()
@@ -168,11 +169,31 @@ class problem(object):
         "Sets lower left corner of domain to xm"
         self.d.set_domain_xm(xm)
 
+    def get_mattype(self):
+        "Returns material type"
+        self.d.get_mattype()
+
+    def set_mattype(self, mattype):
+        "Sets field and block material type"
+        self.d.set_mattype()
+
+    def set_material(self, newmaterial, coords = None):
+        """
+        Sets block material properties for given indices, if no coords provided does so for all blocks
+        If setting all blocks, also changes material type in fields instance if necessary
+        If setting a single block, material type must match that given in fields
+        """
+        self.d.set_material()
+
     def get_nifaces(self):
         "Returns number of interfaces"
         return self.d.get_nifaces()
 
-    def set_iftype(self,index,iftype):
+    def get_iftype(self, index = None):
+        "Returns interface type of given index, if none provided returns full list"
+        return self.d.get_iftype(index)
+
+    def set_iftype(self, iftype, index = None):
         "Sets iftype of interface index"
         self.d.set_iftype(index,iftype)
 
@@ -180,9 +201,53 @@ class problem(object):
         "Returns number of loads on given interface"
         self.d.get_nloads(index)
 
-    def add_load(self, index, newload):
+    def add_load(self, newload, index):
         "Adds load to interface with index (either integer index or iterable)"
         self.d.add_load(index, newload)
+
+    def get_direction(self, index):
+        "Returns direction of interface index"
+        self.d.get_direction(index)
+
+    def get_bm(self, index):
+        "Returns block in minus direction of interface index"
+        self.d.get_bm(index)
+        
+    def get_bp(self, index):
+        "Returns block in plus direction of interface index"
+        self.d.get_bp(index)
+
+    def get_dc(self, index):
+        "Returns slip weakening distance of interface index"
+        self.d.get_dc(index)
+
+    def get_mus(self, index):
+        "Returns static friction coefficient of interface index"
+        self.d.get_mus(index)
+
+    def get_mud(self, index):
+        "Returns dynamic friction coefficient of interface index"
+        self.d.get_mud(index)
+
+    def get_params(self, index):
+        "Returns friction parameters of interface index"
+        self.d.get_params(index)
+
+    def set_dc(self, dc, index = None):
+        "Sets slip weakening distance of interface index, if no index provided does so for all interfaces"
+        self.d.set_dc(dc, index)
+
+    def set_mus(self, mus, index = None):
+        "Sets static friction coefficient of interface index, if no index provided does so for all interfaces"
+        self.d.set_mus(mus, index)
+
+    def set_mud(self, mud, index = None):
+        "Sets dynamic friction coefficient of interface index, if no index provided does so for all interfaces"
+        self.d.set_mud(mud, index)
+
+    def set_params(self, params, index = None):
+        "Sets friction parameters of interface index, if no index provided does so for all interfaces"
+        self.d.set_params(params, index)
 
     def add_output(self, item):
         "Adds output item to output list"

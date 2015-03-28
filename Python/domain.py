@@ -107,18 +107,6 @@ class domain(object):
         "Returns number of grid points"
         return self.nx
 
-    def set_nx(self,nx):
-        "Sets number of grid points"
-        assert (len(nx) == 3), "nx must be a list or tuple of integers of length 3"
-        assert (nx[0] > 0 and nx[1] > 0 and nx[2] > 0), "Number of grid points must be positive"
-
-        if self.ndim == 2:
-            if (nx[2] > 1):
-                print("Warning: number of z grid points set to zero as ndim == 2")
-            self.nx = (int(nx[0]), int(nx[1]), 1)
-        else:
-            self.nx = (int(nx[0]), int(nx[1]), int(nx[2]))
-
     def get_nblocks_tot(self):
         "Returns total number of blocks"
         return self.nblocks[0]*self.nblocks[1]*self.nblocks[2]
@@ -181,7 +169,12 @@ class domain(object):
                              self.f.get_material()))
                         self.blocks[i][j][oldlen+k].set_coords((i,j,k))
 
-        self.set_block_coords()
+        self.__set_block_coords()
+
+        nx = []
+        for i in range(3):
+            nx.append(sum(nx_block[i]))
+        self.nx = (nx[0], nx[1], nx[2])
 
         oldifaces = self.interfaces
 
@@ -217,14 +210,18 @@ class domain(object):
         the number of grid points for each block along the respective dimension
         For example, if nblocks = (3,2,1), then nblock[0] has length 3, nblock[1] has length 2,
         and nblock[2] has length 1
+        method also resets nx to be the correct value given the new block lengths
         """
         assert len(nx_block) == 3, "nx_block must have length 3"
         for i in range(3):
             assert len(nx_block[i]) == self.nblocks[i], "each list in nx_block must match the number of blocks in that dimension"
-            assert sum(nx_block[i]) == self.nx[i], "sum of nx_block must equal the total number of grid points"
+            for j in nx_block[i]:
+                assert j > 0, "Number of grid points per block must be greater than zero"
 
         self.nx_block = (nx_block[0], nx_block[1], nx_block[2])
         if self.ndim == 2:
+            if nx_block[2][0] > 1:
+                print("Warning: number of z grid points set to 1 as ndim = 2")
             self.nx_block = (nx_block[0], nx_block[1], [1])
         
         for i in range(3):
@@ -238,6 +235,46 @@ class domain(object):
             for j in range(self.nblocks[1]):
                 for k in range(self.nblocks[2]):
                     self.blocks[i][j][k].set_nx((self.nx_block[0][i], self.nx_block[1][j], self.nx_block[2][k]))
+
+        nx = []
+        for i in range(3):
+            nx.append(sum(nx_block[i]))
+        self.nx = (nx[0], nx[1], nx[2])
+
+    def get_mattype(self):
+        "Returns material type"
+        return self.f.get_material()
+
+    def set_mattype(self, mattype):
+        "Sets field and block material type"
+        assert mattype == "elastic" or mattype == "plastic", "Material type must be elastic or plastic"
+        self.f.set_material(mattype)
+        for b1 in self.blocks:
+            for b2 in b1:
+                for b in b2:
+                    b.set_mattype(mattype)
+
+    def set_material(self, newmaterial, coords = None):
+        """
+        Sets block material properties for given indices, if no coords provided does so for all blocks
+        If setting all blocks, also changes material type in fields instance if necessary
+        If setting a single block, material type must match that given in fields
+        """
+        if index is None:
+            if self.f.get_material() != newmaterial.get_type():
+                print("Changing domain material type")
+                self.f.set_material(newmaterial.get_type())
+            for b1 in self.blocks:
+                for b2 in b1:
+                    for b in b2:
+                        b.set_material(newmaterial)
+        else:
+            assert len(coords) == 3, "block coordinates must have length 3"
+            for i in range(3):
+                assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+            assert self.f.get_material() == newmaterial.get_mattype(), "Material type must match value in fields"
+            self.blocks[coords[0]][coords[1]][coords[2]].set_material(newmaterial)
+
 
     def get_block_xm(self, coords):
         "Returns location of block with coordinates coords"
@@ -261,7 +298,7 @@ class domain(object):
 
         return self.blocks[coords[0]][coords[1]][coords[2]].get_lx()
 
-    def set_block_lx(self,coords,lx):
+    def set_block_lx(self,lx, coords):
         "Sets block with coordinates coords to have dimensions lx"
         assert len(coords) == 3, "block coordinates must have length 3"
         assert (len(lx) == 3 or (len(lx) == 2 and self.ndim == 2)), "block lengths have incorrect dimensions"
@@ -270,9 +307,9 @@ class domain(object):
         for l in lx:
             assert l >= 0., "input lengths must be positive"
         self.blocks[coords[0]][coords[1]][coords[2]].set_lx(lx)
-        self.set_block_coords()
+        self.__set_block_coords()
 
-    def set_block_coords(self):
+    def __set_block_coords(self):
         "Adjust corners of each block to match neighbors"
         for i in range(self.nblocks[0]):
             for j in range(self.nblocks[1]):
@@ -301,7 +338,7 @@ class domain(object):
         "Returns number of interfaces"
         return self.nifaces
 
-    def set_iftype(self,index,iftype):
+    def set_iftype(self, iftype, index):
         "Sets iftype of interface index"
         assert index >=0 and index < self.nifaces, "Index not in range"
         assert (iftype == "locked" or iftype == "frictionless" or iftype == "slipweak")
@@ -325,7 +362,7 @@ class domain(object):
         assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
         return self.interfaces[index].get_nloads()
 
-    def add_load(self,index,newload):
+    def add_load(self, newload, index):
         "Adds load to interface with index (either integer index or iterable)"
         try:
             for i in index:
@@ -334,6 +371,85 @@ class domain(object):
         except:
             assert index is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
             self.interfaces[index].add_load(newload)
+
+    def get_direction(self, index):
+        "Returns direction of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_direction()
+
+    def get_iftype(self, index = None):
+        "Returns interface type of given index, if none provided returns full list"
+        if index is None:
+            return self.iftype
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            return self.iftype[index]
+
+    def get_bm(self, index):
+        "Returns block in minus direction of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_bm()
+
+    def get_bp(self, index):
+        "Returns block in plus direction of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_bp()
+
+    def get_dc(self, index):
+        "Returns slip weakening distance of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_dc()
+
+    def get_mus(self, index):
+        "Returns static friction coefficient of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_mus()
+
+    def get_mud(self, index):
+        "Returns dynamic friction coefficient of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_mud()
+
+    def get_params(self, index):
+        "Returns friction parameters of interface index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.interfaces[index].get_params()
+
+    def set_dc(self, dc, index = None):
+        "Sets slip weakening distance of interface index, if no index provided does so for all interfaces"
+        if index is None:
+            for iface in self.interfaces:
+                iface.set_dc(dc)
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            self.interfaces[index].set_dc(dc)
+
+    def set_mus(self, mus, index = None):
+        "Sets static friction coefficient of interface index, if no index provided does so for all interfaces"
+        if index is None:
+            for iface in self.interfaces:
+                iface.set_mus(mus)
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            self.interfaces[index].set_mus(mus)
+
+    def set_mud(self, mud, index = None):
+        "Sets dynamic friction coefficient of interface index, if no index provided does so for all interfaces"
+        if index is None:
+            for iface in self.interfaces:
+                iface.set_mud(mud)
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            self.interfaces[index].set_mud(mud)
+
+    def set_params(self, params, index = None):
+        "Sets friction parameters of interface index, if no index provided does so for all interfaces"
+        if index is None:
+            for iface in self.interfaces:
+                iface.set_params(params)
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            self.interfaces[index].set_params(params)
 
     def write_input(self, f):
         "Writes domain information to input file"
@@ -368,6 +484,9 @@ class domain(object):
         "Checks domain for errors"
         
         for i in range(3):
+            assert self.nx[i] > 0, "Number of grid points must be positive"
+            for j in self.nx_block[i]:
+                assert j > 0, "Number of grid points in each block must be positive"
             assert sum(self.nx_block[i]) == self.nx[i], "Number of grid points in blocks must equal nx"
     
     def __str__(self):
