@@ -1,8 +1,9 @@
 from __future__ import division, print_function
 
 from .domain import domain
+from .output import output
 
-class problem:
+class problem(object):
     """
     Class describing a dynamic rupture problem
     """
@@ -21,6 +22,7 @@ class problem:
         self.ninfo = 10
         self.rkorder = 1
         self.d = domain()
+        self.outputlist = []
 
     def get_name(self):
         "Returns problem name"
@@ -38,7 +40,7 @@ class problem:
     def set_nt(self,nt):
         "Sets number of time steps"
         assert nt >= 0, "Number of time steps cannot be less than zero"
-        self.nt = nt
+        self.nt = int(nt)
 
     def get_nt(self):
         "Returns number of time steps"
@@ -47,7 +49,7 @@ class problem:
     def set_dt(self,dt):
         "Sets time step"
         assert dt >= 0., "Time step cannot be negative"
-        self.dt = dt
+        self.dt = float(dt)
 
     def get_dt(self):
         "Returns time step"
@@ -56,7 +58,7 @@ class problem:
     def set_ttot(self,ttot):
         "Sets total integration time"
         assert ttot >= 0,"Integration time cannot be negative"
-        self.ttot = ttot
+        self.ttot = float(ttot)
         
     def get_ttot(self):
         "Returns total integration time"
@@ -65,7 +67,7 @@ class problem:
     def set_cfl(self,cfl):
         "Sets CFL ratio:"
         assert cfl >= 0. and cfl < 1., "CFL ratio must be between 0 and 1"
-        self.cfl = cfl
+        self.cfl = float(cfl)
 
     def get_cfl(self):
         "Returns CFL ratio"
@@ -74,7 +76,7 @@ class problem:
     def set_ninfo(self,ninfo):
         "Sets frequency of information output"
         assert ninfo > 0, "ninfo must be greater than zero"
-        self.ninfo = ninfo
+        self.ninfo = int(ninfo)
 
     def get_ninfo(self):
         "Returns ninfo"
@@ -83,7 +85,7 @@ class problem:
     def set_rkorder(self,rkorder):
         "Sets order of RK method"
         assert rkorder == 1 or rkorder == 2 or rkorder == 3 or rkorder == 4, "RK order must be between 1 and 4"
-        self.rkorder = rkorder
+        self.rkorder = int(rkorder)
 
     def get_rkorder(self):
         "Returns rkorder"
@@ -181,6 +183,19 @@ class problem:
     def add_load(self, index, newload):
         "Adds load to interface with index (either integer index or iterable)"
         self.d.add_load(index, newload)
+
+    def add_output(self, item):
+        "Adds output item to output list"
+        assert type(item) is output, "Item must be of type output"
+        self.outputlist.append(item)
+
+    def delete_output(self, index = None):
+        "Deletes output item at given index (if none given, pops last item)"
+        if index is None:
+            self.outputlist.pop()
+        else:
+            assert index >= 0 and index < len(self.outputlist), "bad index"
+            self.outputlist.pop(index)
     
     def write_input(self, filename = None):
         "Writes problem to input file"
@@ -203,7 +218,10 @@ class problem:
         f.write(str(self.rkorder)+"\n")
         f.write("\n")
         self.d.write_input(f)
-
+        f.write("[fdfault.outputlist]\n")
+        for item in self.outputlist:
+            item.write_input(f)
+        f.write("\n\n")
         f.close()
 
     def check(self):
@@ -211,9 +229,23 @@ class problem:
 
         assert (self.ttot > 0. and self.nt > 0) or ((self.ttot > 0. or self.nt > 0) and (self.dt > 0. or self.cfl > 0.)), "Must specify two of nt, dt, ttot, or cfl (except dt and cfl)"
 
+        for i in range(len(self.outputlist)):
+            if self.outputlist[i].get_xp() > self.d.get_nx()[0]-1:
+                print("xp greater than nx in output "+self.outputlist[i].get_name())
+            if self.outputlist[i].get_yp() > self.d.get_nx()[1]-1:
+                print("yp greater than ny in output "+self.outputlist[i].get_name())
+            if self.outputlist[i].get_zp() > self.d.get_nx()[2]-1:
+                print("zp greater than nz in output "+self.outputlist[i].get_name())
+            if (self.nt > 0 and self.outputlist[i].get_tp > self.nt-1):
+                print("tp greater than nt in output "+self.outputlist[i].get_name())
+            
         self.d.check()
     
     def __str__(self):
+        "Returns a string representation"
+        outliststring = ""
+        for item in self.outputlist:
+            outliststring += "\n"+str(item)
         return ("Problem '"+self.name+"':\ndatadir = "+self.datadir+
                 "\nnt = "+str(self.nt)+"\ndt = "+str(self.dt)+"\nttot = "+str(self.ttot)+"\ncfl = "+str(self.cfl)+
-                "\nninfo = "+str(self.ninfo)+"\nrkorder = "+str(self.rkorder)+"\n\n"+str(self.d))
+                "\nninfo = "+str(self.ninfo)+"\nrkorder = "+str(self.rkorder)+"\n\n"+str(self.d)+"\n\nOutput List:"+outliststring)

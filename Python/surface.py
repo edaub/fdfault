@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 import numpy as np
 
-class surface:
+class surface(object):
     '''
     surface class
     represents a surface for defining interfaces and block boundaries

@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-class fields:
+class fields(object):
     "Class representing fields in a dynamic rupture problem"
     def __init__(self, ndim, mode):
         "Initializes fields for a given number of dimensions and rupture mode"
