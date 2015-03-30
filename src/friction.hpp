@@ -19,12 +19,8 @@ public:
     virtual void update(const double B);
     virtual void write_fields();
 protected:
-    double* u;
     double* du;
-    double* v;
-    double* ux;
     double* dux;
-    double* vx;
     int nloads;
     load** loads;
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);

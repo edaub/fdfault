@@ -17,6 +17,8 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
                    block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : interface(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface and then allocates memory for slip velocity and slip
     
+    is_friction = true;
+    
     // allocate memory for slip and slip rate arrays
     
     if (no_data) {return;}

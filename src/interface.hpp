@@ -17,7 +17,7 @@ struct ifchar {
 };
 
 class interface
-{
+{ friend class outputunit;
 public:
     interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
               block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
@@ -33,8 +33,10 @@ protected:
     int direction;
     int n[2];
     int n_loc[2];
-    int xm[2];
-    int xm_loc[2];
+    int xm[3];
+    int xm_loc[3];
+    int xp[3];
+    int xp_loc[3];
     double x[3];
     double l[3];
     double cp1;
@@ -55,6 +57,11 @@ protected:
     bool no_data;
     bool data1;
     bool data2;
+    bool is_friction;
+    double* u;
+    double* v;
+    double* ux;
+    double* vx;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd);
     void deallocate_normals();
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);

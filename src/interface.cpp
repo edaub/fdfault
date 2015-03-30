@@ -86,6 +86,10 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         no_data = false;
     }
     
+    // set boolean saying this is not frictional (needed in output)
+    
+    is_friction = false;
+    
     // if this interface is contained in this process, proceed
     
     if (no_data) { return; }
@@ -98,6 +102,10 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     nxd[1] = cart.get_nx_tot(1)*cart.get_nx_tot(2);
     nxd[2] = cart.get_nx_tot(2);
     
+    xm[0] = b2->get_xm(0);
+    xm[1] = b2->get_xm(1);
+    xm[2] = b2->get_xm(2);
+    
     switch (direction) {
         case 0:
             // first index is y, second is z
@@ -105,8 +113,9 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             assert(b1->get_nx(2) == b2->get_nx(2));
             n[0] = b1->get_nx(1);
             n[1] = b1->get_nx(2);
-            xm[0] = b1->get_xm(1);
-            xm[1] = b1->get_xm(2);
+            xp[0] = b2->get_xm(0);
+            xp[1] = b2->get_xp(1);
+            xp[2] = b2->get_xp(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -116,8 +125,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = true;
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
-                xm_loc[0] = b1->get_xm_loc(1);
-                xm_loc[1] = b1->get_xm_loc(2);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xm_loc(0);
+                xp_loc[1] = b2->get_xp_loc(1);
+                xp_loc[2] = b2->get_xp_loc(2);
                 mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -127,8 +140,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = false;
                 n_loc[0] = b1->get_nx_loc(1);
                 n_loc[1] = b1->get_nx_loc(2);
-                xm_loc[0] = b1->get_xm_loc(1);
-                xm_loc[1] = b1->get_xm_loc(2);
+                xm_loc[0] = b1->get_xp_loc(0);
+                xm_loc[1] = b1->get_xm_loc(1);
+                xm_loc[2] = b1->get_xm_loc(2);
+                xp_loc[0] = b1->get_xp_loc(0);
+                xp_loc[1] = b1->get_xp_loc(1);
+                xp_loc[2] = b1->get_xp_loc(2);
                 mlb[0] = b1->get_xp_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -138,8 +155,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = true;
                 n_loc[0] = b2->get_nx_loc(1);
                 n_loc[1] = b2->get_nx_loc(2);
-                xm_loc[0] = b2->get_xm_loc(1);
-                xm_loc[1] = b2->get_xm_loc(2);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xm_loc(0);
+                xp_loc[1] = b2->get_xp_loc(1);
+                xp_loc[2] = b2->get_xp_loc(2);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0)-1;
                 mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -157,8 +178,9 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             assert(b1->get_nx(2) == b2->get_nx(2));
             n[0] = b1->get_nx(0);
             n[1] = b2->get_nx(2);
-            xm[0] = b1->get_xm(0);
-            xm[1] = b1->get_xm(2);
+            xp[0] = b2->get_xp(0);
+            xp[1] = b2->get_xm(1);
+            xp[2] = b2->get_xp(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -168,8 +190,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = true;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
-                xm_loc[0] = b1->get_xm_loc(0);
-                xm_loc[1] = b1->get_xm_loc(2);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xp_loc(0);
+                xp_loc[1] = b2->get_xm_loc(1);
+                xp_loc[2] = b2->get_xp_loc(2);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -179,8 +205,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = false;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(2);
-                xm_loc[0] = b1->get_xm_loc(0);
-                xm_loc[1] = b1->get_xm_loc(2);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xp_loc(1)+1;
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b1->get_xp_loc(0);
+                xp_loc[1] = b1->get_xp_loc(1)+1;
+                xp_loc[2] = b1->get_xp_loc(2);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -191,7 +221,11 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 n_loc[0] = b2->get_nx_loc(0);
                 n_loc[1] = b2->get_nx_loc(2);
                 xm_loc[0] = b2->get_xm_loc(0);
-                xm_loc[1] = b2->get_xm_loc(2);
+                xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xp_loc(0);
+                xp_loc[1] = b2->get_xm_loc(1);
+                xp_loc[2] = b2->get_xp_loc(2);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b2->get_xp_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1)-1;
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -209,8 +243,9 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             assert(b1->get_nx(1) == b2->get_nx(1));
             n[0] = b1->get_nx(0);
             n[1] = b2->get_nx(1);
-            xm[0] = b1->get_xm(0);
-            xm[1] = b1->get_xm(1);
+            xp[0] = b2->get_xp(0);
+            xp[1] = b2->get_xp(1);
+            xp[2] = b2->get_xm(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -220,8 +255,12 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 data2 = true;
                 n_loc[0] = b1->get_nx_loc(0);
                 n_loc[1] = b1->get_nx_loc(1);
-                xm_loc[0] = b1->get_xm_loc(0);
-                xm_loc[1] = b1->get_xm_loc(1);
+                xm_loc[0] = b2->get_xm_loc(0);
+                xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xp_loc(0);
+                xp_loc[1] = b2->get_xp_loc(1);
+                xp_loc[2] = b2->get_xm_loc(2);
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -233,6 +272,10 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 n_loc[1] = b1->get_nx_loc(1);
                 xm_loc[0] = b1->get_xm_loc(0);
                 xm_loc[1] = b1->get_xm_loc(1);
+                xm_loc[2] = b1->get_xp_loc(2)+1;
+                xp_loc[0] = b1->get_xp_loc(0);
+                xp_loc[1] = b1->get_xp_loc(1);
+                xp_loc[2] = b1->get_xp_loc(2)+1;
                 mlb[0] = b1->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b1->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b1->get_xp_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2);
@@ -244,6 +287,10 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 n_loc[1] = b2->get_nx_loc(1);
                 xm_loc[0] = b2->get_xm_loc(0);
                 xm_loc[1] = b2->get_xm_loc(1);
+                xm_loc[2] = b2->get_xm_loc(2);
+                xp_loc[0] = b2->get_xp_loc(0);
+                xp_loc[1] = b2->get_xp_loc(1);
+                xp_loc[2] = b2->get_xm_loc(2);
                 mlb[0] = b2->get_xm_loc(0)-cart.get_xm_loc(0)+cart.get_xm_ghost(0);
                 mlb[1] = b2->get_xm_loc(1)-cart.get_xm_loc(1)+cart.get_xm_ghost(1);
                 mlb[2] = b2->get_xm_loc(2)-cart.get_xm_loc(2)+cart.get_xm_ghost(2)-1;

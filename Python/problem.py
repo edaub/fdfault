@@ -303,6 +303,7 @@ class problem(object):
                 print("zp greater than nz in output "+self.outputlist[i].get_name())
             if (self.nt > 0 and self.outputlist[i].get_tp > self.nt-1):
                 print("tp greater than nt in output "+self.outputlist[i].get_name())
+            field = self.outputlist[i].get_field()
             
         self.d.check()
     
