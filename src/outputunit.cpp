@@ -501,9 +501,9 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
         // all processes open distributed file for data output
         
         filename = new char [(datadir+probname+"_"+name+"_"+field_in+".dat").size()+1];
-        strcpy(filename, (datadir+probname+"_"+name+"_"+field_in+".dat").c_str());
+//        strcpy(filename, (datadir+probname+"_"+name+"_"+field_in+".dat").c_str());
         
-        rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &outfile);
+        rc = MPI_File_open(comm, (datadir+probname+"_"+name+"_"+field_in+".dat").c_str(), MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &outfile);
         
         delete[] filename;
             
@@ -533,9 +533,9 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
         
             if (nx[i] > 1) {
                 filename = new char [(datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1];
-                strcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str());
+ //               strcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str());
                 
-                rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
+                rc = MPI_File_open(comm, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str(), MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
                 
                 delete[] filename;
                 
