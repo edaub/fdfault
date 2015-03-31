@@ -1,10 +1,12 @@
 CC=mpic++
 CFLAGS=-c -O3
-EFLAGS= -O3
+IFLAGS=
+LFLAGS=
+EFLAGS=-O3
 EXEC = ../fdfault
 
 fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
-	$(CC) $(EFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
+	$(CC) $(EFLAGS) $(LFLAGS) $(IFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
 		fd.o fields.o friction.o interface.o load.o main.o material.o \
 		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
 
