@@ -120,6 +120,7 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     loads = new load* [nloads];
     
     double x_2d[2], l_2d[2];
+    int xm_2d[2], xm_loc2d[2];
     
     switch (direction) {
         case 0:
@@ -127,22 +128,34 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
             x_2d[1] = x[2];
             l_2d[0] = l[1];
             l_2d[1] = l[2];
+            xm_2d[0] = xm[1];
+            xm_2d[1] = xm[2];
+            xm_loc2d[0] = xm_loc[1];
+            xm_loc2d[1] = xm_loc[2];
             break;
         case 1:
             x_2d[0] = x[0];
             x_2d[1] = x[2];
             l_2d[0] = l[0];
             l_2d[1] = l[2];
+            xm_2d[0] = xm[0];
+            xm_2d[1] = xm[2];
+            xm_loc2d[0] = xm_loc[0];
+            xm_loc2d[1] = xm_loc[2];
             break;
         case 2:
             x_2d[0] = x[0];
             x_2d[1] = x[1];
             l_2d[0] = l[0];
             l_2d[1] = l[1];
+            xm_2d[0] = xm[0];
+            xm_2d[1] = xm[1];
+            xm_loc2d[0] = xm_loc[0];
+            xm_loc2d[1] = xm_loc[1];
     }
     
     for (int i=0; i<nloads; i++) {
-        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], sn[i], s2[i], s3[i], n, xm, xm_loc, x_2d, l_2d);
+        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], sn[i], s2[i], s3[i], n, xm_2d, xm_loc2d, x_2d, l_2d);
     }
     
     delete[] t0;
