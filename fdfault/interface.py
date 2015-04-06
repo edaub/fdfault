@@ -99,9 +99,9 @@ class interface(object):
     def write_input(self,f):
         "Writes interface details to input file"
         f.write("[fdfault.interface"+str(self.index)+"]\n")
-        f.write(direction+"\n")
-        f.write(str(bm[0])+" "+str(bm[1])+" "+str(bm[2])+"\n")
-        f.write(str(bp[0])+" "+str(bp[1])+" "+str(bp[2])+"\n")
+        f.write(self.direction+"\n")
+        f.write(str(self.bm[0])+" "+str(self.bm[1])+" "+str(self.bm[2])+"\n")
+        f.write(str(self.bp[0])+" "+str(self.bp[1])+" "+str(self.bp[2])+"\n")
         if self.surf is None:
             f.write("none\n")
         else:
@@ -143,10 +143,9 @@ class friction(interface):
         "Returns string representation of interface"
         loadstring = ""
         for load in self.loads:
-            loadstring += str(load)+"\n"
-        loadstring = loadstring[0:-1]
+            loadstring += "\n"+str(load)
         return ('Frictional interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nnloads = "+str(self.nloads)+"\nLoads:\n"+loadstring)
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
 
 class slipweak(friction):
     "Class describing slip weakening friction interface"
@@ -209,11 +208,10 @@ class slipweak(friction):
         "Returns string representation of slipweakening friction law"
         loadstring = ""
         for load in self.loads:
-            loadstring += str(load)+"\n"
-        loadstring = loadstring[0:-1]
+            loadstring += "\n"+str(load)
         return ('Slip weakening interface '+str(self.index)+":\ndirection = "+self.direction+
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\ndc = "+str(self.dc)+", mus = "
-                +str(self.mus)+", mud = "+str(self.mud)+"\nnloads = "+str(self.nloads)+"\nLoads:\n"+loadstring)
+                +str(self.mus)+", mud = "+str(self.mud)+"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
 
 class load(object):
     "Class representing load perturbations to fricitonal interfaces"

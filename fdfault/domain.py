@@ -39,7 +39,7 @@ class domain(object):
             self.nblocks = (self.nblocks[0], self.nblocks[1], 1)
             self.nx_block = (self.nx_block[0], self.nx_block[1], [1])
             self.xm_block = (self.xm_block[0], self.xm_block[1], [0])
-        material = self.get_material()
+        material = self.get_mattype()
         s = self.f.get_stress()
         self.f = fields(self.ndim, self.mode)
         self.f.set_material(material)
@@ -79,7 +79,7 @@ class domain(object):
         assert (mode == 2 or mode == 3), "Rupture mode must be 2 or 3"
         oldmode = self.mode
         self.mode = mode
-        material = self.get_material()
+        material = self.get_mattype()
         s = self.f.get_stress()
         self.f = fields(self.ndim, self.mode)
         self.f.set_material(material)
@@ -96,7 +96,7 @@ class domain(object):
 
     def get_sbporder(self):
         "Returns finite difference order"
-        return self.spborder
+        return self.sbporder
 
     def set_sbporder(self,sbporder):
         "Sets finite difference order, must be an integer between 2 and 4"
@@ -173,7 +173,7 @@ class domain(object):
 
         nx = []
         for i in range(3):
-            nx.append(sum(nx_block[i]))
+            nx.append(sum(self.nx_block[i]))
         self.nx = (nx[0], nx[1], nx[2])
 
         oldifaces = self.interfaces
@@ -238,7 +238,7 @@ class domain(object):
 
         nx = []
         for i in range(3):
-            nx.append(sum(nx_block[i]))
+            nx.append(sum(self.nx_block[i]))
         self.nx = (nx[0], nx[1], nx[2])
 
     def get_mattype(self):
@@ -260,7 +260,7 @@ class domain(object):
         If setting all blocks, also changes material type in fields instance if necessary
         If setting a single block, material type must match that given in fields
         """
-        if index is None:
+        if coords is None:
             if self.f.get_material() != newmaterial.get_type():
                 print("Changing domain material type")
                 self.f.set_material(newmaterial.get_type())
@@ -286,8 +286,9 @@ class domain(object):
 
     def set_domain_xm(self, xm):
         "Sets lower left corner of domain to xm"
+        assert len(xm) == 3 or (len(xm) == 2 and self.ndim == 2), "Domain coordinates must have length 2 or 3"
         self.blocks[0][0][0].set_xm(xm)
-        self.set_block_coords()
+        self.__set_block_coords()
     
 
     def get_block_lx(self, coords):
@@ -298,7 +299,7 @@ class domain(object):
 
         return self.blocks[coords[0]][coords[1]][coords[2]].get_lx()
 
-    def set_block_lx(self,lx, coords):
+    def set_block_lx(self, coords, lx):
         "Sets block with coordinates coords to have dimensions lx"
         assert len(coords) == 3, "block coordinates must have length 3"
         assert (len(lx) == 3 or (len(lx) == 2 and self.ndim == 2)), "block lengths have incorrect dimensions"
@@ -309,6 +310,29 @@ class domain(object):
         self.blocks[coords[0]][coords[1]][coords[2]].set_lx(lx)
         self.__set_block_coords()
 
+    def get_bounds(self, coords, loc = None):
+        """
+        Returns boundary types, if location provided returns specific location, otherwise returns list
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        return self.blocks[coords[0]][coords[1]][coords[2]].get_bounds(loc)
+
+    def set_bounds(self, coords, bounds, loc = None):
+        """
+        Sets boundary types
+        Can either provide a list of strings specifying boundary type, or a single string and a location (integer)
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        self.blocks[coords[0]][coords[1]][coords[2]].set_bounds(bounds, loc)
+        
     def __set_block_coords(self):
         "Adjust corners of each block to match neighbors"
         for i in range(self.nblocks[0]):
@@ -338,7 +362,15 @@ class domain(object):
         "Returns number of interfaces"
         return self.nifaces
 
-    def set_iftype(self, iftype, index):
+    def get_iftype(self, index = None):
+        "Returns interface type of given index, if none provided returns full list"
+        if index is None:
+            return self.iftype
+        else:
+            assert index >= 0 and index < self.nifaces, "Index out of range"
+            return self.iftype[index]
+
+    def set_iftype(self, index, iftype):
         "Sets iftype of interface index"
         assert index >=0 and index < self.nifaces, "Index not in range"
         assert (iftype == "locked" or iftype == "frictionless" or iftype == "slipweak")
@@ -362,28 +394,27 @@ class domain(object):
         assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
         return self.interfaces[index].get_nloads()
 
-    def add_load(self, newload, index):
+    def add_load(self, newload, index = None):
         "Adds load to interface with index (either integer index or iterable)"
-        try:
-            for i in index:
-                assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
-                self.interfaces[i].add_load(newload)
-        except:
-            assert index is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
-            self.interfaces[index].add_load(newload)
+        if index is None:
+            for iface in self.interfaces:
+                try:
+                    iface.add_load(newload)
+                except NotImplementedError:
+                    print("skipping non-frictional interface")
+        else:
+            try:
+                for i in index:
+                    assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+                    self.interfaces[i].add_load(newload)
+            except:
+                assert index is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
+                self.interfaces[index].add_load(newload)
 
     def get_direction(self, index):
         "Returns direction of interface index"
         assert index >= 0 and index < self.nifaces, "Index out of range"
         return self.interfaces[index].get_direction()
-
-    def get_iftype(self, index = None):
-        "Returns interface type of given index, if none provided returns full list"
-        if index is None:
-            return self.iftype
-        else:
-            assert index >= 0 and index < self.nifaces, "Index out of range"
-            return self.iftype[index]
 
     def get_bm(self, index):
         "Returns block in minus direction of interface index"
@@ -419,7 +450,10 @@ class domain(object):
         "Sets slip weakening distance of interface index, if no index provided does so for all interfaces"
         if index is None:
             for iface in self.interfaces:
-                iface.set_dc(dc)
+                try:
+                    iface.set_dc(dc)
+                except NotImplementedError:
+                    print("Skipping non slip-weakening interface")
         else:
             assert index >= 0 and index < self.nifaces, "Index out of range"
             self.interfaces[index].set_dc(dc)
@@ -428,7 +462,10 @@ class domain(object):
         "Sets static friction coefficient of interface index, if no index provided does so for all interfaces"
         if index is None:
             for iface in self.interfaces:
-                iface.set_mus(mus)
+                try:
+                    iface.set_mus(mus)
+                except NotImplementedError:
+                    print("Skipping non slip-weakening interface")
         else:
             assert index >= 0 and index < self.nifaces, "Index out of range"
             self.interfaces[index].set_mus(mus)
@@ -437,19 +474,25 @@ class domain(object):
         "Sets dynamic friction coefficient of interface index, if no index provided does so for all interfaces"
         if index is None:
             for iface in self.interfaces:
-                iface.set_mud(mud)
+                try:
+                    iface.set_mud(mud)
+                except NotImplementedError:
+                    print("Skipping non slip-weakening interface")
         else:
             assert index >= 0 and index < self.nifaces, "Index out of range"
             self.interfaces[index].set_mud(mud)
 
-    def set_params(self, params, index = None):
+    def set_params(self, dc, mus, mud, index = None):
         "Sets friction parameters of interface index, if no index provided does so for all interfaces"
         if index is None:
             for iface in self.interfaces:
-                iface.set_params(params)
+                try:
+                    iface.set_params(dc, mus, mud)
+                except NotImplementedError:
+                    print("Skipping non slip-weakening interface")
         else:
             assert index >= 0 and index < self.nifaces, "Index out of range"
-            self.interfaces[index].set_params(params)
+            self.interfaces[index].set_params(dc, mus, mud)
 
     def write_input(self, f):
         "Writes domain information to input file"

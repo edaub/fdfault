@@ -86,9 +86,10 @@ class block(object):
         "sets lower left coordinate"
         assert len(xm) == 3 or (self.ndim == 2 and len(xm) == 2), "xm must be a list or tuple of length 3 of floats"
 
-        self.xm = (float(xm[0]), float(xm[1]), float(xm[2]))
         if self.ndim == 2:
             self.xm = (float(xm[0]), float(xm[1]), 0.)
+        else:
+            self.xm = (float(xm[0]), float(xm[1]), float(xm[2]))
 
     def get_lx(self):
         "Returns block lengths"
@@ -117,14 +118,25 @@ class block(object):
         if self.ndim == 2:
             self.coords = (int(coords[0]), int(coords[1]), 0)
 
-    def get_bounds(self):
-        "Returns boundary types"
-        return self.bounds
+    def get_bounds(self, loc = None):
+        """
+        Returns boundary types, if location provided returns specific location, otherwise returns list
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        if loc is None:
+            return self.bounds
+        elif loc >= 0 and loc < 2*self.ndim:
+            return self.bounds[loc]
+        else:
+            raise TypeError, "loc must be None or an integer location"
 
-    def set_bounds(self,bounds, loc = None):
+    def set_bounds(self, bounds, loc = None):
         """
         Sets boundary types
         Can either provide a list of strings specifying boundary type, or a single string and a location (integer)
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
         """
         if loc is None:
             assert len(bounds) == 2*self.ndim, "Must give 2*ndim boundary types"
@@ -132,7 +144,7 @@ class block(object):
                 assert (bounds[i] == "none") or (bounds[i] == "absorbing") or (bounds[i] == "free") or (bounds[i] == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
             self.bounds = bounds
         elif loc >=0 and loc < 2*self.ndim:
-            assert (bounds[i] == "none") or (bounds[i] == "absorbing") or (bounds[i] == "free") or (bounds[i] == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
+            assert (bounds == "none") or (bounds == "absorbing") or (bounds == "free") or (bounds == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
             self.bounds[loc] = bounds
         else:
             raise TypeError, "loc must either be None or an integer location"

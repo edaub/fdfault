@@ -7,13 +7,13 @@ class output(object):
         assert type(name) is str, "output name must be a string"
         assert (field == "vx" or field == "vy" or field == "vz" or field == "sxx" or field == "sxy"
                 or field == "sxz" or field == "syy" or field == "syz" or field == "szz" or field == "Ux"
-                or field == "Uy" of field == "Uz" or field == "Vx" or field == "Vy" or field == "Vz"
+                or field == "Uy" or field == "Uz" or field == "Vx" or field == "Vy" or field == "Vz"
                 or field == "U" or field == "V"), "Incorrect field name"
         assert (tm >= 0 and tp >= 0 and tp >= tm and ts > 0), "bad time limits"
         assert (xm >= 0 and xp >= 0 and xp >= xm and xs > 0), "bad x limits"
         assert (ym >= 0 and yp >= 0 and yp >= ym and ys > 0), "bad y limits"
         assert (zm >= 0 and zp >= 0 and zp >= zm and zs > 0), "bad z limits"
-        if (field == "Ux"or field == "Uy" of field == "Uz" or field == "Vx" or field == "Vy" or field == "Vz"
+        if (field == "Ux"or field == "Uy" or field == "Uz" or field == "Vx" or field == "Vy" or field == "Vz"
                 or field == "U" or field == "V"):
             assert (xm == xp or ym == yp or zm == zp), "Interface output must be a 2D slice"
         
