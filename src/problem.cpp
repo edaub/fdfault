@@ -62,7 +62,7 @@ problem::problem(const char* filename) {
     
     // create output list
 	
-	out = new outputlist(filename, name, datadir, nt, *d);
+    out = new outputlist(filename, name, datadir, nt, *d);
     
 }
 
@@ -70,7 +70,7 @@ problem::~problem() {
     // destructor, deallocates memory
     delete rk;
     delete d;
-	delete out;
+    delete out;
 }
 
 void problem::set_time_step() {
@@ -134,12 +134,12 @@ void problem::solve() {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-            d->do_rk_stage(dt,stage,(double)i*nt,*rk);
+	    d->do_rk_stage(dt,stage,(double)i*nt,*rk);
         }
         
         // output data
         
-        out->write_list(i, dt, *d);
+	out->write_list(i, dt, *d);
 
         // update status
         
