@@ -6,11 +6,12 @@
 #include "cartesian.hpp"
 #include "domain.hpp"
 #include "outputunit.hpp"
+#include "utilities.h"
 #include <mpi.h>
 
 using namespace std;
 
-outputunit::outputunit(const string probname, const string datadir, const int tm_in, const int tp_in, const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
+outputunit::outputunit(const string probname, const string datadir, const int nt, const int tm_in, const int tp_in, const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
                        const string field_in, const string name, const domain& d) {
     // constructor
     
@@ -198,9 +199,19 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
     
     // set time limits
     
-    tm = tm_in;
-    tp = tp_in;
+    if (tm_in < 0) {
+        tm = 0;
+    } else {
+        tm = tm_in;
+    }
+    if (tp_in > nt-1) {
+        tp = nt-1;
+    } else {
+        tp = tp_in;
+    }
+    tp = tp-(tp-tm)%ts_in;
     ts = ts_in;
+    int ntout = (tp-tm)/ts+1;
     
     // set global spatial limits
     
@@ -526,13 +537,14 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
         
         MPI_File_set_view(outfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
         
-        // write position data to file if more than on spatial point
+        // write position data to file
         
         string xyzstr[3] = {"x", "y", "z"};
         
         for (int i=0; i<3; i++) {
-        
-            if (nx[i] > 1) {
+            
+            if (i < ndim) {
+                
                 filename = new char [(datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1];
                 strcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str());
                 
@@ -579,7 +591,7 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
         
     }
     
-    // if master, open file for time output
+    // if master, open files for time output, matlab, and python
     
     if (id == 0) {
         master = true;
@@ -597,6 +609,45 @@ outputunit::outputunit(const string probname, const string datadir, const int tm
             cerr << "Error opening file in outputunit.cpp\n";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
+        
+        char endian = get_endian();
+        
+        ofstream matlabfile((datadir+probname+"_"+name+".m").c_str(), ios::out);
+        
+        if (matlabfile.is_open()) {
+            if (endian == '<') {
+                matlabfile << "endian = " << "'l';\n";
+            } else if (endian == '>') {
+                matlabfile << "endian = " << "'b';\n";
+            } else {
+                matlabfile << "endian = " << "'n';\n";
+            }
+            matlabfile << "field = '" << field_in << "';\n";
+            matlabfile << "nt = " << ntout << ";\n";
+            matlabfile << "nx = " << nx[0] << ";\n";
+            matlabfile << "ny = " << nx[1] << ";\n";
+            matlabfile << "nz = " << nx[2] << ";\n";
+        } else {
+            cerr << "Error writing parameters to matlab file\n";
+            MPI_Abort(MPI_COMM_WORLD, -1);
+        }
+        matlabfile.close();
+        
+        ofstream pyfile((datadir+probname+"_"+name+".py").c_str(), ios::out);
+        if (pyfile.is_open()) {
+            pyfile << "endian = '" << endian << "'\n";
+            pyfile << "field = '" << field_in << "';\n";
+            pyfile << "nt = " << ntout << "\n";
+            pyfile << "nx = " << nx[0] << "\n";
+            pyfile << "ny = " << nx[1] << "\n";
+            pyfile << "nz = " << nx[2] << "\n";
+        }
+        else {
+            cerr << "Error writing parameters to python file\n";
+            MPI_Abort(MPI_COMM_WORLD, -1);
+        }
+        pyfile.close();
+
         
     }
     

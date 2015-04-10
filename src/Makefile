@@ -5,10 +5,10 @@ LFLAGS=
 EFLAGS=-O3
 EXEC=../fdfault.exe
 
-fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
+fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o utilities.o
 	$(CC) $(EFLAGS) $(LFLAGS) $(IFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
 		fd.o fields.o friction.o interface.o load.o main.o material.o \
-		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o
+		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o utilities.o
 
 block.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fd.hpp material.hpp surface.hpp block.cpp
 	$(CC) $(CFLAGS) block.cpp
@@ -49,7 +49,7 @@ material.o : material.hpp material.cpp
 outputlist.o : outputlist.hpp outputunit.hpp outputlist.cpp
 	$(CC) $(CFLAGS) outputlist.cpp
 
-outputunit.o : outputunit.hpp outputunit.cpp
+outputunit.o : outputunit.hpp utilities.h outputunit.cpp
 	$(CC) $(CFLAGS) outputunit.cpp
 
 problem.o : domain.hpp outputlist.hpp problem.hpp rk.hpp problem.cpp
@@ -63,3 +63,6 @@ slipweak.o : block.hpp cartesian.hpp fd.hpp fields.hpp friction.hpp interface.hp
 
 surface.o : coord.hpp surface.hpp surface.cpp
 	$(CC) $(CFLAGS) surface.cpp
+
+utilities.o : utilities.h utilities.cpp
+	$(CC) $(CFLAGS) utilities.cpp

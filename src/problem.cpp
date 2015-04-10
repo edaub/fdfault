@@ -62,7 +62,7 @@ problem::problem(const char* filename) {
     
     // create output list
 	
-	out = new outputlist(filename, name, datadir, *d);
+	out = new outputlist(filename, name, datadir, nt, *d);
     
 }
 

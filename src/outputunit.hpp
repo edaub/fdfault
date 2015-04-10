@@ -8,7 +8,7 @@
 class outputunit
 {
 public:
-    outputunit(const std::string probname, const std::string datadir, const int tm_in, const int tp_in,
+    outputunit(const std::string probname, const std::string datadir, const int nt, const int tm_in, const int tp_in,
                const int ts_in, const int xm_in[3], const int xp_in[3], const int xs_in[3],
                std::string field_in, std::string name, const domain& d);
     outputunit* get_next_unit() const ;

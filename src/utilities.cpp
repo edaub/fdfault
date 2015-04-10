@@ -17,8 +17,8 @@ char get_endian() {
 	else if (bigint.c[0] == 4 && bigint.c[1] == 3 && bigint.c[2] == 2 && bigint.c[3] == 1) {
 		endian = '<';
 	} else {
-		cout << "Endian test failed, setting to little by default\n";
-		endian = '<';
+		cout << "Endian test failed, setting to native\n";
+		endian = '=';
 	}
     
 	return endian;
