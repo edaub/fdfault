@@ -233,6 +233,83 @@ class load(object):
         self.s2 = float(s2)
         self.s3 = float(s3)
 
+    def get_type(self):
+        "returns load type"
+        return self.loadtype
+
+    def set_type(self,loadtype):
+        "sets load type"
+        assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
+                or loadtype == "boxcar"), "Load must be constant, gaussian, ellipse, or boxcar"
+        self.loadtype = loadtype
+
+    def get_t0(self):
+        "returns onset time"
+        return self.t0
+
+    def set_t0(self, t0):
+        "sets onset time"
+        assert t0 >= 0., "t0 must be nonnegative"
+        self.t0 = float(t0)
+
+    def get_x0(self):
+        "returns perturbation location in first interface coordinate"
+        return self.x0
+
+    def get_y0(self):
+        "returns perturbation location in second interface coordinate"
+        return self.y0
+
+    def set_x0(self, x0):
+        "sets first coordinate of perturbation location"
+        self.x0 = float(x0)
+
+    def set_y0(self, y0):
+        "sets second coordinate of perturbation location"
+        self.y0 = float(y0)
+
+    def get_dx(self):
+        "returns perturbation width in first interface coordinate"
+        return self.dx
+
+    def get_dy(self):
+        "returns perturbation width in second interface coordinate"
+        return self.dy
+
+    def set_dx(self, dx):
+        "sets first coordinate width of perturbation"
+        assert dx >= 0., "dx must be nonnegative"
+        self.dx = float(dx)
+
+    def set_dy(self, dy):
+        "sets second coordinate width of perturbation"
+        assert dy >= 0., "dy must be nonnegative"
+        self.dy = float(dy)
+
+    def get_sn(self):
+        "returns normal stress perturbation"
+        return self.sn
+
+    def set_sn(self, sn):
+        "sets normal stress perturbation"
+        self.sn = float(sn)
+
+    def get_s2(self):
+        "returns horizontal shear stress perturbation"
+        return self.s2
+
+    def set_s2(self, s2):
+        "sets horizontal shear stress perturbation"
+        self.s2 = float(s2)
+
+    def get_s3(self):
+        "returns vertical shear stress perturbation"
+        return self.s3
+
+    def set_s3(self, s3):
+        "sets vertical shear stress perturbation"
+        self.s3 = float(s3)
+
     def write_input(self, f):
         "Writes loads to input file"
         f.write(self.loadtype+" "+str(self.t0)+" "+str(self.x0)+" "+str(self.dx)+" "+str(self.y0)+
