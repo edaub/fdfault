@@ -69,7 +69,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         for (int i=0; i<nifaces; i++) {
             direction = d.interfaces[i]->direction;
             if (direction == 0) {
-                if ((xm_in[0] == d.interfaces[i]->xm[0] || xm_in[0] == d.interfaces[i]->xm[0]-1 || xm_in[0] == d.interfaces[i]->xm[0]+1) && (xm_in[1] >= d.interfaces[i]->xm[1]) &&
+                if ((xm_in[0] == d.interfaces[i]->xm[0] || xm_in[0] == d.interfaces[i]->xm[0]-1) && (xm_in[1] >= d.interfaces[i]->xm[1]) &&
                     (xm_in[1] < d.interfaces[i]->xp[1]) && (xm_in[2] >= d.interfaces[i]->xm[2]) &&
                     (xm_in[2] <= d.interfaces[i]->xp[2])) {
                     location = i;

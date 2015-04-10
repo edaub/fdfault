@@ -90,9 +90,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     
     is_friction = false;
     
-    // if this interface is contained in this process, proceed
-    
-    if (no_data) { return; }
     
     // set number of grid points
     // note do not need to reference ghost cells here as boundary conditions are imposed
@@ -116,6 +113,36 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             xp[0] = b2->get_xm(0);
             xp[1] = b2->get_xp(1);
             xp[2] = b2->get_xp(2);
+            break;
+        case 1:
+            // first index is x, second is z
+            assert(b1->get_nx(0) == b2->get_nx(0));
+            assert(b1->get_nx(2) == b2->get_nx(2));
+            n[0] = b1->get_nx(0);
+            n[1] = b2->get_nx(2);
+            xp[0] = b2->get_xp(0);
+            xp[1] = b2->get_xm(1);
+            xp[2] = b2->get_xp(2);
+            break;
+        case 2:
+            // first index is x, second is y
+            assert(b1->get_nx(0) == b2->get_nx(0));
+            assert(b1->get_nx(1) == b2->get_nx(1));
+            n[0] = b1->get_nx(0);
+            n[1] = b2->get_nx(1);
+            xp[0] = b2->get_xp(0);
+            xp[1] = b2->get_xp(1);
+            xp[2] = b2->get_xm(2);
+            break;
+    }
+    
+    // if this interface is contained in this process, proceed
+    
+    if (no_data) { return; }
+    
+    switch (direction) {
+        case 0:
+            // first index is y, second is z
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -174,13 +201,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             break;
         case 1:
             // first index is x, second is z
-            assert(b1->get_nx(0) == b2->get_nx(0));
-            assert(b1->get_nx(2) == b2->get_nx(2));
-            n[0] = b1->get_nx(0);
-            n[1] = b2->get_nx(2);
-            xp[0] = b2->get_xp(0);
-            xp[1] = b2->get_xm(1);
-            xp[2] = b2->get_xp(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
@@ -239,13 +259,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             break;
         case 2:
             // first index is x, second is y
-            assert(b1->get_nx(0) == b2->get_nx(0));
-            assert(b1->get_nx(1) == b2->get_nx(1));
-            n[0] = b1->get_nx(0);
-            n[1] = b2->get_nx(1);
-            xp[0] = b2->get_xp(0);
-            xp[1] = b2->get_xp(1);
-            xp[2] = b2->get_xm(2);
             if ((b1->get_nx_loc(direction) != 0 && b1->get_xp(direction) == b1->get_xp_loc(direction)) &&
                 (b2->get_nx_loc(direction) != 0 && b2->get_xm(direction) == b2->get_xm_loc(direction))) {
                 // both block data are meaningful
