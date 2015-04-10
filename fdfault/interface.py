@@ -215,7 +215,7 @@ class slipweak(friction):
 
 class load(object):
     "Class representing load perturbations to fricitonal interfaces"
-    def __init__(self, loadtype, t0, x0, dx, y0, dy, sn, s2, s3):
+    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., sn = 0., s2 = 0., s3 =0.):
         "Initialize interface load perturbation"
         assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
                 or loadtype == "boxcar"), "Load must be constant, gaussian, ellipse, or boxcar"

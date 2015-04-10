@@ -1,7 +1,7 @@
 [fdfault.problem]
 hpctest
 data/
-100
+800
 0
 0
 0.3
@@ -57,9 +57,11 @@ x
 none
 
 [fdfault.friction]
-2
+4
 constant 0. 0. 0.125 0. 1. -120. 70. 0.
-boxcar 0. 10. 1.5 0. 1. 0. 11.6 0. 
+boxcar 0. 16. 1.5 0. 1. 0. 11.6 0.
+boxcar 0. 0. 4. 0. 1. -10000. 0. 0.
+boxcar 0. 32. 4. 0. 1. -10000. 0. 0.
 
 [fdfault.slipweak]
 0.4
