@@ -198,9 +198,9 @@ class slipweak(friction):
         friction.write_input(self,f)
 
         f.write("[fdfault.slipweak]\n")
-        f.write(str(dc)+"\n")
-        f.write(str(mus)+"\n")
-        f.write(str(mud)+"\n")
+        f.write(str(self.dc)+"\n")
+        f.write(str(self.mus)+"\n")
+        f.write(str(self.mud)+"\n")
 
         f.write("\n")
 
