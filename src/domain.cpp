@@ -141,7 +141,7 @@ domain::~domain() {
     
     deallocate_blocks();
     
-//    deallocate_interfaces();
+    deallocate_interfaces();
     
     delete fd;
 	
@@ -243,7 +243,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);
         // update interfaces
-	interfaces[i]->update(rk.get_B(stage));
+        interfaces[i]->update(rk.get_B(stage));
     }
     
     // update fields
@@ -256,11 +256,16 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
 
 }
 
-void domain::write_fields() {
+void domain::write_fields() const {
     f->write_fields();
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->write_fields();
     }
+}
+
+void domain::free_exchange() {
+    // frees MPI datatypes for ghost cell exchange
+    f->free_exchange();
 }
 
 void domain::allocate_blocks(const char* filename, int** nx_block, int** xm_block) {

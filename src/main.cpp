@@ -8,7 +8,6 @@ using namespace std;
 int main(int argc, char* argv[]) {
 	
     int np, id, rc;
-	MPI_Status stat;
     time_t rawtime;
     struct tm* timeinfo;
 

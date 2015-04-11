@@ -134,12 +134,12 @@ void problem::solve() {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-	    d->do_rk_stage(dt,stage,(double)i*nt,*rk);
+            d->do_rk_stage(dt,stage,(double)i*nt,*rk);
         }
         
         // output data
         
-	out->write_list(i, dt, *d);
+        out->write_list(i, dt, *d);
 
         // update status
         
@@ -154,5 +154,9 @@ void problem::solve() {
     // close output files
     
     out->close_list();
+    
+    // free MPI data types for boundary exchange
+    
+    d->free_exchange();
     
 }

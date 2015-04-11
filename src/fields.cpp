@@ -412,4 +412,16 @@ void fields::exchange_grid() {
     MPI_Type_free(&gridslicep[2]);
     
 }
+
+void fields::free_exchange() {
+    // free MPI Types for ghost cell exchange
+    
+    MPI_Type_free(&slicem[0]);
+    MPI_Type_free(&slicem[1]);
+    MPI_Type_free(&slicem[2]);
+    MPI_Type_free(&slicep[0]);
+    MPI_Type_free(&slicep[1]);
+    MPI_Type_free(&slicep[2]);
+    
+}
 	

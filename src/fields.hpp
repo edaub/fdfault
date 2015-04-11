@@ -20,6 +20,7 @@ public:
     void update(const double B);
 	void exchange_neighbors();
 	void write_fields() const;
+    void free_exchange();
 private:
 	int ndim;
 	int nfields;
