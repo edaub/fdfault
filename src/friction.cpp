@@ -308,7 +308,9 @@ boundchar friction::solve_fs(const double phi, const double eta, const double sn
 void friction::scale_df(const double A) {
     // scale df for state variables by rk constant A
     
-    /*for (int i=0; i<ndim-1; i++) {
+    if (no_data) {return;}
+    
+    for (int i=0; i<ndim-1; i++) {
         for (int j=0; j<n_loc[0]; j++) {
             for (int k=0; k<n_loc[1]; k++) {
                 dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] *= A;
@@ -320,18 +322,16 @@ void friction::scale_df(const double A) {
         for (int j=0; j<n_loc[1]; j++) {
             du[i*n_loc[1]+j] *= A;
         }
-	}*/
+	}
     
 }
 
 void friction::calc_df(const double dt) {
     // calculate df for state variables for rk time step
     
+    if (no_data) {return;}
     
-    int id;
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
-    /*for (int i=0; i<ndim-1; i++) {
+    for (int i=0; i<ndim-1; i++) {
         for (int j=0; j<n_loc[0]; j++) {
             for (int k=0; k<n_loc[1]; k++) {
                 dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += dt*vx[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
@@ -343,14 +343,16 @@ void friction::calc_df(const double dt) {
         for (int j=0; j<n_loc[1]; j++) {
             du[i*n_loc[1]+j] += dt*v[i*n_loc[1]+j];
         }
-	}*/
+	}
     
 }
 
 void friction::update(const double B) {
     // updates state variables
     
-  /*    for (int i=0; i<ndim-1; i++) {
+    if (no_data) {return;}
+    
+    for (int i=0; i<ndim-1; i++) {
         for (int j=0; j<n_loc[0]; j++) {
             for (int k=0; k<n_loc[1]; k++) {
                 ux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += B*dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
@@ -362,7 +364,7 @@ void friction::update(const double B) {
         for (int j=0; j<n_loc[1]; j++) {
             u[i*n_loc[1]+j] += B*du[i*n_loc[1]+j];
         }
-	}*/
+	}
     
 }
 
