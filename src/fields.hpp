@@ -18,11 +18,19 @@ public:
 	~fields();
     void scale_df(const double A);
     void update(const double B);
+    void set_stress();
+    void remove_stress();
 	void exchange_neighbors();
 	void write_fields() const;
     void free_exchange();
 private:
 	int ndim;
+    int mode;
+    std::string material;
+    int nv;
+    int ns;
+    int nxyz;
+    int index[6];
 	int nfields;
 	int nfieldsp;
     int ndataf;
@@ -39,6 +47,7 @@ private:
 	int shiftm_source_index[3];
 	int shiftm_dest_index[3];
 	coord c;
+    double s0[6];
 	double* f;
 	double* df;
     double* x;

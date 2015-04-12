@@ -326,6 +326,8 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     cs2 = b2->get_cs();
     zp2 = b2->get_zp();
     zs2 = b2->get_zs();
+    gamma1 = 1.-2.*pow(cs1/cp2,2);
+    gamma2 = 1.-2.*pow(cs2/cp2,2);
     
     // create surface for interface
     
@@ -662,21 +664,21 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 b_rot1.v1 -= iffhat.v11;
                 b_rot1.v2 = 0.;
                 b_rot1.v3 = 0.;
+                b_rot1.s22 = gamma1*(b_rot1.s11-iffhat.s11);
+                b_rot1.s33 = gamma1*(b_rot1.s11-iffhat.s11);
                 b_rot1.s11 -= iffhat.s11;
                 b_rot1.s12 = 0.;
                 b_rot1.s13 = 0.;
-                b_rot1.s22 = 0.;
                 b_rot1.s23 = 0.;
-                b_rot1.s33 = 0.;
                 b_rot2.v1 -= iffhat.v21;
                 b_rot2.v2 = 0.;
                 b_rot2.v3 = 0.;
+                b_rot2.s22 = gamma2*(b_rot2.s11-iffhat.s21);
+                b_rot2.s33 = gamma2*(b_rot2.s11-iffhat.s21);
                 b_rot2.s11 -= iffhat.s21;
                 b_rot2.s12 = 0.;
                 b_rot2.s13 = 0.;
-                b_rot2.s22 = 0.;
                 b_rot2.s23 = 0.;
-                b_rot2.s33 = 0.;
                 
                 b1 = rotate_nt_xy(b_rot1,nn,t1,t2);
                 b2 = rotate_nt_xy(b_rot2,nn,t1,t2);

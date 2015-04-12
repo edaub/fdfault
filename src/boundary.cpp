@@ -130,6 +130,7 @@ boundary::boundary(const int ndim_in, const int mode_in, const int location_in, 
     cs = m.get_cs();
     zp = m.get_zp();
     zs = m.get_zs();
+    gamma = 1.-2.*pow(cs/cp,2);
         
     // set reflection coefficient
         
@@ -332,7 +333,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 
                 b_rot = rotate_xy_nt(b,nn,t1,t2);
                 
-                // save rotate fields in b_rots for s waves
+                // save rotated fields in b_rots for s waves
                 
                 b_rots = b_rot;
         
@@ -360,12 +361,12 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 b_rot.v1 -= bhatp.v;
                 b_rot.v2 = 0.;
                 b_rot.v3 = 0.;
+                b_rot.s22 = gamma*(b_rot.s11-bhatp.s);
+                b_rot.s33 = gamma*(b_rot.s11-bhatp.s);
                 b_rot.s11 -= bhatp.s;
                 b_rot.s12 = 0.;
                 b_rot.s13 = 0.;
-                b_rot.s22 = 0.;
                 b_rot.s23 = 0.;
-                b_rot.s33 = 0.;
                     
                 b = rotate_nt_xy(b_rot,nn,t1,t2);
         

@@ -115,10 +115,6 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     }
     paramfile.close();
     
-    nloads = 2;
-    
-    loads = new load* [nloads];
-    
     double x_2d[2], l_2d[2];
     int xm_2d[2], xm_loc2d[2];
     
@@ -153,6 +149,8 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
             xm_loc2d[0] = xm_loc[0];
             xm_loc2d[1] = xm_loc[1];
     }
+    
+    loads = new load* [nloads];
     
     for (int i=0; i<nloads; i++) {
         loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], sn[i], s2[i], s3[i], n, xm_2d, xm_loc2d, x_2d, l_2d);

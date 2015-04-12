@@ -10,14 +10,11 @@
 
 using namespace std;
 
-fields::fields(const char* filename, const int ndim_in, const int mode, const cartesian& cart) {
+fields::fields(const char* filename, const int ndim_in, const int mode_in, const cartesian& cart) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in ==3);
-    assert(mode == 2 || mode == 3);
-    
-    double s[6];
-    string material;
+    assert(mode_in == 2 || mode_in == 3);
     
     // read from input file
     
@@ -36,26 +33,9 @@ fields::fields(const char* filename, const int ndim_in, const int mode, const ca
         } else {
             // read problem variables
             paramfile >> material;
-            switch (ndim_in) {
-                case 3:
-                    for (int i=0; i<6; i++) {
-                        paramfile >> s[i];
-                    }
-                    break;
-                case 2:
-                    switch (mode) {
-                        case 2:
-                            for (int i=0; i<3; i++) {
-                                paramfile >> s[i];
-                            }
-                            break;
-                        case 3:
-                            for (int i=0; i<2; i++) {
-                                paramfile >> s[i];
-                            }
-                    }
+            for (int i=0; i<6; i++) {
+                paramfile >> s0[i];
             }
-            
         }
     } else {
         cerr << "Error opening input file in fields.cpp\n";
@@ -66,6 +46,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode, const ca
     assert(material == "elastic" || material == "plastic");
     
     ndim = ndim_in;
+    mode = mode_in;
     
     if (ndim == 3) {
         nfields = 9;
@@ -79,6 +60,9 @@ fields::fields(const char* filename, const int ndim_in, const int mode, const ca
 		nfieldsp = 0;
 	} else {
         nfieldsp = 2;
+        if (ndim == 2 && mode == 2) {
+            nfields = 6;
+        }
     }
     
     for (int i=0; i<ndim; i++) {
@@ -102,14 +86,53 @@ fields::fields(const char* filename, const int ndim_in, const int mode, const ca
     x = new double [ndatax];
     metric = new double [ndatametric];
     jac = new double [ndatajac];
+    
+    // set fields to zero
+    
+    for (int i=0; i<ndataf; i++) {
+        f[i] = 0.;
+    }
+    
+    // set up information on stress for calculating absolute stress
+    
+    switch (ndim) {
+        case 3:
+            ns = 6;
+            nv = 3;
+            index[0] = 0;
+            index[1] = 1;
+            index[2] = 2;
+            index[3] = 3;
+            index[4] = 4;
+            index[5] = 5;
+            break;
+        case 2:
+            switch (mode) {
+                case 2:
+                    ns = 3;
+                    index[0] = 0;
+                    index[1] = 1;
+                    index[2] = 3;
+                    if (material == "plastic") {
+                        ns = 4;
+                        index[3] = 5;
+                    }
+                    nv = 2;
+                    break;
+                case 3:
+                    ns = 2;
+                    nv = 1;
+                    index[0] = 2;
+                    index[1] = 4;
+            }
+    }
+    
+    nxyz = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
 	
 	// initialize MPI datatypes for exchanging with neighbors
 	
 	init_exchange(cart);
 	
-	// initialize fields
-	
-	init_fields(mode, s);
 }
 
 fields::~fields() {
@@ -122,36 +145,26 @@ fields::~fields() {
 	
 }
 
-void fields::init_fields(const int mode, const double s[6]) {
+void fields::set_stress() {
 	// initialize fields to constant initial stress state
-    
-    int nv, ns, nxyz;
-    
-    switch (ndim) {
-        case 3:
-            ns = 6;
-            nv = 3;
-            break;
-        case 2:
-            switch (mode) {
-                case 2:
-                    ns = 3;
-                    nv = 2;
-                    break;
-                case 3:
-                    ns = 2;
-                    nv = 1;
-            }
-    }
-    
-    nxyz = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
     
 	for (int i=0; i<ns; i++) {
         for (int j=0; j<nxyz; j++) {
-            f[(nv+i)*nxyz+j] = s[i];
+            f[(nv+i)*nxyz+j] += s0[index[i]];
         }
 	}
 		
+}
+
+void fields::remove_stress() {
+    // initialize fields to constant initial stress state
+    
+    for (int i=0; i<ns; i++) {
+        for (int j=0; j<nxyz; j++) {
+            f[(nv+i)*nxyz+j] -= s0[index[i]];
+        }
+    }
+    
 }
 
 void fields::init_exchange(const cartesian& cart) {

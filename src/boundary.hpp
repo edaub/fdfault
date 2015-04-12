@@ -43,6 +43,7 @@ private:
     double cs;
     double zp;
     double zs;
+    double gamma;
     double*** nx;
     double** dl;
     double r;

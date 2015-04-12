@@ -9,14 +9,8 @@ class fields(object):
         self.ndim = ndim
         self.mode = mode
         self.material = "elastic"
-        if self.ndim == 3:
-            self.s = [0., 0., 0., 0., 0., 0.]
-        else:
-            if (self.mode == 2):
-                self.s = [0., 0., 0.]
-            else:
-                self.s = [0., 0.]
-
+        self.s = [0., 0., 0., 0., 0., 0.]
+        
     def get_material(self):
         "Returns material type"
         return self.material
@@ -32,13 +26,7 @@ class fields(object):
 
     def set_stress(self,s):
         "Sets uniform intial stress"
-        if (self.ndim == 3):
-            assert len(s) == 6, "For 3D problems, initial stress has 6 components"
-        else:
-            if (self.mode == 2):
-                assert len(s) == 3, "For mode 2 problems, initial stress has 3 components"
-            else:
-                assert(len(s) == 2), "For mode 3 problems, initial stress has 2 components"
+        assert len(s) == 6, "Initial stress must hav 6 components"
         for sc in s:
             assert (type(sc) is float or type(sc) is int), "Initial stress must be a number"
         self.s = s[:]

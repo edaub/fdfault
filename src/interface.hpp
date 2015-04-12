@@ -22,7 +22,7 @@ public:
     interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
               block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~interface();
-    void apply_bcs(const double dt, const double t, fields&f);
+    void apply_bcs(const double dt, const double t, fields& f);
     virtual void scale_df(const double A);
     virtual void calc_df(const double dt);
     virtual void update(const double B);
@@ -47,6 +47,8 @@ protected:
     double cs2;
     double zp2;
     double zs2;
+    double gamma1;
+    double gamma2;
     double*** nx;
     double** dl1;
     double** dl2;

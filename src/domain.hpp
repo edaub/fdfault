@@ -24,6 +24,8 @@ public:
     void do_rk_stage(const double dt, const int stage, const double t, rk_type& rk);
     void write_fields() const;
     void free_exchange();
+    void set_stress();
+    void remove_stress();
 private:
 	int ndim;
     int mode;

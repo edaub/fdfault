@@ -137,10 +137,14 @@ void problem::solve() {
             d->do_rk_stage(dt,stage,(double)i*nt,*rk);
         }
         
-        // output data
+        // output data (uses absolute stress values)
+        
+        d->set_stress();
         
         out->write_list(i, dt, *d);
 
+        d->remove_stress();
+        
         // update status
         
         if (id == 0 && (i+1)%ninfo == 0) {

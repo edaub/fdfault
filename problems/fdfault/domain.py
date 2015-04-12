@@ -43,28 +43,7 @@ class domain(object):
         s = self.f.get_stress()
         self.f = fields(self.ndim, self.mode)
         self.f.set_material(material)
-        if (self.ndim == 3):
-            if len(s) == 2:
-                news = [0., 0., s[0], 0., s[1], 0.]
-            elif len(s) == 3:
-                news = [s[0], s[1], 0., s[2], 0., 0.]
-            else:
-                news = s
-        elif (self.mode == 2):
-            if len(s) == 6:
-                news = [s[0], s[1], s[3]]
-            elif len(s) == 2:
-                news = [0., 0., 0.]
-            else:
-                news = s
-        else:
-            if len(s) == 6:
-                news = [s[2], s[4]]
-            elif len(s) == 3:
-                news = [0., 0.]
-            else:
-                news = s
-        self.f.set_stress(news)
+        self.f.set_stress(s)
         for b1 in self.blocks:
             for b2 in b1:
                 for b in b2:
@@ -83,12 +62,7 @@ class domain(object):
         s = self.f.get_stress()
         self.f = fields(self.ndim, self.mode)
         self.f.set_material(material)
-        if (self.ndim == 3 or oldmode == self.mode):
-            self.f.set_stress(s)
-        elif self.mode == 2:
-            self.f.set_stress([0., 0., 0.])
-        else:
-            self.f.set_stress([0., 0.])
+        self.f.set_stress(s)
         for b1 in self.blocks:
             for b2 in b1:
                 for b in b2:

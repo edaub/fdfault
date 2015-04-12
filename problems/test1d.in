@@ -57,11 +57,7 @@ x
 none
 
 [fdfault.friction]
-4
-constant 0. 0. 0.125 0. 1. -120. 70. 0.
-boxcar 0. 16. 1.5 0. 1. 0. 11.6 0.
-boxcar 0. 0. 4. 0. 1. -10000. 0. 0.
-boxcar 0. 32. 4. 0. 1. -10000. 0. 0.
+0
 
 [fdfault.slipweak]
 0.4

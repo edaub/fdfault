@@ -238,11 +238,18 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
         interfaces[i]->calc_df(dt);
     }
         
-    // apply interface conditions
+    // apply interface conditions (requires absoute stress)
+    
+    f->set_stress();
     
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);
-        // update interfaces
+    }
+    
+    f->remove_stress();
+    
+    // update interfaces
+    for (int i=0; i<nifaces; i++) {
         interfaces[i]->update(rk.get_B(stage));
     }
     
@@ -266,6 +273,16 @@ void domain::write_fields() const {
 void domain::free_exchange() {
     // frees MPI datatypes for ghost cell exchange
     f->free_exchange();
+}
+
+void domain::set_stress() {
+    // sets absolute stress
+    f->set_stress();
+}
+
+void domain::remove_stress() {
+    // subtracts initial stress
+    f->remove_stress();
 }
 
 void domain::allocate_blocks(const char* filename, int** nx_block, int** xm_block) {
