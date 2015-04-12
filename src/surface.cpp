@@ -14,7 +14,7 @@ surface::surface(const int ndim_in, const coord c, const int direction, const do
 	assert(direction >= 0 && direction < ndim_in);
 	assert(fabs(fabs(normal)-1.) < 1.e-15);
 	
-	int index[2];
+	int index[2],xm_loc[2];
 	
 	if (direction == 0) {
 		index[0] = 1;
@@ -33,8 +33,10 @@ surface::surface(const int ndim_in, const coord c, const int direction, const do
         n[i] = c.get_nx(index[i]);
 		if (local) {
 			n_loc[i] = c.get_nx_loc(index[i]);
+            xm_loc[i] = c.get_xm_loc(index[i]);
 		} else {
 			n_loc[i] = n[i];
+            xm_loc[i] = c.get_xm(index[i]);
 		}
     }
 	
@@ -79,7 +81,7 @@ surface::surface(const int ndim_in, const coord c, const int direction, const do
 	
         for (int i=0; i<n_loc[0]; i++) {
             for (int j=0; j<n_loc[1]; j++) {
-                x[k][i][j] = tmp[c.get_xm_loc(index[0])-c.get_xm(index[0])+i][c.get_xm_loc(index[1])-c.get_xm(index[1])+j];
+                x[k][i][j] = tmp[xm_loc[0]-c.get_xm(index[0])+i][xm_loc[1]-c.get_xm(index[1])+j];
             }
         }
     }
@@ -94,11 +96,11 @@ surface::surface(const int ndim_in, const coord c, const int direction, const do
         
         for (int i=0; i<n_loc[0]; i++) {
             for (int j=0; j<n_loc[1]; j++) {
-                nx[k][i][j] = normal*tmp[c.get_xm_loc(index[0])-c.get_xm(index[0])+i][c.get_xm_loc(index[1])-c.get_xm(index[1])+j];
+                nx[k][i][j] = normal*tmp[xm_loc[0]-c.get_xm(index[0])+i][xm_loc[1]-c.get_xm(index[1])+j];
             }
         }
     }
-
+    
 	surffile.close();
 	
 	// deallocate temporary array

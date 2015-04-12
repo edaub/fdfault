@@ -196,7 +196,7 @@ class domain(object):
                             break
                     if notfound:
                         self.iftype.append("locked")
-                        self.interfaces.append(interface(self.nifaces,"x",(i,j,k),(i+1,j,k)))
+                        self.interfaces.append(interface(self.ndim, self.nifaces,"x",(i,j,k),(i+1,j,k)))
                         self.nifaces += 1
 
     def get_nx_block(self):
@@ -332,6 +332,28 @@ class domain(object):
         for i in range(3):
             assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
         self.blocks[coords[0]][coords[1]][coords[2]].set_bounds(bounds, loc)
+
+    def get_block_surf(self, coords, loc):
+        """
+        Returns blockboundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        return self.blocks[coords[0]][coords[1]][coords[2]].get_surf(loc)
+
+    def set_block_surf(self, coords, loc, surf):
+        """
+        Sets boundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        self.blocks[coords[0]][coords[1]][coords[2]].set_surf(loc, surf)
         
     def __set_block_coords(self):
         "Adjust corners of each block to match neighbors"
@@ -341,22 +363,30 @@ class domain(object):
                     if (i == 0):
                         x0 = 0.
                     else:
-                        x = self.blocks[i-1][j][k].get_xm()
-                        l = self.blocks[i-1][j][k].get_lx()
-                        x0 = x[0]+l[0]
+                        x = self.blocks[i-1][j][k].get_xm()[0]
+                        l = self.blocks[i-1][j][k].get_lx()[0]
+                        x0 = x+l
                     if (j == 0):
                         x1 = 0.
                     else:
-                        x = self.blocks[i][j-1][k].get_xm()
-                        l = self.blocks[i][j-1][k].get_lx()
-                        x1 = x[1]+l[1]
+                        x = self.blocks[i][j-1][k].get_xm()[1]
+                        l = self.blocks[i][j-1][k].get_lx()[1]
+                        x1 = x+l
                     if (k == 0):
                         x2 = 0.
                     else:
-                        x = self.blocks[i][j][k-1].get_xm()
-                        l = self.blocks[i][j][k-1].get_lx()
-                        x2 = x[2]+l[2]
+                        x = self.blocks[i][j][k-1].get_xm()[2]
+                        l = self.blocks[i][j][k-1].get_lx()[2]
+                        x2 = x+l
                     self.blocks[i][j][k].set_xm((x0,x1,x2))
+
+    def get_stress(self):
+        "Returns intial stress values"
+        return self.f.get_stress()
+
+    def set_stress(self,s):
+        "Sets uniform intial stress"
+        self.f.set_stress(s)
 
     def get_nifaces(self):
         "Returns number of interfaces"
@@ -383,11 +413,11 @@ class domain(object):
         bm = self.interfaces[index].get_bm()
         bp = self.interfaces[index].get_bp()
         if iftype == "locked":
-            self.interfaces[index] = interface(index, direction, bm, bp)
+            self.interfaces[index] = interface(self.ndim, index, direction, bm, bp)
         elif iftype == "frictionless":
-            self.interfaces[index] = friction(index, direction, bm, bp)
+            self.interfaces[index] = friction(self.ndim, index, direction, bm, bp)
         else:
-            self.interfaces[index] = slipweak(index,direction,bm,bp)
+            self.interfaces[index] = slipweak(self.ndim, index,direction,bm,bp)
 
     def get_nloads(self, index):
         "Returns number of loads on given interface"
@@ -425,6 +455,16 @@ class domain(object):
         "Returns block in plus direction of interface index"
         assert index >= 0 and index < self.nifaces, "Index out of range"
         return self.interfaces[index].get_bp()
+
+    def get_iface_surf(self,index):
+        "Returns interface surface for given index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        return self.iterfaces[index].get_surf()
+
+    def set_iface_surf(self, index, surf):
+        "Sets interface surface for given index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        self.interfaces[index].set_surface(surf)
 
     def get_dc(self, index):
         "Returns slip weakening distance of interface index"
@@ -494,7 +534,7 @@ class domain(object):
             assert index >= 0 and index < self.nifaces, "Index out of range"
             self.interfaces[index].set_params(dc, mus, mud)
 
-    def write_input(self, f):
+    def write_input(self, f, probname, endian = '='):
         "Writes domain information to input file"
 
         f.write("[fdfault.domain]\n")
@@ -518,10 +558,10 @@ class domain(object):
         for b1 in self.blocks:
             for b2 in b1:
                 for b in b2:
-                    b.write_input(f)
+                    b.write_input(f, probname, endian)
 
         for iface in self.interfaces:
-            iface.write_input(f)
+            iface.write_input(f, probname, endian)
 
     def check(self):
         "Checks domain for errors"
@@ -531,6 +571,53 @@ class domain(object):
             for j in self.nx_block[i]:
                 assert j > 0, "Number of grid points in each block must be positive"
             assert sum(self.nx_block[i]) == self.nx[i], "Number of grid points in blocks must equal nx"
+
+        for i in range(self.nblocks[0]):
+            for j in range(self.nblocks[1]):
+                for k in range(self.nblocks[2]):
+                    self.blocks[i][j][k].check()
+                    if (i != 0):
+                        s1 = self.blocks[i-1][j][k].get_surf(1)
+                        s2 = self.blocks[i][j][k].get_surf(0)
+                        if (s1 is None or s2 is None):
+                            assert(self.blocks[i-1][j][k].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
+                            assert(self.blocks[i-1][j][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
+                        else:
+                            assert s1 == s2, "block edges do not match"
+                    if (j != 0):
+                        s1 = self.blocks[i][j-1][k].get_surf(3)
+                        s2 = self.blocks[i][j][k].get_surf(2)
+                        if (s1 is None or s2 is None):
+                            assert(self.blocks[i][j-1][k].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
+                            assert(self.blocks[i][j-1][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
+                        else:
+                            assert s1 == s2, "block edges do not match"
+                    if (k != 0):
+                        s1 = self.blocks[i][j][k-1].get_surf(5)
+                        s2 = self.blocks[i][j][k].get_surf(4)
+                        if (s1 is None or s2 is None):
+                            assert(self.blocks[i][j][k-1].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
+                            assert(self.blocks[i][j][k-1].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
+                        else:
+                            assert s1 == s2, "block edges do not match"
+
+        for iface in self.interfaces:
+            coordsm = iface.get_bm()
+            if iface.get_direction() == 'x':
+                loc = 1
+            elif iface.get_direction() == 'y':
+                loc = 3
+            else:
+                loc = 5
+            s1 = self.blocks[coordsm[0]][coordsm[1]][coordsm[2]].get_surf(loc)
+            coordsp = iface.get_bp()
+            loc -= 1
+            s2 = self.blocks[coordsp[0]][coordsp[1]][coordsp[2]].get_surf(loc)
+            s3 = iface.get_surface()
+            if (not s1 is None) and (not s3 is None):
+                assert s1 == s3, "interface surface must match surface of blocks"
+            if (not s2 is None) and (not s3 is None):
+                assert s2 == s3, "interface surface must match surface of blocks"
     
     def __str__(self):
         blockstring = ""

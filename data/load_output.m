@@ -3,10 +3,13 @@ function output = load_output(probname, name, datadir)
 % function to load output data from simulation data
 
     if nargin == 2
-        datadir = '';
+        datadir = pwd;
     end
 
+    olddir = pwd;
+    cd datadir;
     eval([probname '_' name]);
+    cd olddir;
 
     output.field = field;
     output.endian = endian;

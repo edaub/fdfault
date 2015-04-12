@@ -90,7 +90,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     
     is_friction = false;
     
-    
     // set number of grid points
     // note do not need to reference ghost cells here as boundary conditions are imposed
     // point by point
@@ -358,7 +357,13 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         }
     }
     
-    surface surf(ndim,c,direction,1., x, l, true);
+    surface* surf;
+    
+    if (surffile == "none") {
+        surf = new surface(ndim,c,direction,1., x, l, true);
+    } else {
+        surf = new surface(ndim,c,direction,1.,surffile,true);
+    }
     
     // allocate memory for arrays for normal vectors and grid spacing
     
@@ -369,7 +374,9 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         dx2[i] = b2->get_dx(i);
     }
     
-    allocate_normals(dx1,dx2,f,surf,fd);
+    allocate_normals(dx1,dx2,f,*surf,fd);
+    
+    delete surf;
 
 }
 

@@ -46,4 +46,4 @@ from .interface import interface, friction, slipweak, load
 from .problem import problem
 from .material import material
 from .output import output
-from .surface import surface
+from .surface import surface, curve

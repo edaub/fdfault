@@ -1,7 +1,9 @@
 from __future__ import division, print_function
 
+from .surface import surface, curve
+
 class interface(object):
-    def __init__(self, index, direction, bm, bp):
+    def __init__(self, ndim, index, direction, bm, bp):
         "Initializes interface given an index, direction, and block coordinates"
         assert index >= 0, "interface index must be nonnegative"
         assert (direction == "x" or direction == "y" or direction == "z"), "Direction must be x, y, or z"
@@ -24,6 +26,7 @@ class interface(object):
             assert int(bp[0]) == int(bm[0]), "blocks must be neighboring to be coupled via an interface"
             assert int(bp[1]) == int(bm[1]), "blocks must be neighboring to be coupled via an interface"
 
+        self.ndim = ndim
         self.iftype = "locked"
         self.index = int(index)
         self.bm = (int(bm[0]), int(bm[1]), int(bm[2]))
@@ -55,6 +58,18 @@ class interface(object):
     def get_bp(self):
         "Returns block on positive side"
         return self.bp
+
+    def get_surface(self):
+        "Returns interface surface"
+        return self.surf
+
+    def set_surface(self, surf):
+        "Sets interface surface"
+        if self.ndim == 3:
+            assert type(surf) is surface, "interface surface must be of type surface"
+        else:
+            assert type(surf) is curve, "interface for 2D problem must be curve"
+        self.surf = surf
 
     def get_nloads(self):
         "Returns number of load perturbations"
@@ -96,7 +111,7 @@ class interface(object):
         "Set all friction parameters"
         raise NotImplementedError, "Interfaces do not support friction parameters"
 
-    def write_input(self,f):
+    def write_input(self, f, probname, endian = '='):
         "Writes interface details to input file"
         f.write("[fdfault.interface"+str(self.index)+"]\n")
         f.write(self.direction+"\n")
@@ -105,16 +120,18 @@ class interface(object):
         if self.surf is None:
             f.write("none\n")
         else:
-            raise NotImplementedError, "Surface files not implemented"
+            f.write("problems/"+probname+"_interface"+str(self.index)+".surf\n")
+            self.surf.write(probname+"_interface"+str(self.index)+".surf",endian)
         f.write("\n")
     
     def __str__(self):
-        return 'Interface '+str(self.index)+":\ndirection = "+self.direction+"\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)
+        return ('Interface '+str(self.index)+":\ndirection = "+self.direction+
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf))
 
 class friction(interface):
-    def __init__(self, index, direction, bm, bp):
+    def __init__(self, ndim, index, direction, bm, bp):
         "Initializes frictional interface, also calls __init__ method of interface"
-        interface.__init__(self, index, direction, bm, bp)
+        interface.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "frictionless"
         self.nloads = 0
         self.loads = []
@@ -127,12 +144,13 @@ class friction(interface):
         "Adds a load to list of load perturbations"
         assert type(newload) is load, "Cannot add types other than loads to load list"
         self.loads.append(newload)
+        self.nloads = len(self.loads)
 
-    def write_input(self,f):
+    def write_input(self, f, probname, endian = '='):
         "Writes Interface to input file"
-        interface.write_input(self, f)
+        interface.write_input(self, f, probname, endian)
         f.write("[fdfault.friction]\n")
-        f.write(str(self.nloads))
+        f.write(str(self.nloads)+'\n')
 
         for l in self.loads:
             l.write_input(f)
@@ -145,12 +163,12 @@ class friction(interface):
         for load in self.loads:
             loadstring += "\n"+str(load)
         return ('Frictional interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)+"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
 
 class slipweak(friction):
     "Class describing slip weakening friction interface"
-    def __init__(self, index, direction, bm, bp):
-        friction.__init__(self, index, direction, bm, bp)
+    def __init__(self, ndim, index, direction, bm, bp):
+        friction.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "slipweak"
         self.dc = 0.
         self.mus = 0.
@@ -193,9 +211,9 @@ class slipweak(friction):
         self.set_mus(mus)
         self.set_mud(mud)
 
-    def write_input(self, f):
+    def write_input(self, f, probname, endian = '='):
         "Write parameters to input file"
-        friction.write_input(self,f)
+        friction.write_input(self, f, probname, endian)
 
         f.write("[fdfault.slipweak]\n")
         f.write(str(self.dc)+"\n")
@@ -210,8 +228,9 @@ class slipweak(friction):
         for load in self.loads:
             loadstring += "\n"+str(load)
         return ('Slip weakening interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\ndc = "+str(self.dc)+", mus = "
-                +str(self.mus)+", mud = "+str(self.mud)+"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
+                +"\ndc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud)
+                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
 
 class load(object):
     "Class representing load perturbations to fricitonal interfaces"

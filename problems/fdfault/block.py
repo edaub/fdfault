@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-from .surface import surface
+from .surface import surface, curve
 from .material import material
 
 import numpy as np
@@ -149,6 +149,28 @@ class block(object):
         else:
             raise TypeError, "loc must either be None or an integer location"
 
+    def get_surf(self, loc):
+        """
+        Returns boundary surface for corresponding location
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert type(loc) is int and (loc >= 0 and loc < 2*self.ndim), "location out of range"
+        return self.surfs[loc]
+
+    def set_surf(self, loc, surf):
+        """
+        Sets boundary surface for corresponding location
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert type(loc) is int and (loc >= 0 and loc < 2*self.ndim), "location out of range"
+        if self.ndim == 3:
+            assert type(surf) is surface
+        else:
+            assert type(surf) is curve
+        self.surfs[loc] = surf
+
     def get_material(self):
         "Returns material type"
         return self.m
@@ -162,7 +184,19 @@ class block(object):
         assert type(mat) is material
         self.m = mat
 
-    def write_input(self,f):
+    def check(self):
+        "Checks for errors before writing input file"
+
+        surf1 = [0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3]
+        surf2 = [2, 3, 2, 3, 4, 5, 4, 5, 4, 5, 4, 5]
+        edge1 = [1, 3,1, 3, 1, 3, 1, 3, 1, 3, 1, 3]
+        edge2 = [1, 1, 3, 3, 0, 0, 2, 2, 1, 1, 3, 3]
+
+        for i in range(2**(self.ndim-1)*self.ndim):
+            if ((not self.surfs[surf1[i]] is None) and (not self.surfs[surf2[i]] is None)):
+                assert self.surfs[surf1[i]].has_same_edge(edge1[i], edge2[i], self.surfs[surf2[i]]), "surface edges do not match"
+
+    def write_input(self, f, probname, endian = '='):
         "writes block information to input file"
         f.write("[fdfault.block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+"]\n")
         self.m.write_input(f)
@@ -178,16 +212,22 @@ class block(object):
         f.write(outstring+"\n")
         for btype in self.bounds:
             f.write(btype+"\n")
+        nsurfs = 0
         for s in self.surfs:
             if s is None:
                 f.write("none\n")
             else:
-                raise NotImplementedError, "Surfaces not implemented"
+                f.write("problems/"+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf\n")
+                s.write(probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf", endian)
+            nsurfs += 1
         f.write("\n")
     
     def __str__(self):
         '''
         returns a string representation
         '''
+        surfstring = ''
+        for surf in self.surfs:
+            surfstring += str(surf)+"\n"
         return ("Block "+str(self.coords)+":\nnx = "+str(self.nx)+"\nxm = "+str(self.xm)+"\nlx = "+
-                str(self.lx)+"\nbounds = "+str(self.bounds)+"\n"+str(self.m))
+                str(self.lx)+"\nbounds = "+str(self.bounds)+"\nsurfaces =\n"+surfstring+str(self.m))

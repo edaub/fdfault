@@ -202,6 +202,30 @@ class problem(object):
         """
         self.d.set_bounds(coords, bounds, loc)
 
+    def get_block_surf(self, coords, loc):
+        """
+        Returns blockboundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        return self.d.get_block_surf(coords,loc)
+
+    def set_block_surf(self, coords, loc, surf):
+        """
+        Sets boundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        self.d.set_block_surf(coords, loc, surf)
+
+    def get_stress(self):
+        "Returns intial stress values"
+        return self.d.get_stress()
+
+    def set_stress(self,s):
+        "Sets uniform intial stress"
+        self.d.set_stress(s)
+
     def get_nifaces(self):
         "Returns number of interfaces"
         return self.d.get_nifaces()
@@ -213,6 +237,14 @@ class problem(object):
     def set_iftype(self, index, iftype):
         "Sets iftype of interface index"
         self.d.set_iftype(index, iftype)
+
+    def get_iface_surf(self,index):
+        "Returns interface surface for given index"
+        return self.d.get_iface_surf(index)
+
+    def set_iface_surf(self, index, surf):
+        "Sets interface surface for given index"
+        self.d.set_iface_surf(index,surf)
 
     def get_nloads(self, index):
         "Returns number of loads on given interface"
@@ -279,15 +311,15 @@ class problem(object):
             assert index >= 0 and index < len(self.outputlist), "bad index"
             self.outputlist.pop(index)
     
-    def write_input(self, filename = None):
+    def write_input(self, filename = None, endian = '='):
         "Writes problem to input file"
 
         self.check()
 
         if (filename is None):
-            f = open("problems/"+self.name+".in",'w')
+            f = open(self.name+".in",'w')
         else:
-            f = open("problems/"+filename+".in",'w')
+            f = open(filename+".in",'w')
 
         f.write("[fdfault.problem]\n")
         f.write(str(self.name)+"\n")
@@ -299,7 +331,7 @@ class problem(object):
         f.write(str(self.ninfo)+"\n")
         f.write(str(self.rkorder)+"\n")
         f.write("\n")
-        self.d.write_input(f)
+        self.d.write_input(f, self.name, endian)
         f.write("[fdfault.outputlist]\n")
         for item in self.outputlist:
             item.write_input(f)
@@ -318,7 +350,7 @@ class problem(object):
                 print("yp greater than ny in output "+self.outputlist[i].get_name())
             if self.outputlist[i].get_zp() > self.d.get_nx()[2]-1:
                 print("zp greater than nz in output "+self.outputlist[i].get_name())
-            if (self.nt > 0 and self.outputlist[i].get_tp > self.nt-1):
+            if (self.nt > 0 and self.outputlist[i].get_tp() > self.nt-1):
                 print("tp greater than nt in output "+self.outputlist[i].get_name())
             field = self.outputlist[i].get_field()
             
