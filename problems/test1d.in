@@ -1,7 +1,7 @@
 [fdfault.problem]
-test2
+test1d
 data/
-1
+1601
 0
 0
 0.3
@@ -22,7 +22,7 @@ slipweak
 
 [fdfault.fields]
 elastic
-0. 0. 0.
+0. 0. 0. 0. 0. 0.
 
 [fdfault.block000]
 2.67 32.04 32.04
