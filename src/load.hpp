@@ -29,6 +29,8 @@ private:
     double b;
     double c;
     double d;
+    double xyfunc(const int i, const int j) const;
+    double tfunc(const double t) const;
 };
 
 #endif

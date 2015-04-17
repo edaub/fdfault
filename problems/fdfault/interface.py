@@ -237,7 +237,7 @@ class load(object):
     def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., sn = 0., s2 = 0., s3 =0.):
         "Initialize interface load perturbation"
         assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar"), "Load must be constant, gaussian, ellipse, or boxcar"
+                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
         assert t0 >= 0., "t0 must be nonnegative"
         assert dx >= 0., "dx must be nonnegative"
         assert dy >= 0., "dy must be nonnegative"
@@ -259,7 +259,7 @@ class load(object):
     def set_type(self,loadtype):
         "sets load type"
         assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar"), "Load must be constant, gaussian, ellipse, or boxcar"
+                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
         self.loadtype = loadtype
 
     def get_t0(self):

@@ -10,7 +10,8 @@ load::load(const std::string type_in, const double t0_in, const double x0_in, co
            const double x[2], const double l[2]) {
     // constructor
 	
-    assert(type_in == "constant" || type_in == "gaussian" || type_in == "ellipse" || type_in == "boxcar");
+    assert(type_in == "constant" || type_in == "gaussian" || type_in == "ellipse" || type_in == "boxcar"
+           || type_in == "linear");
     assert(t0_in >= 0.);
     assert(dx_in >= 0.);
     assert(dy_in >= 0.);
@@ -30,8 +31,10 @@ load::load(const std::string type_in, const double t0_in, const double x0_in, co
         type = 1;
     } else if (type_in == "ellipse") {
         type = 2;
-    } else { // boxcar
+    } else if (type_in == "linear") {
         type = 3;
+    } else { // boxcar
+        type = 4;
     }
     
     // calculate parameters
@@ -46,143 +49,26 @@ load::load(const std::string type_in, const double t0_in, const double x0_in, co
 double load::get_s2(const int i, const int j, const double t) {
     // returns shear load perturbation
     
-    double s2val = 0., tval, xval, yval;
-    
-    if (t >= t0) {
-        tval = 1.;
-    } else {
-        tval = t/t0;
-    }
-    
-    switch (type) {
-        case 0:
-            s2val = s2;
-            break;
-        case 1:
-            if (dx < 1.e-14) {
-                xval = 0.;
-            } else {
-                xval = pow((b*(double)i+a-x0)/dx,2);
-            }
-            if (dy < 1.e-14) {
-                yval = 0.;
-            } else {
-                yval = pow((d*(double)j+c-y0)/dy,2);
-            }
-            s2val = s2*tval*exp(-xval-yval);
-            break;
-        case 2:
-            if (dx < 1.e-14) {
-                xval = 0.;
-            } else {
-                xval = pow((b*(double)i+a-x0)/dx,2);
-            }
-            if (dy < 1.e-14) {
-                yval = 0.;
-            } else {
-                yval = pow((d*(double)j+c-y0)/dy,2);
-            }
-            if (xval+yval <= 1.) {
-                s2val = s2*tval;
-            }
-            break;
-        case 3:
-            if (dx < 1.e-14) {
-                xval = 1.;
-            } else {
-                if (fabs(b*(double)i+a-x0) <= dx) {
-                    xval = 1.;
-                } else {
-                    xval = 0.;
-                }
-            }
-            if (dy < 1.e-14) {
-                yval = 1.;
-            } else {
-                if (fabs(d*(double)j+c-y0) <= dy) {
-                    yval = 1.;
-                } else {
-                    yval = 0.;
-                }
-            }
-            s2val = s2*xval*yval*tval;
-    }
-    
-    return s2val;
+    return s2*xyfunc(i,j)*tfunc(t);
 }
 
 double load::get_s3(const int i, const int j, const double t) {
     // returns shear load perturbation
     
-    double s3val = 0., tval, xval, yval;
-    
-    if (t >= t0) {
-        tval = 1.;
-    } else {
-        tval = t/t0;
-    }
-    
-    switch (type) {
-        case 0:
-            s3val = s3;
-            break;
-        case 1:
-            if (dx < 1.e-14) {
-                xval = 0.;
-            } else {
-                xval = pow((b*(double)i+a-x0)/dx,2);
-            }
-            if (dy < 1.e-14) {
-                yval = 0.;
-            } else {
-                yval = pow((d*(double)j+c-y0)/dy,2);
-            }
-            s3val = s3*tval*exp(-xval-yval);
-            break;
-        case 2:
-            if (dx < 1.e-14) {
-                xval = 0.;
-            } else {
-                xval = pow((b*(double)i+a-x0)/dx,2);
-            }
-            if (dy < 1.e-14) {
-                yval = 0.;
-            } else {
-                yval = pow((d*(double)j+c-y0)/dy,2);
-            }
-            if (xval+yval <= 1.) {
-                s3val = s3*tval;
-            }
-            break;
-        case 3:
-            if (dx < 1.e-14) {
-                xval = 1.;
-            } else {
-                if (fabs(b*(double)i+a-x0) <= dx) {
-                    xval = 1.;
-                } else {
-                    xval = 0.;
-                }
-            }
-            if (dy < 1.e-14) {
-                yval = 1.;
-            } else {
-                if (fabs(d*(double)j+c-y0) <= dy) {
-                    yval = 1.;
-                } else {
-                    yval = 0.;
-                }
-            }
-            s3val = s3*xval*yval*tval;
-    }
-    
-    return s3val;
+    return s3*xyfunc(i,j)*tfunc(t);
 }
 
 double load::get_sn(const int i, const int j, const double t) {
     // returns normal load perturbation
     
-    double snval = 0., tval, xval, yval;
+    return sn*xyfunc(i,j)*tfunc(t);
+
+}
+
+double load::tfunc(const double t) const {
+    // load time ramp
+    
+    double tval;
     
     if (t >= t0) {
         tval = 1.;
@@ -190,9 +76,17 @@ double load::get_sn(const int i, const int j, const double t) {
         tval = t/t0;
     }
     
+    return tval;
+}
+
+double load::xyfunc(const int i, const int j) const {
+    // calculates spatial dependence of perturbation
+
+    double xyval = 0., xval, yval;
+    
     switch (type) {
         case 0:
-            snval = sn;
+            xyval = 1.;
             break;
         case 1:
             if (dx < 1.e-14) {
@@ -205,7 +99,7 @@ double load::get_sn(const int i, const int j, const double t) {
             } else {
                 yval = pow((d*(double)j+c-y0)/dy,2);
             }
-            snval = sn*tval*exp(-xval-yval);
+            xyval = exp(-xval-yval);
             break;
         case 2:
             if (dx < 1.e-14) {
@@ -219,10 +113,23 @@ double load::get_sn(const int i, const int j, const double t) {
                 yval = pow((d*(double)j+c-y0)/dy,2);
             }
             if (xval+yval <= 1.) {
-                snval = sn*tval;
+                xyval = 1.;
             }
             break;
         case 3:
+            if (dx < 1.e-14) {
+                xval = 1;
+            } else {
+                xval = (b*(double)i+a)/dx+x0;
+            }
+            if (dy < 1.e-14) {
+                yval = 1;
+            } else {
+                yval = (d*(double)i+c)/dy+y0;
+            }
+            xyval = xval*yval;
+            break;
+        case 4:
             if (dx < 1.e-14) {
                 xval = 1.;
             } else {
@@ -241,9 +148,9 @@ double load::get_sn(const int i, const int j, const double t) {
                     yval = 0.;
                 }
             }
-            snval = sn*xval*yval*tval;
+            xyval = xval*yval;
     }
     
-    return snval;
-
+    return xyval;
 }
+
