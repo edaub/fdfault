@@ -1,15 +1,15 @@
 import numpy as np
 from sys import path
+from os.path import dirname, realpath
 
 class output(object):
     "class for output objects"
     def __init__(self,problem,name,datadir = None):
         "initializes output object with simulation information"
-        path.append(datadir)
         self.name = name
         self.problem = problem
         if datadir is None:
-            self.datadir = ''
+            self.datadir = dirname(realpath(__file__))
         else:
             self.datadir = datadir
 
