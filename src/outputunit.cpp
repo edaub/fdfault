@@ -648,7 +648,6 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         }
         pyfile.close();
 
-        
     }
     
     // wait for all processes to finish initializing output

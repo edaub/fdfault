@@ -10,6 +10,7 @@
 
 class friction: public interface
 { friend class outputunit;
+    friend class front;
 public:
     friction(const char* filename, const int ndim_in, const int mode_in, const int niface,
              block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
