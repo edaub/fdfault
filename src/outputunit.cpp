@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cassert>
-#include <cmath>
 #include <string>
 #include <string.h>
 #include "cartesian.hpp"
@@ -609,7 +608,10 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
             cerr << "Error opening file in outputunit.cpp\n";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
-        
+    }
+    
+    if (master) {
+    
         char endian = get_endian();
         
         ofstream matlabfile((datadir+probname+"_"+name+".m").c_str(), ios::out);

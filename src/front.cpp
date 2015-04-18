@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cassert>
 #include <string>
@@ -221,17 +222,31 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         
         MPI_File_close(&outfile);
         
-        // Free datatype
-        
-        MPI_Type_free(&filearray);
-        
         // write position data to file
         
-/*        MPI_Datatype dataarray;
+        // create MPI Datatype
+        
+        MPI_Datatype dataarray;
         
         int count, ntot = nx_loc[0]*nx_loc[1];
         
         int* disp;
+        
+        int n_loc[3];
+        
+        if (direction == 0) {
+            n_loc[0] = 1;
+            n_loc[1] = nx_loc[0];
+            n_loc[2] = nx_loc[1];
+        } else if (direction == 1) {
+            n_loc[0] = nx_loc[0];
+            n_loc[1] = 1;
+            n_loc[2] = nx_loc[1];
+        } else {
+            n_loc[0] = nx_loc[0];
+            n_loc[1] = nx_loc[1];
+            n_loc[2] = 1;
+        }
         
         disp = new int [ntot];
         
@@ -242,32 +257,22 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         count++;
         
         for (int i=1; i<ntot; i++) {
-            if (i%(nx_loc[1]) == 0) {
-                if (location == -1) {
-                    disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1])-1)+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)*(xs[0]-1);
+            if (i%(n_loc[1]*n_loc[2]) == 0) {
+                if (direction == 0) {
+                    disp[i] = disp[i-1]+nx_loc[1]*(nx_loc[0]-(xp_loc[1]-xm_loc[1])-1)+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
+                } else if (direction == 1) {
+                    disp[i] = disp[i-1]+nx_loc[1]*(1-(xp_loc[1]-xm_loc[1])-1)+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
                 } else {
-                    int direction = d.interfaces[location]->direction;
-                    if (direction == 0) {
-                        disp[i] = disp[i-1]+d.interfaces[location]->n_loc[1]*(d.interfaces[location]->n_loc[0]-(xp_loc[1]-xm_loc[1])-1)+d.interfaces[location]->n_loc[1]-(xp_loc[2]-xm_loc[2])+d.interfaces[location]->n_loc[0]*d.interfaces[location]->n_loc[1]*(xs[0]-1);
-                    } else if (direction == 1) {
-                        disp[i] = disp[i-1]+d.interfaces[location]->n_loc[1]*(1-(xp_loc[1]-xm_loc[1])-1)+d.interfaces[location]->n_loc[1]-(xp_loc[2]-xm_loc[2])+d.interfaces[location]->n_loc[1]*(xs[0]-1);
-                    } else {
-                        disp[i] = disp[i-1]+(d.interfaces[location]->n_loc[1]-(xp_loc[1]-xm_loc[1])-1)+1-(xp_loc[2]-xm_loc[2])+d.interfaces[location]->n_loc[1]*(xs[0]-1);
-                    }
+                    disp[i] = disp[i-1]+(nx_loc[1]-(xp_loc[1]-xm_loc[1])-1)+1-(xp_loc[2]-xm_loc[2]);
                 }
-            } else if (i%nx_loc[2] == 0) {
-                if (location == -1) {
-                    disp[i] = disp[i-1]+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(2)*(xs[1]-1);
+            } else if (i%n_loc[2] == 0) {
+                if (direction == 0 || direction == 1) {
+                    disp[i] = disp[i-1]+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
                 } else {
-                    int direction = d.interfaces[location]->direction;
-                    if (direction == 0 || direction == 1) {
-                        disp[i] = disp[i-1]+d.interfaces[location]->n_loc[1]-(xp_loc[2]-xm_loc[2])+d.interfaces[location]->n_loc[1]*(xs[1]-1);
-                    } else {
-                        disp[i] = disp[i-1]+1-(xp_loc[2]-xm_loc[2])+(xs[1]-1);
-                    }
+                    disp[i] = disp[i-1]+1-(xp_loc[2]-xm_loc[2]);
                 }
             } else {
-                disp[i] = disp[i-1]+xs[2];
+                disp[i] = disp[i-1]+1;
             }
         }
         
@@ -321,7 +326,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
                 
                 // write data
                 
-                MPI_File_write(xfile, &(d.f->x[xstart]), 1, dataarray, MPI_STATUS_IGNORE);
+                MPI_File_write(xfile, &(f.x[xstart]), 1, dataarray, MPI_STATUS_IGNORE);
                 
                 // close file
                 
@@ -329,32 +334,22 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
                 
             }
             
-        }*/
-        
-    }
-    
-    // if master, open files for time output, matlab, and python
-    
-/*    if (id == 0) {
-        master = true;
-    } else {
-        master = false;
-    }
-    
-    if (master && tp > tm) {
-        
-        tfile = new ofstream;
-        
-        tfile->open ((datadir+probname+"_"+name+"_t.dat").c_str(), ios::out | ios::binary);
-        
-        if (!tfile->is_open()) {
-            cerr << "Error opening file in outputunit.cpp\n";
-            MPI_Abort(MPI_COMM_WORLD, -1);
         }
+        
+        // Free MPI Datatypes
+        
+        MPI_Type_free(&dataarray);
+        MPI_Type_free(&filearray);
+        
+    }
+    
+    // if master, open files for matlab and python
+        
+    if (id == 0) {
         
         char endian = get_endian();
         
-        ofstream matlabfile((datadir+probname+"_"+name+".m").c_str(), ios::out);
+        ofstream matlabfile((datadir+probname+"_front_"+niface+".m").c_str(), ios::out);
         
         if (matlabfile.is_open()) {
             if (endian == '<') {
@@ -364,25 +359,19 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
             } else {
                 matlabfile << "endian = " << "'n';\n";
             }
-            matlabfile << "field = '" << field_in << "';\n";
-            matlabfile << "nt = " << ntout << ";\n";
             matlabfile << "nx = " << nx[0] << ";\n";
             matlabfile << "ny = " << nx[1] << ";\n";
-            matlabfile << "nz = " << nx[2] << ";\n";
         } else {
             cerr << "Error writing parameters to matlab file\n";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
         matlabfile.close();
         
-        ofstream pyfile((datadir+probname+"_"+name+".py").c_str(), ios::out);
+        ofstream pyfile((datadir+probname+"_front_"+niface+".py").c_str(), ios::out);
         if (pyfile.is_open()) {
             pyfile << "endian = '" << endian << "'\n";
-            pyfile << "field = '" << field_in << "';\n";
-            pyfile << "nt = " << ntout << "\n";
             pyfile << "nx = " << nx[0] << "\n";
             pyfile << "ny = " << nx[1] << "\n";
-            pyfile << "nz = " << nx[2] << "\n";
         }
         else {
             cerr << "Error writing parameters to python file\n";
@@ -391,7 +380,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         pyfile.close();
         
         
-    }*/
+    }
     
 }
 

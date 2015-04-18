@@ -13,6 +13,7 @@ class fields
     friend class interface;
     friend class load;
     friend class outputunit;
+    friend class front;
 public:
     fields(const char* filename, const int ndim_in, const int mode, const cartesian& cart);
 	~fields();
