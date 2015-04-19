@@ -162,7 +162,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
     char* filename;
     char filetype[] = "native";
     
-    if (!no_data) {
+/*    if (!no_data) {
         
         // create subarray
         
@@ -380,7 +380,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         pyfile.close();
         
         
-    }
+    }*/
     
 }
 
