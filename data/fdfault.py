@@ -6,6 +6,13 @@ class output(object):
     "class for output objects"
     def __init__(self,problem,name,datadir = None):
         "initializes output object with simulation information"
+        import sys
+        
+##        try:
+##            reload
+##        except NameError:
+##            from importlib import reload, __import__
+        
         self.name = name
         self.problem = problem
         if datadir is None:
@@ -13,7 +20,13 @@ class output(object):
         else:
             self.datadir = datadir
 
-        _temp = __import__(problem+'_'+name)
+        module_name = problem+'_'+name
+
+        if module_name in sys.modules:
+            _temp = reload(sys.modules[module_name])
+        else:
+            _temp = __import__(module_name)
+        
         self.field = _temp.field
         self.nt = _temp.nt
         self.nx = _temp.nx
@@ -70,6 +83,6 @@ class output(object):
 
     def __str__(self):
         "returns string representation"
-        return ('Problem '+self.problem+', Output '+self.name+'\nfield = '+self.field+'\nnx = '+str(self.nx)
+        return ('Problem '+self.problem+', Output '+self.name+'\nfield = '+self.field+'\nnt = '+str(self.nt)+'\nnx = '+str(self.nx)
                 +'\nny = '+str(self.ny)+'\nnz = '+str(self.nz))
             
