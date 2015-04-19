@@ -1,17 +1,10 @@
 import numpy as np
-from sys import path
 from os.path import dirname, realpath
 
 class output(object):
     "class for output objects"
     def __init__(self,problem,name,datadir = None):
         "initializes output object with simulation information"
-        import sys
-        
-##        try:
-##            reload
-##        except NameError:
-##            from importlib import reload, __import__
         
         self.name = name
         self.problem = problem
@@ -20,23 +13,34 @@ class output(object):
         else:
             self.datadir = datadir
 
-        module_name = problem+'_'+name
-
-        if module_name in sys.modules:
-            _temp = reload(sys.modules[module_name])
-        else:
-            _temp = __import__(module_name)
-        
-        self.field = _temp.field
-        self.nt = _temp.nt
-        self.nx = _temp.nx
-        self.ny = _temp.ny
-        self.nz = _temp.nz
-        self.endian = _temp.endian
-        del(_temp)
+        self._temp = __import__(problem+'_'+name)
+ 
+        self.field = self._temp.field
+        self.nt = self._temp.nt
+        self.nx = self._temp.nx
+        self.ny = self._temp.ny
+        self.nz = self._temp.nz
+        self.endian = self._temp.endian
 
     def load(self):
         "load data from data file for output item"
+
+        # check if simulation data has changed
+
+        try:
+            from importlib import reload
+        except ImportError:
+            from imp import reload
+
+        reload(self._temp)
+ 
+        self.field = self._temp.field
+        self.nt = self._temp.nt
+        self.nx = self._temp.nx
+        self.ny = self._temp.ny
+        self.nz = self._temp.nz
+        self.endian = self._temp.endian
+        
         if (self.nt > 1):
             self.t = np.fromfile(self.datadir+self.problem+'_'+self.name+'_t.dat',self.endian+'f8')
         self.x = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_x.dat',self.endian+'f8').reshape(self.nx, self.ny, self.nz))
