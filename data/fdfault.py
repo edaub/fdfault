@@ -9,7 +9,7 @@ class output(object):
         self.name = name
         self.problem = problem
         if datadir is None:
-            self.datadir = dirname(realpath(__file__))
+            self.datadir = dirname(realpath(__file__))+'/'
         else:
             self.datadir = datadir
 
