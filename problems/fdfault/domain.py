@@ -173,6 +173,40 @@ class domain(object):
                         self.interfaces.append(interface(self.ndim, self.nifaces,"x",(i,j,k),(i+1,j,k)))
                         self.nifaces += 1
 
+        for j in range(self.nblocks[1]-1):
+            for i in range(self.nblocks[0]):
+                for k in range(self.nblocks[2]):
+                    notfound = True
+                    for iface in oldifaces:
+                        if (iface.get_bm() == (i,j,k) and iface.get_bp() == (i,j+1,k)):
+                            iface.set_index(self.nifaces)
+                            self.iftype.append(iface.get_type())
+                            self.interfaces.append(iface)
+                            self.nifaces += 1
+                            notfound = False
+                            break
+                    if notfound:
+                        self.iftype.append("locked")
+                        self.interfaces.append(interface(self.ndim, self.nifaces,"y",(i,j,k),(i,j+1,k)))
+                        self.nifaces += 1
+
+        for k in range(self.nblocks[2]-1):
+            for i in range(self.nblocks[0]):
+                for j in range(self.nblocks[1]):
+                    notfound = True
+                    for iface in oldifaces:
+                        if (iface.get_bm() == (i,j,k) and iface.get_bp() == (i,j,k+1)):
+                            iface.set_index(self.nifaces)
+                            self.iftype.append(iface.get_type())
+                            self.interfaces.append(iface)
+                            self.nifaces += 1
+                            notfound = False
+                            break
+                    if notfound:
+                        self.iftype.append("locked")
+                        self.interfaces.append(interface(self.ndim, self.nifaces,"z",(i,j,k),(i,j,k+1)))
+                        self.nifaces += 1
+
     def get_nx_block(self):
         "Returns number of grid points in each block for each dimension (list of lists)"
         return self.nx_block
@@ -409,10 +443,10 @@ class domain(object):
         else:
             try:
                 for i in index:
-                    assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+                    assert type(i) is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
                     self.interfaces[i].add_load(newload)
             except:
-                assert index is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
+                assert type(index) is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
                 self.interfaces[index].add_load(newload)
 
     def get_direction(self, index):

@@ -1,11 +1,11 @@
 [fdfault.problem]
 test2
 data/
-50
+100
 0
 0
 0.3
-5
+25
 4
 
 [fdfault.domain]
@@ -22,7 +22,7 @@ slipweak
 
 [fdfault.fields]
 elastic
-0. 0. 0.
+0. 0. 0. 0. 0. 0.
 
 [fdfault.block000]
 2.67 32.04 32.04
@@ -57,7 +57,11 @@ x
 none
 
 [fdfault.friction]
-0
+3
+constant 0. 0. 0. 0. 0. -120. 70. 0.
+boxcar 0. 16. 1.5 0. 0. 0. 11.6 0.
+boxcar 0. 0. 4. 0. 0. 0. -10. 0.
+boxcar 0. 32. 4. 0. 0. 0. -10. 0.
 
 [fdfault.slipweak]
 0.4
