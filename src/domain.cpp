@@ -240,13 +240,9 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
         
     // apply interface conditions (requires absoute stress)
     
-    f->set_stress();
-    
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);
     }
-    
-    f->remove_stress();
     
     // update interfaces
     for (int i=0; i<nifaces; i++) {

@@ -5,9 +5,9 @@ LFLAGS=
 EFLAGS=-O3
 EXEC=../fdfault
 
-fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o utilities.o
+fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o front.o interface.o load.o main.o material.o outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o utilities.o
 	$(CC) $(EFLAGS) $(LFLAGS) $(IFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
-		fd.o fields.o friction.o interface.o load.o main.o material.o \
+		fd.o fields.o friction.o front.o interface.o load.o main.o material.o \
 		outputlist.o outputunit.o problem.o rk.o slipweak.o surface.o utilities.o
 
 block.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fd.hpp material.hpp surface.hpp block.cpp
@@ -33,6 +33,9 @@ fields.o : fields.hpp coord.hpp cartesian.hpp fields.cpp
 
 friction.o : block.hpp cartesian.hpp fd.hpp fields.hpp friction.hpp interface.hpp load.hpp friction.cpp
 	$(CC) $(CFLAGS) friction.cpp
+
+front.o : cartesian.hpp fields.hpp front.hpp interface.hpp utilities.h front.cpp
+	$(CC) $(CFLAGS) front.cpp
 
 interface.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fields.hpp interface.hpp surface.hpp interface.cpp
 	$(CC) $(CFLAGS) interface.cpp

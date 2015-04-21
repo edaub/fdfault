@@ -762,197 +762,149 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     
     // x derivatives
     
-    double invrho = 1./mat.get_rho();
+    int index1, index2, index3;
+    double invjac, invrho = dt/mat.get_rho()/dx[0], g2lam = dt*(2.*mat.get_g()+mat.get_lambda())/dx[0];
+    double g = dt*mat.get_g()/dx[0], lambda = dt*mat.get_lambda()/dx[0];
+        
+    for (int i=mlb[0]; i<mc[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = i-mlb[0]+1;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (mlb[0]+n)*nxd[1]+j;
+                f.df[index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[index2]*f.f[2*nxd[0]+index2]+
+                                           f.metric[nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                           f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                                lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] += g*fd.fdcoeff[index3][n]*(f.metric[index1]*f.f[nxd[0]+index2]+
+                                                                  f.metric[nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[index1]*f.f[index2]);
+            }
+        }
+    }
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<mc[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                              (f.jac[(mlb[0]+n)*nxd[1]+j]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                               f.jac[(mlb[0]+n)*nxd[1]+j]*
-                                               f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[3*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                              (f.jac[(mlb[0]+n)*nxd[1]+j]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[3*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                               f.jac[(mlb[0]+n)*nxd[1]+j]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[4*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0]);
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0];
-                f.df[3*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                                             f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0];
-                f.df[4*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0];
+    for (int i=mc[0]; i<mrb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<2*fd.sbporder-1; n++) {
+                index2 = index1+(-fd.sbporder+1+n)*nxd[1];
+                f.df[index1] += (invjac*fd.fdcoeff[0][n]*f.jac[index2]*
+                                          (f.metric[index2]*f.f[2*nxd[0]+index2]+
+                                           f.metric[nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] += (invjac*fd.fdcoeff[0][n]*f.jac[index2]*
+                                          (f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                           f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                           lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] += g*fd.fdcoeff[0][n]*(f.metric[index1]*f.f[nxd[0]+index2]+
+                                                             f.metric[nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                           lambda*f.metric[index1]*f.f[index2]);
             }
         }
     }
-
-    for (int n=0; n<2*fd.sbporder-1; n++) {
-        for (int i=mc[0]; i<mrb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                                         f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.f[3*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.f[3*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                                         f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                         f.f[4*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0]);
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0];
-                f.df[3*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                             f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0];
-                f.df[4*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0];
-            }
-        }
-    }
-
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mrb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                                       f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[3*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[3*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                                       f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[4*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0]);
-                f.df[2*nxd[0]+i*nxd[1]+j] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0];
-                f.df[3*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                             f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0];
-                f.df[4*nxd[0]+i*nxd[1]+j] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                 mat.get_lambda()*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0];
+    
+    for (int i=mrb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[0]-i;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (prb[0]-1-n)*nxd[1]+j;
+                f.df[index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                 (f.metric[index2]*f.f[2*nxd[0]+index2]+
+                                  f.metric[nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                        (f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                         f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                                lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] -= g*fd.fdcoeff[index3][n]*(f.metric[index1]*f.f[nxd[0]+index2]+
+                                                                  f.metric[nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[index1]*f.f[index2]);
             }
         }
     }
 
     // y derivatives
+
+    invrho *= dx[0]/dx[1];
+    g2lam *= dx[0]/dx[1];
+    g *= dx[0]/dx[1];
+    lambda *= dx[0]/dx[1];
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<mc[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = j-mlb[1]+1;
+            invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                                         f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[3*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[3*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                                         f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[4*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1]);
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1];
-                f.df[3*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                             f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1];
-                f.df[4*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1];
+                index2 = i*nxd[1]+mlb[1]+n;
+                f.df[index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[2*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] += g*fd.fdcoeff[index3][n]*(f.metric[ndim*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                             f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
             }
         }
-        
+    }
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mc[1]; j<mrb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                                f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[3*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[3*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                                f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[4*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1]);
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1];
-                f.df[3*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                             f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1];
-                f.df[4*nxd[0]+i*nxd[1]+j] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1];
+                index2 = index1-fd.sbporder+1+n;
+                f.df[index1] += (invjac*fd.fdcoeff[0][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[2*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] += (invjac*fd.fdcoeff[0][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                           lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] += g*fd.fdcoeff[0][n]*(f.metric[ndim*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                             f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                           lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
             }
         }
-        
+    }
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mrb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[1]-j;
+            invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                                       f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[3*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[3*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                                       f.jac[i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[4*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1]);
-                f.df[2*nxd[0]+i*nxd[1]+j] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1];
-                f.df[3*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                             f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1];
-                f.df[4*nxd[0]+i*nxd[1]+j] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                 mat.get_lambda()*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                 fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1];
+                index2 = i*nxd[1]+(prb[1]-1-n);
+                f.df[index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[2*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[3*nxd[0]+index2]));
+                f.df[nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*
+                                          (f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]));
+                f.df[2*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                f.df[3*nxd[0]+index1] -= g*fd.fdcoeff[index3][n]*(f.metric[ndim*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                  f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
             }
         }
     }
@@ -964,109 +916,98 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     
     // x derivatives
     
-    double invrho = 1./mat.get_rho();
+    int index1, index2, index3;
+    double invjac, invrho = dt/mat.get_rho()/dx[0], g = dt*mat.get_g()/dx[0];
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<mc[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                              (f.jac[(mlb[0]+n)*nxd[1]+j]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j]+
-                                               f.jac[(mlb[0]+n)*nxd[1]+j]*
-                                               f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j]*
-                                               f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0];
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j])/dx[0];
+    for (int i=mlb[0]; i<mc[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = i-mlb[0]+1;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (mlb[0]+n)*nxd[1]+j;
+                f.df[index1] += invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[nxd[0]+index2]+
+                                                                             f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+index1] += g*f.metric[index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                f.df[2*nxd[0]+index1] += g*f.metric[nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
             }
         }
     }
     
-    for (int n=0; n<2*fd.sbporder-1; n++) {
-        for (int i=mc[0]; i<mrb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]+
-                                                                f.jac[(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j]*
-                                                                f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0];
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j])/dx[0];
+    for (int i=mc[0]; i<mrb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<2*fd.sbporder-1; n++) {
+                index2 = index1+(-fd.sbporder+1+n)*nxd[1];
+                f.df[index1] += invjac*fd.fdcoeff[0][n]*f.jac[index2]*(f.metric[index2]*f.f[nxd[0]+index2]+
+                                                                             f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+index1] += g*f.metric[index1]*fd.fdcoeff[0][n]*f.f[index2];
+                f.df[2*nxd[0]+index1] += g*f.metric[nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
             }
         }
     }
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mrb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[0]-i][n]*(f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]+
-                                                                       f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0];
-                f.df[2*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j])/dx[0];
+    for (int i=mrb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[0]-i;
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (prb[0]-1-n)*nxd[1]+j;
+                f.df[index1] -= invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[nxd[0]+index2]+
+                                                                             f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+index1] -= g*f.metric[index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                f.df[2*nxd[0]+index1] -= g*f.metric[nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
             }
         }
     }
     
     // y derivatives
     
+    invrho *= dx[0]/dx[1];
+    g *= dx[0]/dx[1];
+    
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<mc[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = j-mlb[1]+1;
+            invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[j-mlb[1]+1][n]*(f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)]+
-                                                                         f.jac[i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)]*
-                                                                         f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1];
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)])/dx[1];
+                index2 = i*nxd[1]+mlb[1]+n;
+                f.df[index1] += invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[nxd[0]+index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+i*nxd[1]+j] += g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                f.df[2*nxd[0]+i*nxd[1]+j] += g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
             }
         }
-        
+    }
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mc[1]; j<mrb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] += (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[0][n]*(f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]+
-                                                                f.jac[i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)]*
-                                                                f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1];
-                f.df[2*nxd[0]+i*nxd[1]+j] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)])/dx[1];
+                index2 = index1-fd.sbporder+1+n;
+                f.df[index1] += invjac*fd.fdcoeff[0][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[nxd[0]+index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+i*nxd[1]+j] += g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
+                f.df[2*nxd[0]+i*nxd[1]+j] += g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
             }
         }
-        
-        for (int j=mrb[1]; j<prb[1]; j++) {
-            for (int n=0; n<3*(fd.sbporder-1); n++) {
-                f.df[0*nxd[0]+i*nxd[1]+j] -= (dt*invrho/f.jac[i*nxd[1]+j]*
-                                              fd.fdcoeff[prb[1]-j][n]*(f.jac[i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]+
-                                                                       f.jac[(prb[0]-1-n)*nxd[1]+j]*
-                                                                       f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)]*
-                                                                       f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1]);
-                f.df[1*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1];
-                f.df[2*nxd[0]+i*nxd[1]+j] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j]*
-                                                             fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)])/dx[1];
+    }
+    
+        for (int i=mlb[0]; i<prb[0]; i++) {
+            for (int j=mrb[1]; j<prb[1]; j++) {
+                index1 = i*nxd[1]+j;
+                index3 = prb[1]-j;
+                invjac = invrho/f.jac[index1];
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = i*nxd[1]+(prb[1]-1-n);
+                f.df[index1] -= invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[nxd[0]+index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
+                f.df[nxd[0]+i*nxd[1]+j] -= g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                f.df[2*nxd[0]+i*nxd[1]+j] -= g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
             }
         }
     }
@@ -1078,183 +1019,116 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
     // x derivatives
     
-    double invrho = 1./mat.get_rho();
+    int index1, index2, index3;
+    double invjac, invrho = dt/mat.get_rho()/dx[0], g2lam = dt*(2.*mat.get_g()+mat.get_lambda())/dx[0];
+    double g = dt*mat.get_g()/dx[0], lambda = dt*mat.get_lambda()/dx[0];
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<mc[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                                           (f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                                           (f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[i-mlb[0]+1][n]*
-                                                           (f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[i-mlb[0]+1][n]*f.f[2*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[0*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[i-mlb[0]+1][n]*f.f[1*nxd[0]+(mlb[0]+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
+    for (int i=mlb[0]; i<mc[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = i-mlb[0]+1;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = (mlb[0]+n)*nxd[1]+j*nxd[2]+k;
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                                    lambda*(f.metric[nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
-
-    for (int n=0; n<2*fd.sbporder-1; n++) {
-        for (int i=mc[0]; i<mrb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[2*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+(i-fd.sbporder+1+n)*nxd[1]+j*nxd[2]+k]))/dx[0];
+    
+    for (int i=mc[0]; i<mrb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = 0;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = index1+(-fd.sbporder+1+n)*nxd[1];
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                                    lambda*(f.metric[nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
-
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mrb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[0]-i][n]*
-                                                           (f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[0]-i][n]*
-                                                           (f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[0]-i][n]*
-                                                           (f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                            f.jac[(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*f.metric[0*ndim*nxd[0]+2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]))/dx[0];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                          f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k])/dx[0];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[0*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[0]-i][n]*f.f[2*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[0*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[0*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]+
-                                                                                f.metric[0*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[0]-i][n]*f.f[1*nxd[0]+(prb[0]-1-n)*nxd[1]+j*nxd[2]+k]))/dx[0];
+    
+    for (int i=mrb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = prb[0]-i;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = (mlb[0]+n)*nxd[1]+j*nxd[2]+k;
+                    f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[2*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[index1]*f.f[index2]+
+                                                                    lambda*(f.metric[nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[2*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[index1]*f.f[index2]+
+                                                                            f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
@@ -1262,181 +1136,117 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
     // y derivatives
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<mc[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[j-mlb[1]+1][n]*
-                                                           (f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[j-mlb[1]+1][n]*
-                                                           (f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[j-mlb[1]+1][n]*
-                                                           (f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]))/dx[1];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+i*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]))/dx[1];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k])/dx[1];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[j-mlb[1]+1][n]*f.f[2*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[0*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[j-mlb[1]+1][n]*f.f[1*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]))/dx[1];
+    invrho *= dx[0]/dx[1];
+    g2lam *= dx[0]/dx[1];
+    g *= dx[0]/dx[1];
+    lambda *= dx[0]/dx[1];
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<mc[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = j-mlb[1]+1;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = i*nxd[1]+(mlb[1]+n)*nxd[2]+k;
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
     
-    for (int n=0; n<2*fd.sbporder-1; n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mc[1]; j<mrb[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]))/dx[1];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]))/dx[1];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k])/dx[1];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]))/dx[1];
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mc[1]; j<mrb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = 0;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = index1+(-fd.sbporder+1+n)*nxd[2];
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mrb[1]; j<prb[1]; j++) {
-                for (int k=mlb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[1]-j][n]*
-                                                           (f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[1]-j][n]*
-                                                           (f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[1]-j][n]*
-                                                           (f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                            f.jac[i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]))/dx[1];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]))/dx[1];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                          f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k])/dx[1];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[1*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[1]-j][n]*f.f[2*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                              mat.get_lambda()*(f.metric[1*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[0*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]+
-                                                                                f.metric[1*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[1]-j][n]*f.f[1*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]))/dx[1];
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mrb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = prb[1]-j;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = i*nxd[1]+(mlb[1]+n)*nxd[2]+k;
+                    f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[(ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
@@ -1444,181 +1254,117 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
     // z derivatives
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mlb[2]; k<mc[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[k-mlb[2]+1][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[k-mlb[2]+1][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[k-mlb[2]+1][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[k-mlb[2]+1][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]))/dx[2];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[k-mlb[2]+1][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]))/dx[2];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)])/dx[2];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[k-mlb[2]+1][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[k-mlb[2]+1][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]))/dx[2];
+    invrho *= dx[1]/dx[2];
+    g2lam *= dx[1]/dx[2];
+    g *= dx[1]/dx[2];
+    lambda *= dx[1]/dx[2];
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<mrb[1]; j++) {
+            for (int k=mlb[2]; k<mc[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = k-mlb[2]+1;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = i*nxd[1]+j*nxd[2]+(mlb[2]+n);
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
     
-    for (int n=0; n<2*fd.sbporder-1; n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mc[2]; k<mrb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] += (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[0][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]))/dx[2];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]))/dx[2];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)])/dx[2];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] += dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[0][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]+
-                                                                                f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[0][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]))/dx[2];
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mc[2]; k<mrb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = 0;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = index1+(-fd.sbporder+1+n);
+                    f.df[0*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] += (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] += fd.fdcoeff[index3][n]*g*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
     }
     
-    for (int n=0; n<3*(fd.sbporder-1); n++) {
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mlb[1]; j<prb[1]; j++) {
-                for (int k=mrb[2]; k<prb[2]; k++) {
-                    f.df[0*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[2]-k][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[3*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2]);
-                    f.df[1*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[2]-k][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[4*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[6*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2]);
-                    f.df[2*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= (dt*invrho/f.jac[i*nxd[1]+j*nxd[2]+k]*fd.fdcoeff[prb[2]-k][n]*
-                                                           (f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[5*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[7*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                            f.jac[i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]*
-                                                            f.f[8*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2]);
-                    f.df[3*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[2]-k][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]))/dx[2];
-                    f.df[4*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                          f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2];
-                    f.df[5*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2];
-                    f.df[6*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[2]-k][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                                f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]))/dx[2];
-                    f.df[7*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*mat.get_g()*(f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                          f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                          fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)])/dx[2];
-                    f.df[8*nxd[0]+i*nxd[1]+j*nxd[2]+k] -= dt*((mat.get_g()*2.+mat.get_lambda())*f.metric[2*ndim*nxd[0]+2*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                              fd.fdcoeff[prb[2]-k][n]*f.f[2*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                              mat.get_lambda()*(f.metric[2*ndim*nxd[0]+0*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[0*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]+
-                                                                                f.metric[2*ndim*nxd[0]+1*nxd[0]+i*nxd[1]+j*nxd[2]+k]*
-                                                                                fd.fdcoeff[prb[2]-k][n]*f.f[1*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]))/dx[2];
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mrb[2]; k<prb[2]; k++) {
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                invjac = invrho/f.jac[index1];
+                index3 = prb[2]-k;
+                for (int n=0; n<3*(fd.sbporder-1); n++) {
+                    index2 = i*nxd[1]+j*nxd[2]+(mlb[2]+n);
+                    f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
+                    f.df[1*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[6*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[7*nxd[0]+index2]));
+                    f.df[2*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[5*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[7*nxd[0]+index2]+
+                                                                                          f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[8*nxd[0]+index2]));
+                    f.df[3*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                    lambda*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[1*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[index2]);
+                    f.df[5*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[2*ndim*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[index2]);
+                    f.df[6*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]));
+                    f.df[7*nxd[0]+index1] -= fd.fdcoeff[index3][n]*g*(f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                      f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[nxd[0]+index2]);
+                    f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
+                                                                    lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
+                                                                            f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
                 }
             }
         }
