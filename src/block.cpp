@@ -628,32 +628,32 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
     
     // y derivatives
     
-    for (int j=mlb[0]; j<prb[0]; j++) {
+    for (int i=mlb[0]; i<prb[0]; i++) {
         for (int k=mlb[2]; k<prb[2]; k++) {
-            for (int i=mlb[1]; i<mc[1]; i++) {
+            for (int j=mlb[1]; j<mc[1]; j++) {
                 // left boundaries
                 for (int l=0; l<ndim; l++) {
-                    xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] = 0.;
+                    xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] += fd.fdcoeff[i-mlb[1]+1][n]*f.x[l*nxd[0]+j*nxd[1]+(mlb[1]+n)*nxd[2]+k]/dx[1];
+                        xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[j-mlb[1]+1][n]*f.x[l*nxd[0]+i*nxd[1]+(mlb[1]+n)*nxd[2]+k]/dx[1];
                     }
                 }
             }
-            for (int i=mc[1]; i<mrb[1]; i++) {
+            for (int j=mc[1]; j<mrb[1]; j++) {
                 // interior points
                 for (int l=0; l<ndim; l++) {
-                    xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] = 0.;
+                    xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<2*fd.sbporder-1; n++) {
-                        xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+j*nxd[1]+(i-fd.sbporder+1+n)*nxd[2]+k]/dx[1];
+                        xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+i*nxd[1]+(j-fd.sbporder+1+n)*nxd[2]+k]/dx[1];
                     }
                 }
             }
-            for (int i=mrb[1]; i<prb[1]; i++) {
+            for (int j=mrb[1]; j<prb[1]; j++) {
                 // right boundaries
                 for (int l=0; l<ndim; l++) {
-                    xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] = 0.;
+                    xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][1][j-mlb[0]][i-mlb[1]][k-mlb[2]] -= fd.fdcoeff[prb[1]-i][n]*f.x[l*nxd[0]+j*nxd[1]+(prb[1]-1-n)*nxd[2]+k]/dx[1];
+                        xp[l][1][i-mlb[0]][j-mlb[1]][k-mlb[2]] -= fd.fdcoeff[prb[1]-j][n]*f.x[l*nxd[0]+i*nxd[1]+(prb[1]-1-n)*nxd[2]+k]/dx[1];
                     }
                 }
             }
@@ -662,32 +662,32 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
     
     // z derivatives
     
-    for (int j=mlb[0]; j<prb[0]; j++) {
-        for (int k=mlb[1]; k<prb[1]; k++) {
-            for (int i=mlb[2]; i<mc[2]; i++) {
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<mc[2]; k++) {
                 // left boundaries
                 for (int l=0; l<ndim; l++) {
-                    xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] = 0.;
+                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] += fd.fdcoeff[i-mlb[2]+1][n]*f.x[l*nxd[0]+j*nxd[1]+k*nxd[2]+(mlb[2]+n)]/dx[2];
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[k-mlb[2]+1][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]/dx[2];
                     }
                 }
             }
-            for (int i=mc[2]; i<mrb[2]; i++) {
+            for (int k=mc[2]; k<mrb[2]; k++) {
                 // interior points
                 for (int l=0; l<ndim; l++) {
-                    xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] = 0.;
+                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<2*fd.sbporder-1; n++) {
-                        xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+j*nxd[1]+k*nxd[2]+(i-fd.sbporder+1+n)]/dx[2];
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]/dx[2];
                     }
                 }
             }
-            for (int i=mrb[2]; i<prb[2]; i++) {
+            for (int k=mrb[2]; k<prb[2]; k++) {
                 // right boundaries
                 for (int l=0; l<ndim; l++) {
-                    xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] = 0.;
+                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
                     for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][2][j-mlb[0]][k-mlb[1]][i-mlb[2]] -= fd.fdcoeff[prb[2]-i][n]*f.x[l*nxd[0]+j*nxd[1]+k*nxd[2]+(prb[2]-1-n)]/dx[2];
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] -= fd.fdcoeff[prb[2]-k][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]/dx[2];
                     }
                 }
             }
@@ -713,7 +713,7 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
                         f.metric[l*ndim*nxd[0]+m*nxd[0]+i*nxd[1]+j*nxd[2]+k] = ((xp[(m+1)%3][(l+1)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]]*
                                                                                 xp[(m+2)%3][(l+2)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]]-
                                                                                 xp[(m+1)%3][(l+2)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]]*
-                                                                                xp[(m+1)%3][(l+1)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]])/
+                                                                                xp[(m+2)%3][(l+1)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]])/
                                                                                 f.jac[i*nxd[1]+j*nxd[2]+k]);
                     }
                 }
