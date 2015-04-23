@@ -69,3 +69,6 @@ surface.o : coord.hpp surface.hpp surface.cpp
 
 utilities.o : utilities.h utilities.cpp
 	$(CC) $(CFLAGS) utilities.cpp
+
+clean:
+	rm *.o $(EXEC)
