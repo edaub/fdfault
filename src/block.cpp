@@ -178,7 +178,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
     int surf1[12] = {0,0,1,1,0,0,1,1,2,2,3,3};
     int surf2[12] = {2,3,2,3,4,5,4,5,4,5,4,5};
     int edge1[12] = {1,3,1,3,0,2,0,2,0,2,0,2};
-    int edge2[12] = {1,1,3,3,0,2,0,2,1,1,3,3};
+    int edge2[12] = {1,1,3,3,1,1,3,3,0,0,2,2};
  
     for (int i=0; i<pow(2,ndim-1)*ndim; i++) {
         if (!surf[surf1[i]]->has_same_edge(edge1[i],edge2[i],*(surf[surf2[i]]))) {
