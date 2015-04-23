@@ -30,6 +30,10 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
         ss << coords[i];
     }
     
+    for (int i=0; i<3; i++) {
+        l_block[i] = 0.;
+    }
+    
     string line;
     ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
@@ -750,10 +754,6 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
     }
     
     delete[] xp;
-    
-    // exhange data with neighbors
-    
-    f.exchange_grid();
 
 }
 
