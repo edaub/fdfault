@@ -189,8 +189,8 @@ class block(object):
 
         surf1 = [0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3]
         surf2 = [2, 3, 2, 3, 4, 5, 4, 5, 4, 5, 4, 5]
-        edge1 = [1, 3,1, 3, 1, 3, 1, 3, 1, 3, 1, 3]
-        edge2 = [1, 1, 3, 3, 0, 0, 2, 2, 1, 1, 3, 3]
+        edge1 = [1, 3,1, 3, 0, 2, 0, 2, 0, 2, 0, 2]
+        edge2 = [1, 1, 3, 3, 1, 1, 3, 3, 0, 0, 2, 2]
 
         for i in range(2**(self.ndim-1)*self.ndim):
             if ((not self.surfs[surf1[i]] is None) and (not self.surfs[surf2[i]] is None)):
