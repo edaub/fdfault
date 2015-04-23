@@ -125,6 +125,7 @@ domain::domain(const char* filename) {
     // exchange neighbors to fill in ghost cells
     
     f->exchange_neighbors();
+    f->exchange_grid();
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];

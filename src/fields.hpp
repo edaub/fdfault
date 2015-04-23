@@ -22,6 +22,7 @@ public:
     void set_stress();
     void remove_stress();
 	void exchange_neighbors();
+    void exchange_grid();
 	void write_fields() const;
     void free_exchange();
 private:
@@ -59,7 +60,6 @@ private:
 	MPI_Datatype slicem[3];
     void init_fields(const int mode, const double s[6]);
 	void init_exchange(const cartesian& cart);
-    void exchange_grid();
 };
 
 #endif
