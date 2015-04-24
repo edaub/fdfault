@@ -155,6 +155,8 @@ void problem::solve() {
         
     }
     
+    d->write_fields();
+    
     // close output files
     
     out->close_list();

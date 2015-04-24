@@ -760,6 +760,11 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
 void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a mode 2 problem
     
+    int id;
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+    
+    cout << id << " " << f.df[3*nxd[1]+200] << "\n";
+    
     // x derivatives
     
     int index1, index2, index3;
@@ -810,6 +815,8 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
             }
         }
     }
+    
+    cout << id << " " << f.df[3*nxd[1]+200] << "\n";
     
     for (int i=mrb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -908,6 +915,8 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
             }
         }
     }
+    
+    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
     
 }
 
@@ -1019,6 +1028,11 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
     // x derivatives
     
+    int id;
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+    
+    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
+    
     int index1, index2, index3;
     double invjac, invrho = dt/mat.get_rho()/dx[0], g2lam = dt*(2.*mat.get_g()+mat.get_lambda())/dx[0];
     double g = dt*mat.get_g()/dx[0], lambda = dt*mat.get_lambda()/dx[0];
@@ -1096,6 +1110,8 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
             }
         }
     }
+    
+    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
     
     for (int i=mrb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -1252,9 +1268,11 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         }
     }
     
+    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
+    
     // z derivatives
     
-    invrho *= dx[1]/dx[2];
+/*    invrho *= dx[1]/dx[2];
     g2lam *= dx[1]/dx[2];
     g *= dx[1]/dx[2];
     lambda *= dx[1]/dx[2];
@@ -1368,7 +1386,7 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                 }
             }
         }
-    }
+    }*/
     
 }
 
