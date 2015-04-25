@@ -118,14 +118,14 @@ domain::domain(const char* filename) {
     
     allocate_blocks(filename, nx_block, xm_block);
     
-    // allocate memory and create interfaces
-    
-    allocate_interfaces(filename, iftype);
-
     // exchange neighbors to fill in ghost cells
     
     f->exchange_neighbors();
     f->exchange_grid();
+    
+    // allocate memory and create interfaces
+    
+    allocate_interfaces(filename, iftype);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
@@ -220,15 +220,14 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->scale_df(rk.get_A(stage));
     }
-
     
     // calculate df for blocks
     
     for (int i=0; i<nblocks[0]; i++) {
         for (int j=0; j<nblocks[1]; j++) {
             for (int k=0; k<nblocks[2]; k++) {
-	        blocks[i][j][k]->calc_df(dt,*f,*fd);
-	        blocks[i][j][k]->set_boundaries(dt,*f);
+                blocks[i][j][k]->calc_df(dt,*f,*fd);
+                blocks[i][j][k]->set_boundaries(dt,*f);
             }
         }
     }
@@ -239,7 +238,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
         interfaces[i]->calc_df(dt);
     }
         
-    // apply interface conditions (requires absoute stress)
+    // apply interface conditions
     
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);

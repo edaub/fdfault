@@ -496,7 +496,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         MPI_Type_commit(&dataarray);
     
         delete[] disp;
-    
+        
         // filearray uses subarray to describe layout in file
         
         int starts[3];
@@ -540,53 +540,79 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         
         string xyzstr[3] = {"x", "y", "z"};
         
-        for (int i=0; i<3; i++) {
-            
-            if (i < ndim) {
-                
-                filename = new char [(datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1];
-                strcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str());
-                
-                rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
-                
-                delete[] filename;
-                
-                if(rc != MPI_SUCCESS){
-                    std::cerr << "Error opening file in outputunit.cpp\n";
-                    MPI_Abort(MPI_COMM_WORLD, rc);
-                }
-                
-                // delete contents
-                
-                rc = MPI_File_set_size(xfile, (MPI_Offset)0);
-                
-                if(rc != MPI_SUCCESS){
-                    std::cerr << "Error deleting file in outputunit.cpp\n";
-                    MPI_Abort(MPI_COMM_WORLD, rc);
-                }
-                
-                // set view to beginning
-                
-                MPI_File_set_view(xfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
-                
-                // calculate start position of data to be written
+        // define MPI datatype for spatial grid points
         
-                int xstart = (i*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
-                              (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
-                              (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
-                              (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
+        MPI_Datatype xarray;
+        
+        disp = new int [ntot];
+        
+        count = 0;
+        
+        disp[count] = 0;
+        
+        count++;
+        
+        for (int i=1; i<ntot; i++) {
+            if (i%(nx_loc[1]*nx_loc[2]) == 0) {
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1])-1)+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)*(xs[0]-1);
+            } else if (i%nx_loc[2] == 0) {
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2])+d.cart->get_nx_tot(2)*(xs[1]-1);
+            } else {
+                disp[i] = disp[i-1]+xs[2];
+            }
+        }
+        
+        MPI_Type_create_indexed_block(ntot, 1, disp, MPI_DOUBLE, &xarray);
+        
+        MPI_Type_commit(&xarray);
+        
+        delete[] disp;
+        
+        for (int i=0; i<ndim; i++) {
                 
-                // write data
-                
-                MPI_File_write(xfile, &(d.f->x[xstart]), 1, dataarray, MPI_STATUS_IGNORE);
-                
-                // close file
-                
-                MPI_File_close(&xfile);
-                
+            filename = new char [(datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").size()+1];
+            strcpy(filename, (datadir+probname+"_"+name+"_"+xyzstr[i]+".dat").c_str());
+            
+            rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
+            
+            delete[] filename;
+            
+            if(rc != MPI_SUCCESS){
+                std::cerr << "Error opening file in outputunit.cpp\n";
+                MPI_Abort(MPI_COMM_WORLD, rc);
             }
             
+            // delete contents
+            
+            rc = MPI_File_set_size(xfile, (MPI_Offset)0);
+            
+            if(rc != MPI_SUCCESS){
+                std::cerr << "Error deleting file in outputunit.cpp\n";
+                MPI_Abort(MPI_COMM_WORLD, rc);
+            }
+            
+            // set view to beginning
+            
+            MPI_File_set_view(xfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+            
+            // calculate start position of data to be written
+    
+            int xstart = (i*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
+                          (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
+            
+            // write data
+            
+            MPI_File_write(xfile, &(d.f->x[xstart]), 1, xarray, MPI_STATUS_IGNORE);
+            
+            // close file
+            
+            MPI_File_close(&xfile);
+            
         }
+        
+        MPI_Type_free(&xarray);
         
     }
     
