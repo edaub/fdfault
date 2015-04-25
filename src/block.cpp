@@ -760,11 +760,6 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
 void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a mode 2 problem
     
-    int id;
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
-    cout << id << " " << f.df[3*nxd[1]+200] << "\n";
-    
     // x derivatives
     
     int index1, index2, index3;
@@ -815,8 +810,6 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
             }
         }
     }
-    
-    cout << id << " " << f.df[3*nxd[1]+200] << "\n";
     
     for (int i=mrb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -915,8 +908,6 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
             }
         }
     }
-    
-    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
     
 }
 
@@ -1028,11 +1019,6 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
     // x derivatives
     
-    int id;
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
-    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
-    
     int index1, index2, index3;
     double invjac, invrho = dt/mat.get_rho()/dx[0], g2lam = dt*(2.*mat.get_g()+mat.get_lambda())/dx[0];
     double g = dt*mat.get_g()/dx[0], lambda = dt*mat.get_lambda()/dx[0];
@@ -1111,8 +1097,6 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         }
     }
     
-    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
-    
     for (int i=mrb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
@@ -1120,7 +1104,7 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                 invjac = invrho/f.jac[index1];
                 index3 = prb[0]-i;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
-                    index2 = (mlb[0]+n)*nxd[1]+j*nxd[2]+k;
+                    index2 = (prb[0]-1-n)*nxd[1]+j*nxd[2]+k;
                     f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[index2]*f.f[3*nxd[0]+index2]+
                                                                                           f.metric[nxd[0]+index2]*f.f[4*nxd[0]+index2]+
                                                                                           f.metric[2*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
@@ -1238,7 +1222,7 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                 invjac = invrho/f.jac[index1];
                 index3 = prb[1]-j;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
-                    index2 = i*nxd[1]+(mlb[1]+n)*nxd[2]+k;
+                    index2 = i*nxd[1]+(prb[1]-1-n)*nxd[2]+k;
                     f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
                                                                                           f.metric[(ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
                                                                                           f.metric[(ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
@@ -1268,11 +1252,9 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         }
     }
     
-    cout << id << " " << f.df[3*nxd[1]+200*nxd[2]+100] << "\n";
-    
     // z derivatives
     
-/*    invrho *= dx[1]/dx[2];
+    invrho *= dx[1]/dx[2];
     g2lam *= dx[1]/dx[2];
     g *= dx[1]/dx[2];
     lambda *= dx[1]/dx[2];
@@ -1358,7 +1340,7 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                 invjac = invrho/f.jac[index1];
                 index3 = prb[2]-k;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
-                    index2 = i*nxd[1]+j*nxd[2]+(mlb[2]+n);
+                    index2 = i*nxd[1]+j*nxd[2]+(prb[2]-1-n);
                     f.df[0*nxd[0]+index1] -= (invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[2*ndim*nxd[0]+index2]*f.f[3*nxd[0]+index2]+
                                                                                           f.metric[(2*ndim+1)*nxd[0]+index2]*f.f[4*nxd[0]+index2]+
                                                                                           f.metric[(2*ndim+2)*nxd[0]+index2]*f.f[5*nxd[0]+index2]));
@@ -1386,7 +1368,7 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                 }
             }
         }
-    }*/
+    }
     
 }
 
