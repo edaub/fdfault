@@ -118,14 +118,14 @@ domain::domain(const char* filename) {
     
     allocate_blocks(filename, nx_block, xm_block);
     
-    // allocate memory and create interfaces
-    
-    allocate_interfaces(filename, iftype);
-
     // exchange neighbors to fill in ghost cells
     
     f->exchange_neighbors();
     f->exchange_grid();
+    
+    // allocate memory and create interfaces
+    
+    allocate_interfaces(filename, iftype);
     
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];

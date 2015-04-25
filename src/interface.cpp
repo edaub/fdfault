@@ -316,6 +316,18 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             break;
     }
     
+    // check that block edges match
+    
+    for (int i=0; i<ndim; i++) {
+        for (int j=mlb[0]; j<prb[0]; j++) {
+            for (int k=mlb[1]; k<prb[1]; k++) {
+                for (int l=mlb[2]; l<prb[2]; l++) {
+                    assert(fabs(f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l]-f.x[i*nxd[0]+(j+delta[0])*nxd[1]+(k+delta[1])*nxd[2]+l+delta[2]]) < 1.e-14);
+                }
+            }
+        }
+    }
+    
     // set material parameters
     
     cp1 = b1->get_cp();
