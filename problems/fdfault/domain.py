@@ -280,7 +280,7 @@ class domain(object):
             assert len(coords) == 3, "block coordinates must have length 3"
             for i in range(3):
                 assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
-            assert self.f.get_material() == newmaterial.get_mattype(), "Material type must match value in fields"
+            assert self.f.get_material() == newmaterial.get_type(), "Material type must match value in fields"
             self.blocks[coords[0]][coords[1]][coords[2]].set_material(newmaterial)
 
 
