@@ -129,7 +129,7 @@ class block(object):
         elif loc >= 0 and loc < 2*self.ndim:
             return self.bounds[loc]
         else:
-            raise TypeError, "loc must be None or an integer location"
+            raise TypeError("loc must be None or an integer location")
 
     def set_bounds(self, bounds, loc = None):
         """
@@ -147,7 +147,7 @@ class block(object):
             assert (bounds == "none") or (bounds == "absorbing") or (bounds == "free") or (bounds == "rigid"), "Boundary types must be none, absorbing, free, or rigid"
             self.bounds[loc] = bounds
         else:
-            raise TypeError, "loc must either be None or an integer location"
+            raise TypeError("loc must either be None or an integer location")
 
     def get_surf(self, loc):
         """

@@ -73,43 +73,43 @@ class interface(object):
 
     def get_nloads(self):
         "Returns number of load perturbations"
-        raise NotImplementedError, "Interfaces do not support load perturbations"
+        raise NotImplementedError("Interfaces do not support load perturbations")
 
     def add_load(self, newload):
         "Adds a load to list of load perturbations"
-        raise NotImplementedError, "Interfaces do not support load perturbations"
+        raise NotImplementedError("Interfaces do not support load perturbations")
 
     def get_dc(self):
         "Returns slip weakening distance"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def set_dc(self, dc):
         "Sets slip weakening distance"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def get_mus(self):
         "Returns static friction coefficient"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def set_mus(self, mus):
         "Sets static friction coefficient"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def get_mud(self):
         "Returns dynamic friction coefficient"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def set_mud(self, mud):
         "Sets dynamic friction coefficient"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def get_params(self):
         "Returns all friction parameters as a tuple"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def set_params(self, dc, mus, mud):
         "Set all friction parameters"
-        raise NotImplementedError, "Interfaces do not support friction parameters"
+        raise NotImplementedError("Interfaces do not support friction parameters")
 
     def write_input(self, f, probname, endian = '='):
         "Writes interface details to input file"
