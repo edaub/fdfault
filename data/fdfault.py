@@ -1,5 +1,6 @@
 import numpy as np
 from os.path import dirname, realpath
+from sys import path
 
 class output(object):
     "class for output objects"
@@ -12,6 +13,8 @@ class output(object):
             self.datadir = dirname(realpath(__file__))+'/'
         else:
             self.datadir = datadir
+
+        path.append(datadir)
 
         self._temp = __import__(problem+'_'+name)
  
