@@ -31,22 +31,18 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     du = new double [n_loc[0]*n_loc[1]];
     v = new double [n_loc[0]*n_loc[1]];
     
-    // initialize slip and slip velocity
+    // initialize slip, change in slip, and slip velocity
     
-    for (int i=0; i<ndim-1; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                ux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] = 0.;
-                vx[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] = 0.;
-            }
-        }
+    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+        ux[i] = 0.;
+        dux[i] = 0.;
+        vx[i] = 0.;
     }
     
-    for (int i=0; i<n_loc[0]; i++) {
-        for (int j=0; j<n_loc[1]; j++) {
-            u[i*n_loc[1]+j] = 0.;
-            v[i*n_loc[1]+j] = 0.;
-        }
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        u[i] = 0.;
+        du[i] = 0.;
+        v[i] = 0.;
     }
     
     // read loads from input file
@@ -308,19 +304,13 @@ void friction::scale_df(const double A) {
     
     if (no_data) {return;}
     
-    for (int i=0; i<ndim-1; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] *= A;
-            }
-        }
-	}
+    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+        dux[i] *= A;
+    }
     
-    for (int i=0; i<n_loc[0]; i++) {
-        for (int j=0; j<n_loc[1]; j++) {
-            du[i*n_loc[1]+j] *= A;
-        }
-	}
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        du[i] *= A;
+    }
     
 }
 
@@ -329,19 +319,13 @@ void friction::calc_df(const double dt) {
     
     if (no_data) {return;}
     
-    for (int i=0; i<ndim-1; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += dt*vx[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
-            }
-        }
+    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+        dux[i] += dt*vx[i];
     }
     
-    for (int i=0; i<n_loc[0]; i++) {
-        for (int j=0; j<n_loc[1]; j++) {
-            du[i*n_loc[1]+j] += dt*v[i*n_loc[1]+j];
-        }
-	}
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        du[i] += dt*v[i];
+    }
     
 }
 
@@ -350,20 +334,14 @@ void friction::update(const double B) {
     
     if (no_data) {return;}
     
-    for (int i=0; i<ndim-1; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                ux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k] += B*dux[i*n_loc[0]*n_loc[1]+j*n_loc[1]+k];
-            }
-        }
+    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+        ux[i] += B*dux[i];
     }
     
-    for (int i=0; i<n_loc[0]; i++) {
-        for (int j=0; j<n_loc[1]; j++) {
-            u[i*n_loc[1]+j] += B*du[i*n_loc[1]+j];
-        }
-	}
-    
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        u[i] += B*du[i];
+    }
+        
 }
 
 void friction::write_fields() {
