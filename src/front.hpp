@@ -2,9 +2,7 @@
 #define FRONTCLASSHEADERDEF
 
 #include <string>
-#include "cartesian.hpp"
 #include "domain.hpp"
-#include "fields.hpp"
 #include <mpi.h>
 
 class front
@@ -16,7 +14,7 @@ public:
     front* get_next_unit() const;
     void set_next_unit(front* nextunit);
     void set_front(const double t, const domain& d);
-    void write_front(const cartesian& cart, const fields& f) const;
+    void write_front(const domain& d) const;
 private:
     std::string probname;
     std::string datadir;

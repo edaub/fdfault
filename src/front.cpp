@@ -123,7 +123,7 @@ void front::set_front(const double t, const domain& d) {
     
 }
 
-void front::write_front(const cartesian& cart, const fields& f) const {
+void front::write_front(const domain& d) const {
     // writes rupture times to file
     
     // determine which processes have data to create new communicator
@@ -258,13 +258,7 @@ void front::write_front(const cartesian& cart, const fields& f) const {
         
         // write position data to file
         
-        // create MPI Datatype
-        
-        MPI_Datatype dataarray;
-        
-        int count, ntot = nx_loc[0]*nx_loc[1];
-        
-        int* disp;
+        string xyzstr[3] = {"x", "y", "z"};
         
         int n_loc[3];
         
@@ -282,6 +276,13 @@ void front::write_front(const cartesian& cart, const fields& f) const {
             n_loc[2] = 1;
         }
         
+        // define MPI datatype for spatial grid points
+        
+        MPI_File xfile;
+        MPI_Datatype xarray;
+        int ntot = nx_loc[0]*nx_loc[1];
+        int* disp;
+        
         disp = new int [ntot];
         
         count = 0;
@@ -292,88 +293,68 @@ void front::write_front(const cartesian& cart, const fields& f) const {
         
         for (int i=1; i<ntot; i++) {
             if (i%(n_loc[1]*n_loc[2]) == 0) {
-                if (direction == 0) {
-                    disp[i] = disp[i-1]+nx_loc[1]*(nx_loc[0]-(xp_loc[1]-xm_loc[1])-1)+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
-                } else if (direction == 1) {
-                    disp[i] = disp[i-1]+nx_loc[1]*(1-(xp_loc[1]-xm_loc[1])-1)+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
-                } else {
-                    disp[i] = disp[i-1]+(nx_loc[1]-(xp_loc[1]-xm_loc[1])-1)+1-(xp_loc[2]-xm_loc[2]);
-                }
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)*(d.cart->get_nx_tot(1)-(xp_loc[1]-xm_loc[1])-1)+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2]);
             } else if (i%n_loc[2] == 0) {
-                if (direction == 0 || direction == 1) {
-                    disp[i] = disp[i-1]+nx_loc[1]-(xp_loc[2]-xm_loc[2]);
-                } else {
-                    disp[i] = disp[i-1]+1-(xp_loc[2]-xm_loc[2]);
-                }
+                disp[i] = disp[i-1]+d.cart->get_nx_tot(2)-(xp_loc[2]-xm_loc[2]);
             } else {
                 disp[i] = disp[i-1]+1;
             }
         }
         
-        MPI_Type_create_indexed_block(ntot, 1, disp, MPI_DOUBLE, &dataarray);
+        MPI_Type_create_indexed_block(ntot, 1, disp, MPI_DOUBLE, &xarray);
         
-        MPI_Type_commit(&dataarray);
+        MPI_Type_commit(&xarray);
         
         delete[] disp;
-
-        // write data
         
-        MPI_File xfile;
-        
-        string xyzstr[3] = {"x", "y", "z"};
-        
-        for (int i=0; i<3; i++) {
+        for (int i=0; i<ndim; i++) {
             
-            if (i < ndim) {
-                
-                filename = new char [(datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").size()+1];
-                strcpy(filename, (datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").c_str());
-                
-                rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
-                
-                delete[] filename;
-                
-                if(rc != MPI_SUCCESS){
-                    std::cerr << "Error opening file in outputunit.cpp\n";
-                    MPI_Abort(MPI_COMM_WORLD, rc);
-                }
-                
-                // delete contents
-                
-                rc = MPI_File_set_size(xfile, (MPI_Offset)0);
-                
-                if(rc != MPI_SUCCESS){
-                    std::cerr << "Error deleting file in outputunit.cpp\n";
-                    MPI_Abort(MPI_COMM_WORLD, rc);
-                }
-                
-                // set view to beginning
-                
-                MPI_File_set_view(xfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
-                
-                // calculate start position of data to be written
-                
-                int xstart = (i*cart.get_nx_tot(0)*cart.get_nx_tot(1)*cart.get_nx_tot(2)+
-                              (xm_loc[0]-cart.get_xm_loc(0)+cart.get_xm_ghost(0))*cart.get_nx_tot(1)*cart.get_nx_tot(2)+
-                              (xm_loc[1]-cart.get_xm_loc(1)+cart.get_xm_ghost(1))*cart.get_nx_tot(2)+
-                              (xm_loc[2]-cart.get_xm_loc(2)+cart.get_xm_ghost(2)));
-                
-                // write data
-                
-                MPI_File_write(xfile, &(f.x[xstart]), 1, dataarray, MPI_STATUS_IGNORE);
-                
-                // close file
-                
-                MPI_File_close(&xfile);
-                
+            filename = new char [(datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").size()+1];
+            strcpy(filename, (datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").c_str());
+            
+            rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
+            
+            delete[] filename;
+            
+            if(rc != MPI_SUCCESS){
+                std::cerr << "Error opening file in outputunit.cpp\n";
+                MPI_Abort(MPI_COMM_WORLD, rc);
             }
+            
+            // delete contents
+            
+            rc = MPI_File_set_size(xfile, (MPI_Offset)0);
+            
+            if(rc != MPI_SUCCESS){
+                std::cerr << "Error deleting file in outputunit.cpp\n";
+                MPI_Abort(MPI_COMM_WORLD, rc);
+            }
+            
+            // set view to beginning
+            
+            MPI_File_set_view(xfile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+            
+            // calculate start position of data to be written
+            
+            int xstart = (i*d.cart->get_nx_tot(0)*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[0]-d.cart->get_xm_loc(0)+d.cart->get_xm_ghost(0))*d.cart->get_nx_tot(1)*d.cart->get_nx_tot(2)+
+                          (xm_loc[1]-d.cart->get_xm_loc(1)+d.cart->get_xm_ghost(1))*d.cart->get_nx_tot(2)+
+                          (xm_loc[2]-d.cart->get_xm_loc(2)+d.cart->get_xm_ghost(2)));
+            
+            // write data
+            
+            MPI_File_write(xfile, &(d.f->x[xstart]), 1, xarray, MPI_STATUS_IGNORE);
+            
+            // close file
+            
+            MPI_File_close(&xfile);
             
         }
         
         // Free MPI Datatypes
         
-        MPI_Type_free(&dataarray);
         MPI_Type_free(&filearray);
+        MPI_Type_free(&xarray);
         
     }
     

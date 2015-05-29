@@ -104,7 +104,7 @@ void frontlist::write_list(const domain& d) {
     // traverse list, calling set_front for each
     
     while (cunit) {
-        cunit->write_front(*(d.cart), *(d.f));
+        cunit->write_front(d);
         cunit = cunit->get_next_unit();
     }
 }
