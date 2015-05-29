@@ -64,9 +64,8 @@ boxcar 0. 0. 5. 0. 0. 0. 0. 0.
 boxcar 0. 40. 5. 0. 0. 0. 0. 0.
 
 [fdfault.slipweak]
-0.4
-0.677
-0.525
+1
+constant 0. 0. 0. 0. 0. 0.4 0.677 0.525
 
 [fdfault.outputlist]
 v

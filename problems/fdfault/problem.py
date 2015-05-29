@@ -256,6 +256,30 @@ class problem(object):
         "Adds load to interface with index (either integer index or iterable)"
         self.d.add_load(newload, index)
 
+    def delete_load(self, niface, index = -1):
+        "Deletes load from index niface at position index from the list of loads. Default is most recently added"
+        self.d.delete_load(niface, index)
+
+    def get_load(self, niface, index = None):
+        "Returns load for index niface at position index. If no index provided, returns entire list"
+        return self.d.get_load(niface, index)
+
+    def get_nperts(self, index):
+        "Returns number of perturbations on given interface"
+        return self.d.get_nperts(index)
+
+    def add_pert(self, newpert, index = None):
+        "Adds perturbation to interface with index (either integer index or iterable)"
+        self.d.add_pert(newpert, index)
+
+    def delete_pert(self, niface, index = -1):
+        "Deletes perturbation from index niface at position index from the list of loads. Default is most recently added"
+        self.d.delete_pert(niface, index)
+
+    def get_pert(self, niface, index = None):
+        "Returns perturbation for index niface at position index. If no index provided, returns entire list"
+        return self.d.get_pert(niface, index)
+        
     def get_direction(self, index):
         "Returns direction of interface index"
         return self.d.get_direction(index)
@@ -268,42 +292,18 @@ class problem(object):
         "Returns block in plus direction of interface index"
         return self.d.get_bp(index)
 
-    def get_dc(self, index):
-        "Returns slip weakening distance of interface index"
-        return self.d.get_dc(index)
-
-    def get_mus(self, index):
-        "Returns static friction coefficient of interface index"
-        return self.d.get_mus(index)
-
-    def get_mud(self, index):
-        "Returns dynamic friction coefficient of interface index"
-        return self.d.get_mud(index)
-
-    def get_params(self, index):
-        "Returns friction parameters of interface index"
-        return self.d.get_params(index)
-
-    def set_dc(self, dc, index = None):
-        "Sets slip weakening distance of interface index, if no index provided does so for all interfaces"
-        self.d.set_dc(dc, index)
-
-    def set_mus(self, mus, index = None):
-        "Sets static friction coefficient of interface index, if no index provided does so for all interfaces"
-        self.d.set_mus(mus, index)
-
-    def set_mud(self, mud, index = None):
-        "Sets dynamic friction coefficient of interface index, if no index provided does so for all interfaces"
-        self.d.set_mud(mud, index)
-
-    def set_params(self, dc, mus, mud, index = None):
-        "Sets friction parameters of interface index, if no index provided does so for all interfaces"
-        self.d.set_params(dc, mus, mud, index)
-
     def add_output(self, item):
         "Adds output item to output list"
         assert type(item) is output, "Item must be of type output"
         self.outputlist.append(item)
+
+    def get_output(self, index = None):
+        "Returns output item at given index (if none give, returns entire list)"
+        if index is None:
+            return self.outputlist
+        else:
+            assert index >= 0 and index < len(self.outputlist), "bad index"
+            return self.outputlist[index]
 
     def delete_output(self, index = None):
         "Deletes output item at given index (if none given, pops last item)"

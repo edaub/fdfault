@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 
+from .pert import pert
 from .surface import surface, curve
 
 class interface(object):
@@ -79,37 +80,29 @@ class interface(object):
         "Adds a load to list of load perturbations"
         raise NotImplementedError("Interfaces do not support load perturbations")
 
-    def get_dc(self):
-        "Returns slip weakening distance"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def delete_load(self, index = -1):
+        "Deletes load at position index from the list of loads. Default is most recently added"
+        raise NotImplementedError("Interfaces do not support load perturbations")
 
-    def set_dc(self, dc):
-        "Sets slip weakening distance"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def get_load(self, index = None):
+        "Returns load at position index. If no index provided, returns entire list"
+        raise NotImplementedError("Interfaces do not support load perturbations")
 
-    def get_mus(self):
-        "Returns static friction coefficient"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def get_nperts(self):
+        "Returns number of friction parameter perturbations"
+        raise NotImplementedError("Interfaces do not support parameter perturbations")
 
-    def set_mus(self, mus):
-        "Sets static friction coefficient"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def add_pert(self,newpert):
+        "Adds a perturbation to list of parameter perturbations"
+        raise NotImplementedError("Interfaces do not support parameter perturbations")
 
-    def get_mud(self):
-        "Returns dynamic friction coefficient"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def delete_pert(self, index = -1):
+        "Deletes perturbation at position index from the list of perturbation. Default is most recently added"
+        raise NotImplementedError("Interfaces do not support parameter perturbations")
 
-    def set_mud(self, mud):
-        "Sets dynamic friction coefficient"
-        raise NotImplementedError("Interfaces do not support friction parameters")
-
-    def get_params(self):
-        "Returns all friction parameters as a tuple"
-        raise NotImplementedError("Interfaces do not support friction parameters")
-
-    def set_params(self, dc, mus, mud):
-        "Set all friction parameters"
-        raise NotImplementedError("Interfaces do not support friction parameters")
+    def get_pert(self, index = None):
+        "Returns perturbation at given index. If no index provided, returns entire list"
+        raise NotImplementedError("Interfaces do not support parameter perturbations")
 
     def write_input(self, f, probname, endian = '='):
         "Writes interface details to input file"
@@ -146,6 +139,19 @@ class friction(interface):
         self.loads.append(newload)
         self.nloads = len(self.loads)
 
+    def delete_load(self, index = -1):
+        "Deletes load at position index from the list of loads. Default is most recently added"
+        self.loads.pop(index)
+        self.nloads = len(self.loads)
+
+    def get_load(self, index = None):
+        "Returns load at position index. If no index provided, returns entire list"
+        if index is None:
+            return self.loads
+        else:
+            assert index is int, "must provide integer index to load list"
+            return self.loads[index]
+
     def write_input(self, f, probname, endian = '='):
         "Writes Interface to input file"
         interface.write_input(self, f, probname, endian)
@@ -170,55 +176,40 @@ class slipweak(friction):
     def __init__(self, ndim, index, direction, bm, bp):
         friction.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "slipweak"
-        self.dc = 0.
-        self.mus = 0.
-        self.mud = 0.
+        self.nperts = 0
+        self.perts = []
 
-    def get_dc(self):
-        "Returns slip weakening distance"
-        return self.dc
+    def get_nperts(self):
+        "Returns number of friction parameter perturbations"
+        return self.nperts
 
-    def set_dc(self, dc):
-        "Sets slip weakening distance"
-        assert dc >= 0., "slip weakening distance cannot be negative"
-        self.dc = float(dc)
+    def add_pert(self,newpert):
+        "Adds a perturbation to list of parameter perturbations"
+        assert type(newpert) is swparam, "Cannot add types other than swparam to parameter list"
+        self.perts.append(newpert)
+        self.nperts = len(self.perts)
 
-    def get_mus(self):
-        "Returns static friction coefficient"
-        return self.mus
+    def delete_pert(self, index = -1):
+        "Deletes perturbation at position index from the list of perturbation. Default is most recently added"
+        self.perts.pop(index)
+        self.nperts = len(self.perts)
 
-    def set_mus(self, mus):
-        "Sets static friction coefficient"
-        assert mus >= 0., "static friction coefficient cannot be negative"
-        self.mus = float(mus)
-
-    def get_mud(self):
-        "Returns dynamic friction coefficient"
-        return self.mud
-
-    def set_mud(self, mud):
-        "Sets dynamic friction coefficient"
-        assert mud >= 0., "dynamic friction coefficient cannot be negative"
-        self.mud = float(mud)
-
-    def get_params(self):
-        "Returns all friction parameters as a tuple"
-        return (self.dc, self.mus, self.mud)
-
-    def set_params(self, dc, mus, mud):
-        "Set all friction parameters"
-        self.set_dc(dc)
-        self.set_mus(mus)
-        self.set_mud(mud)
+    def get_pert(self, index = None):
+        "Returns perturbation at given index. If no index provided, returns entire list"
+        if index is None:
+            return self.perts
+        else:
+            assert index is int, "index must be an integer"
+            return self.perts[index]
 
     def write_input(self, f, probname, endian = '='):
         "Write parameters to input file"
         friction.write_input(self, f, probname, endian)
 
         f.write("[fdfault.slipweak]\n")
-        f.write(str(self.dc)+"\n")
-        f.write(str(self.mus)+"\n")
-        f.write(str(self.mud)+"\n")
+        f.write(str(self.nperts)+"\n")
+        for p in self.perts:
+            p.write_input(f)
 
         f.write("\n")
 
@@ -232,78 +223,16 @@ class slipweak(friction):
                 +"\ndc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud)
                 +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring)
 
-class load(object):
+class load(pert):
     "Class representing load perturbations to fricitonal interfaces"
     def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., sn = 0., s2 = 0., s3 =0.):
         "Initialize interface load perturbation"
-        assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
-        assert t0 >= 0., "t0 must be nonnegative"
-        assert dx >= 0., "dx must be nonnegative"
-        assert dy >= 0., "dy must be nonnegative"
-        
-        self.loadtype = loadtype
-        self.t0 = float(t0)
-        self.x0 = float(x0)
-        self.y0 = float(y0)
-        self.dx = float(dx)
-        self.dy = float(dy)
+
+        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+
         self.sn = float(sn)
         self.s2 = float(s2)
         self.s3 = float(s3)
-
-    def get_type(self):
-        "returns load type"
-        return self.loadtype
-
-    def set_type(self,loadtype):
-        "sets load type"
-        assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
-        self.loadtype = loadtype
-
-    def get_t0(self):
-        "returns onset time"
-        return self.t0
-
-    def set_t0(self, t0):
-        "sets onset time"
-        assert t0 >= 0., "t0 must be nonnegative"
-        self.t0 = float(t0)
-
-    def get_x0(self):
-        "returns perturbation location in first interface coordinate"
-        return self.x0
-
-    def get_y0(self):
-        "returns perturbation location in second interface coordinate"
-        return self.y0
-
-    def set_x0(self, x0):
-        "sets first coordinate of perturbation location"
-        self.x0 = float(x0)
-
-    def set_y0(self, y0):
-        "sets second coordinate of perturbation location"
-        self.y0 = float(y0)
-
-    def get_dx(self):
-        "returns perturbation width in first interface coordinate"
-        return self.dx
-
-    def get_dy(self):
-        "returns perturbation width in second interface coordinate"
-        return self.dy
-
-    def set_dx(self, dx):
-        "sets first coordinate width of perturbation"
-        assert dx >= 0., "dx must be nonnegative"
-        self.dx = float(dx)
-
-    def set_dy(self, dy):
-        "sets second coordinate width of perturbation"
-        assert dy >= 0., "dy must be nonnegative"
-        self.dy = float(dy)
 
     def get_sn(self):
         "returns normal stress perturbation"
@@ -331,11 +260,53 @@ class load(object):
 
     def write_input(self, f):
         "Writes loads to input file"
-        f.write(self.loadtype+" "+str(self.t0)+" "+str(self.x0)+" "+str(self.dx)+" "+str(self.y0)+
-                " "+str(self.dy)+" "+str(self.sn)+" "+str(self.s2)+" "+str(self.s3)+"\n")
+        pert.write_input(self, f)
+        f.write(" "+str(self.sn)+" "+str(self.s2)+" "+str(self.s3)+"\n")
 
     def __str__(self):
         "Returns a string representation"
-        return ("type = "+self.loadtype+", t0 = "+str(self.t0)+", x0 = "+str(self.x0)+", dx = "+str(self.dx)+
-                ", y0 = "+str(self.y0)+", dy = "+str(self.dy)+", sn = "+str(self.sn)+", s2 = "+str(self.s2)+", s3 = "+str(self.s3))
+        return (pert.__str__(self)+", sn = "+str(self.sn)+", s2 = "+str(self.s2)+", s3 = "+str(self.s3))
     
+class swparam(pert):
+    "Class representing perturbations to slip weakening parameters"
+    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., dc = 0., mus = 0., mud =0.):
+        "Initialize interface load perturbation"
+
+        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+
+        self.dc = float(dc)
+        self.mus = float(mus)
+        self.mud = float(mud)
+
+    def get_dc(self):
+        "returns slip weakening distance perturbation"
+        return self.dc
+
+    def set_dc(self, dc):
+        "sets slip weakening distance perturbation"
+        self.dc = float(dc)
+
+    def get_mus(self):
+        "returns static friction perturbation"
+        return self.mus
+
+    def set_mus(self, mus):
+        "sets static friction perturbation"
+        self.mus = float(mus)
+
+    def get_mud(self):
+        "returns dynamic friction perturbation"
+        return self.mud
+
+    def set_mud(self, mud):
+        "sets dynamic friction perturbation"
+        self.mud = float(mud)
+
+    def write_input(self, f):
+        "Writes loads to input file"
+        pert.write_input(self, f)
+        f.write(" "+str(self.dc)+" "+str(self.mus)+" "+str(self.mud)+"\n")
+
+    def __str__(self):
+        "Returns a string representation"
+        return (pert.__str__(self)+", dc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud))

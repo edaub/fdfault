@@ -149,9 +149,10 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     loads = new load* [nloads];
     
     for (int i=0; i<nloads; i++) {
-        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], sn[i], s2[i], s3[i], n, xm_2d, xm_loc2d, x_2d, l_2d);
+        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, sn[i], s2[i], s3[i]);
     }
     
+    delete[] ltype;
     delete[] t0;
     delete[] x0;
     delete[] y0;
@@ -236,7 +237,7 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     phi3 = eta*(iffin.s13/z1-iffin.v13+iffin.s23/z2+iffin.v23);
     phi = sqrt(pow(phi2,2)+pow(phi3,2));
     
-    boundchar b = solve_fs(phi, eta, sn, i, j);
+    boundchar b = solve_fs(phi, eta, sn, i, j, t);
     
     if (fabs(b.v) < 1.e-14 && fabs(b.s) < 1.e-14) {
         v2 = 0.;
@@ -287,7 +288,7 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     
 }
 
-boundchar friction::solve_fs(const double phi, const double eta, const double sn, const int i, const int j) {
+boundchar friction::solve_fs(const double phi, const double eta, const double sn, const int i, const int j, const double t) {
     // solves friction law for slip velocity and strength
     // frictionless interface
     

@@ -449,6 +449,48 @@ class domain(object):
                 assert type(index) is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
                 self.interfaces[index].add_load(newload)
 
+    def delete_load(self, niface, index = -1):
+        "Deletes load from index niface at position index from the list of loads. Default is most recently added"
+        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].delete_load(index)
+
+    def get_load(self, niface, index = None):
+        "Returns load for index niface at position index. If no index provided, returns entire list"
+        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_load(index)
+
+    def get_nperts(self, index):
+        "Returns number of perturbations on given interface"
+        assert i is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[index].get_nperts()
+
+    def add_pert(self, newpert, index = None):
+        "Adds perturbation to interface with index (either integer index or iterable)"
+        if index is None:
+            for iface in self.interfaces:
+                try:
+                    iface.add_pert(newpert)
+                except NotImplementedError:
+                    print("skipping non-frictional interface")
+        else:
+            try:
+                for i in index:
+                    assert type(i) is int and i >= 0 and i < self.nifaces, "Must give integer index for interface"
+                    self.interfaces[i].add_pert(newpert)
+            except:
+                assert type(index) is int and index >= 0 and index < self.nifaces, "Must give integer index for interface"
+                self.interfaces[index].add_pert(newpert)
+
+    def delete_pert(self, niface, index = -1):
+        "Deletes perturbation from index niface at position index from the list of loads. Default is most recently added"
+        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].delete_pert(index)
+
+    def get_pert(self, niface, index = None):
+        "Returns perturbation for index niface at position index. If no index provided, returns entire list"
+        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_pert(index)
+
     def get_direction(self, index):
         "Returns direction of interface index"
         assert index >= 0 and index < self.nifaces, "Index out of range"
@@ -473,74 +515,6 @@ class domain(object):
         "Sets interface surface for given index"
         assert index >= 0 and index < self.nifaces, "Index out of range"
         self.interfaces[index].set_surface(surf)
-
-    def get_dc(self, index):
-        "Returns slip weakening distance of interface index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        return self.interfaces[index].get_dc()
-
-    def get_mus(self, index):
-        "Returns static friction coefficient of interface index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        return self.interfaces[index].get_mus()
-
-    def get_mud(self, index):
-        "Returns dynamic friction coefficient of interface index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        return self.interfaces[index].get_mud()
-
-    def get_params(self, index):
-        "Returns friction parameters of interface index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        return self.interfaces[index].get_params()
-
-    def set_dc(self, dc, index = None):
-        "Sets slip weakening distance of interface index, if no index provided does so for all interfaces"
-        if index is None:
-            for iface in self.interfaces:
-                try:
-                    iface.set_dc(dc)
-                except NotImplementedError:
-                    print("Skipping non slip-weakening interface")
-        else:
-            assert index >= 0 and index < self.nifaces, "Index out of range"
-            self.interfaces[index].set_dc(dc)
-
-    def set_mus(self, mus, index = None):
-        "Sets static friction coefficient of interface index, if no index provided does so for all interfaces"
-        if index is None:
-            for iface in self.interfaces:
-                try:
-                    iface.set_mus(mus)
-                except NotImplementedError:
-                    print("Skipping non slip-weakening interface")
-        else:
-            assert index >= 0 and index < self.nifaces, "Index out of range"
-            self.interfaces[index].set_mus(mus)
-
-    def set_mud(self, mud, index = None):
-        "Sets dynamic friction coefficient of interface index, if no index provided does so for all interfaces"
-        if index is None:
-            for iface in self.interfaces:
-                try:
-                    iface.set_mud(mud)
-                except NotImplementedError:
-                    print("Skipping non slip-weakening interface")
-        else:
-            assert index >= 0 and index < self.nifaces, "Index out of range"
-            self.interfaces[index].set_mud(mud)
-
-    def set_params(self, dc, mus, mud, index = None):
-        "Sets friction parameters of interface index, if no index provided does so for all interfaces"
-        if index is None:
-            for iface in self.interfaces:
-                try:
-                    iface.set_params(dc, mus, mud)
-                except NotImplementedError:
-                    print("Skipping non slip-weakening interface")
-        else:
-            assert index >= 0 and index < self.nifaces, "Index out of range"
-            self.interfaces[index].set_params(dc, mus, mud)
 
     def write_input(self, f, probname, endian = '='):
         "Writes domain information to input file"
