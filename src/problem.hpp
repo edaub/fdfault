@@ -3,6 +3,7 @@
 
 #include <string>
 #include "domain.hpp"
+#include "frontlist.hpp"
 #include "outputlist.hpp"
 #include "rk.hpp"
 
@@ -24,6 +25,7 @@ private:
     domain* d;
     rk_type* rk;
 	outputlist* out;
+    frontlist* front;
     void set_time_step();
 };
 

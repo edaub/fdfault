@@ -12,6 +12,8 @@
 
 class domain
 { friend class outputunit;
+    friend class frontlist;
+    friend class front;
 public:
     domain(const char* filename);
     ~domain();

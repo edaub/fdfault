@@ -14,12 +14,21 @@
 using namespace std;
 
 front::front(const std::string probname_in, const std::string datadir_in,
-      std::string field_in, const double value_in, const int niface_in, const interface& iface) {
+      std::string field_in, const double value_in, const int niface_in, const domain& d) {
     // constructor
     
     assert(value_in > 0.);
     assert(field_in == "V" || field_in == "U");
-    assert(iface.is_friction);
+    assert(d.interfaces[niface_in]->is_friction);
+    
+    // set next front to null pointer
+    
+    next = 0;
+    
+    // set class attributes from input
+    
+    probname = probname_in;
+    datadir = datadir_in;
     
     if (field_in == "V") {
         field = 0;
@@ -28,32 +37,32 @@ front::front(const std::string probname_in, const std::string datadir_in,
     }
     
     value = value_in;
-    
-    stringstream ss;
-    
-    ss << niface_in;
-    
-    niface = ss.str();
+    niface = niface_in;
 
     // set values from interface
     
     for (int i=0; i<2; i++) {
-        nx[i] = iface.n[i];
-        nx_loc[i] = iface.n_loc[i];
+        nx[i] = d.interfaces[niface]->n[i];
+        nx_loc[i] = d.interfaces[niface]->n_loc[i];
     }
     
     for (int i=0; i<3; i++) {
-        xm[i] = iface.xm[i];
-        xm_loc[i] = iface.xm_loc[i];
-        xp[i] = iface.xp[i];
-        xp_loc[i] = iface.xp_loc[i];
+        xm[i] = d.interfaces[niface]->xm[i];
+        xm_loc[i] = d.interfaces[niface]->xm_loc[i];
+        xp[i] = d.interfaces[niface]->xp[i];
+        xp_loc[i] = d.interfaces[niface]->xp_loc[i];
     }
     
-    direction = iface.direction;
+    ndim = d.ndim;
+    direction = d.interfaces[niface]->direction;
     
-    // if interface is shared between processes, use data1 side
-    
-    no_data = iface.data1;
+    // if interface is shared between processes, use data2 side
+
+    if (!d.interfaces[niface]->no_data && d.interfaces[niface]->data2) {
+        no_data = false;
+    } else {
+        no_data = true;
+    }
     
     if (no_data) { return; }
     
@@ -78,21 +87,34 @@ front::~front() {
     
 }
 
-void front::set_front(const double t, const interface& iface) {
+front* front::get_next_unit() const {
+    // returns address of next front in list
+    
+    return next;
+}
+
+void front::set_next_unit(front* nextunit) {
+    // sets next to point to nextunit
+    
+    next = nextunit;
+}
+
+void front::set_front(const double t, const domain& d) {
     // checks if interface values exceed threshold
     
     if (no_data) { return; }
     
     for (int i=0; i<nx_loc[0]*nx_loc[1]; i++) {
-        if (tvals[i] < 0) {
+        if (tvals[i] < 0.) {
             switch (field) {
                 case 0:
-                    if (iface.v[i] >= value) {
+                    if (d.interfaces[niface]->v[i] >= value) {
                         tvals[i] = t;
                     }
                     break;
                 case 1:
-                    if (iface.u[i] >= value) {
+                    break;
+                    if (d.interfaces[niface]->u[i] >= value) {
                         tvals[i] = t;
                     }
             }
@@ -101,7 +123,7 @@ void front::set_front(const double t, const interface& iface) {
     
 }
 
-void front::write_front(const int ndim, const fields& f, const cartesian& cart) const {
+void front::write_front(const cartesian& cart, const fields& f) const {
     // writes rupture times to file
     
     // determine which processes have data to create new communicator
@@ -162,7 +184,13 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
     char* filename;
     char filetype[] = "native";
     
-/*    if (!no_data) {
+    // make interface number into a string
+    
+    stringstream ss;
+    
+    ss << niface;
+    
+    if (!no_data) {
         
         // create subarray
         
@@ -189,8 +217,8 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         
         MPI_File outfile;
         
-        filename = new char [(datadir+probname+"_front_"+niface+"_t.dat").size()+1];
-        strcpy(filename, (datadir+probname+"_front_"+niface+"_t.dat").c_str());
+        filename = new char [(datadir+probname+"_front_"+ss.str()+"_t.dat").size()+1];
+        strcpy(filename, (datadir+probname+"_front_"+ss.str()+"_t.dat").c_str());
         
         rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &outfile);
         
@@ -292,8 +320,8 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
             
             if (i < ndim) {
                 
-                filename = new char [(datadir+probname+"_front_"+niface+"_"+xyzstr[i]+".dat").size()+1];
-                strcpy(filename, (datadir+probname+"_front_"+niface+"_"+xyzstr[i]+".dat").c_str());
+                filename = new char [(datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").size()+1];
+                strcpy(filename, (datadir+probname+"_front_"+ss.str()+"_"+xyzstr[i]+".dat").c_str());
                 
                 rc = MPI_File_open(comm, filename, MPI_MODE_CREATE | MPI_MODE_WRONLY,MPI_INFO_NULL, &xfile);
                 
@@ -349,7 +377,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         
         char endian = get_endian();
         
-        ofstream matlabfile((datadir+probname+"_front_"+niface+".m").c_str(), ios::out);
+        ofstream matlabfile((datadir+probname+"_front_"+ss.str()+".m").c_str(), ios::out);
         
         if (matlabfile.is_open()) {
             if (endian == '<') {
@@ -367,7 +395,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         }
         matlabfile.close();
         
-        ofstream pyfile((datadir+probname+"_front_"+niface+".py").c_str(), ios::out);
+        ofstream pyfile((datadir+probname+"_front_"+ss.str()+".py").c_str(), ios::out);
         if (pyfile.is_open()) {
             pyfile << "endian = '" << endian << "'\n";
             pyfile << "nx = " << nx[0] << "\n";
@@ -380,7 +408,7 @@ void front::write_front(const int ndim, const fields& f, const cartesian& cart) 
         pyfile.close();
         
         
-    }*/
+    }
     
 }
 

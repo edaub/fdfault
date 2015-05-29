@@ -46,6 +46,7 @@ class output(object):
         return self.field
 
     def set_field(self, field):
+        "Sets output file (must be a valid block or interface field)"
         assert (field == "vx" or field == "vy" or field == "vz" or field == "sxx" or field == "sxy"
                 or field == "sxz" or field == "syy" or field == "syz" or field == "szz" or field == "Ux"
                 or field == "Uy" or field == "Vx" or field == "Vy" or field == "U" or field == "V"), "Incorrect field name"

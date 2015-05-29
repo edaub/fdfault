@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from .domain import domain
 from .output import output
+from .front import front
 
 class problem(object):
     """
@@ -23,6 +24,7 @@ class problem(object):
         self.rkorder = 1
         self.d = domain()
         self.outputlist = []
+        self.frt = front()
 
     def get_name(self):
         "Returns problem name"
@@ -310,6 +312,30 @@ class problem(object):
         else:
             assert index >= 0 and index < len(self.outputlist), "bad index"
             self.outputlist.pop(index)
+
+    def get_front_output(self):
+        "Returns front output (boolean)"
+        return self.frt.get_output()
+
+    def set_front_output(self, output):
+        "Sets front output (boolean)"
+        self.frt.set_output(output)
+
+    def get_front_field(self):
+        "Returns front field"
+        return self.frt.get_field()
+
+    def set_front_field(self, field):
+        "Sets front field (must be slip (U) or slip velocity (V))"
+        self.frt.set_field(field)
+
+    def get_front_value(self):
+        "Returns front threshhold value"
+        return self.frt.get_value()
+
+    def set_front_value(self, value):
+        "Sets front threshhold value"
+        self.frt.set_value(value)
     
     def write_input(self, filename = None, endian = '='):
         "Writes problem to input file"
@@ -336,6 +362,8 @@ class problem(object):
         for item in self.outputlist:
             item.write_input(f)
         f.write("\n\n")
+        self.frt.write_input(f)
+        f.write("\n")
         f.close()
 
     def check(self):

@@ -3,22 +3,25 @@
 
 #include <string>
 #include "cartesian.hpp"
+#include "domain.hpp"
 #include "fields.hpp"
-#include "interface.hpp"
 #include <mpi.h>
 
 class front
 {
 public:
     front(const std::string probname_in, const std::string datadir_in,
-               std::string field_in, const double value_in, const int niface_in, const interface& iface);
+               std::string field_in, const double value_in, const int niface_in, const domain& d);
     ~front();
-    void set_front(const double t, const interface& iface);
-    void write_front(const int ndim, const fields& f, const cartesian& cart) const;
+    front* get_next_unit() const;
+    void set_next_unit(front* nextunit);
+    void set_front(const double t, const domain& d);
+    void write_front(const cartesian& cart, const fields& f) const;
 private:
     std::string probname;
     std::string datadir;
     bool no_data;
+    int ndim;
     int xm[3];
     int xm_loc[3];
     int xp[3];
@@ -27,9 +30,10 @@ private:
     int nx_loc[2];
     int field;
     int direction;
-    std::string niface;
+    int niface;
     double value;
     double* tvals;
+    front* next;
 };
 
 #endif

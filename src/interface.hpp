@@ -18,6 +18,7 @@ struct ifchar {
 
 class interface
 { friend class outputunit;
+    friend class frontlist;
     friend class front;
 public:
     interface(const char* filename, const int ndim_in, const int mode_in, const int niface,

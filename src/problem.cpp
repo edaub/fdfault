@@ -6,6 +6,7 @@
 #include <cmath>
 #include "problem.hpp"
 #include "domain.hpp"
+#include "frontlist.hpp"
 #include "outputlist.hpp"
 #include "rk.hpp"
 #include <mpi.h>
@@ -64,6 +65,10 @@ problem::problem(const char* filename) {
 	
     out = new outputlist(filename, name, datadir, nt, *d);
     
+    // create front list
+    
+    front = new frontlist(filename, name, datadir, *d);
+    
 }
 
 problem::~problem() {
@@ -71,6 +76,7 @@ problem::~problem() {
     delete rk;
     delete d;
     delete out;
+    delete front;
 }
 
 void problem::set_time_step() {
@@ -134,7 +140,7 @@ void problem::solve() {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-            d->do_rk_stage(dt,stage,(double)i*nt,*rk);
+            d->do_rk_stage(dt,stage,(double)(i*nt),*rk);
         }
         
         // output data (uses absolute stress values)
@@ -144,6 +150,10 @@ void problem::solve() {
         out->write_list(i, dt, *d);
 
         d->remove_stress();
+        
+        // update front
+        
+        front->set_front((double)i*dt, *d);
         
         // update status
         
@@ -158,6 +168,10 @@ void problem::solve() {
     // close output files
     
     out->close_list();
+    
+    // write fronts
+    
+    front->write_list(*d);
     
     // free MPI data types for boundary exchange
     
