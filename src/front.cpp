@@ -208,8 +208,14 @@ void front::write_front(const cartesian& cart, const fields& f) const {
         }
         
         MPI_Datatype filearray;
+        int nx_tmp[2], nx_loc_tmp[2];
         
-        MPI_Type_create_subarray(2, nx, nx_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
+        for (int i=0; i<2; i++) {
+            nx_tmp[i] = nx[i];
+            nx_loc_tmp[i] = nx_loc[i];
+        }
+        
+        MPI_Type_create_subarray(2, nx_tmp, nx_loc_tmp, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
         
         MPI_Type_commit(&filearray);
         
