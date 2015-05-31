@@ -28,6 +28,13 @@ class surface(object):
         self.ny = np.array(ny)
         self.nz = np.array(nz)
 
+        assert (n1, n2) == self.x.shape, "x must have shape (n1, n2)"
+        assert (n1, n2) == self.y.shape, "y must have shape (n1, n2)"
+        assert (n1, n2) == self.z.shape, "z must have shape (n1, n2)"
+        assert (n1, n2) == self.nx.shape, "nx must have shape (n1, n2)"
+        assert (n1, n2) == self.ny.shape, "ny must have shape (n1, n2)"
+        assert (n1, n2) == self.nz.shape, "nz must have shape (n1, n2)"
+
     def get_n1(self):
         '''
         returns number of grid points along first dimension
@@ -179,7 +186,7 @@ class surface(object):
         by default, output is native
         '''
         
-        assert(endian == '=' or endian == '>' or endian == '<')
+        assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
 
         f = open(filename, 'wb')
 
@@ -196,7 +203,7 @@ class surface(object):
         '''
         returns string representation of surface for printing
         '''
-        return 'Surface with normal direction ' + self.direction +' and n1 = ' + str(self.n1) + ', n2 = ' + str(self.n2)
+        return 'Surface with normal direction ' + self.direction +', n1 = ' + str(self.n1) + ', n2 = ' + str(self.n2)
 
 class curve(surface):
     "Class representing surfaces for 2D problems"
@@ -209,7 +216,7 @@ class curve(surface):
         nx, ny hold normal vector components
         '''
 
-        assert(direction == 'x' or direction == 'y')
+        assert(direction == 'x' or direction == 'y'), "direction must be 'x' or 'y'"
         self.n1 = n
         self.n2 = 1
         self.direction = direction
@@ -219,6 +226,11 @@ class curve(surface):
         self.nx = np.array(nx)
         self.ny = np.array(ny)
         self.nz = np.array([0.])
+
+        assert (n,) == self.x.shape, "x must have length n"
+        assert (n,) == self.y.shape, "y must have length n"
+        assert (n,) == self.nx.shape, "nx must have length n"
+        assert (n,) == self.ny.shape, "ny must have length n"
 
     def has_same_edge(self, edge1, edge2, othersurf):
         '''

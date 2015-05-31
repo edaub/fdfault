@@ -220,6 +220,14 @@ class problem(object):
         """
         self.d.set_block_surf(coords, loc, surf)
 
+    def delete_block_surf(self, coords, loc):
+        """
+        Sets boundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        self.d.delete_block_surf(coords, loc)
+
     def get_stress(self):
         "Returns intial stress values"
         return self.d.get_stress()
@@ -247,6 +255,10 @@ class problem(object):
     def set_iface_surf(self, index, surf):
         "Sets interface surface for given index"
         self.d.set_iface_surf(index,surf)
+
+    def delete_iface_surf(self, index):
+        "Deletes interface surface for given index"
+        self.d.delete_surface(index)
 
     def get_nloads(self, index):
         "Returns number of loads on given interface"
@@ -279,6 +291,30 @@ class problem(object):
     def get_pert(self, niface, index = None):
         "Returns perturbation for index niface at position index. If no index provided, returns entire list"
         return self.d.get_pert(niface, index)
+
+    def get_loadfile(self, niface):
+        "Returns loadfile for given interface"
+        return self.d.get_loadfile(niface)
+
+    def set_loadfile(self, niface, newloadfile):
+        "Sets loadfile for given interface"
+        self.d.set_loadfile(niface, newloadfile)
+
+    def delete_loadfile(self, niface):
+        "Deletes loadfile for given interface"
+        self.d.delete_loadfile(niface)
+
+    def get_paramfile(self, niface):
+        "Returns paramfile for given interface"
+        return self.d.get_paramfile(niface)
+
+    def set_paramfile(self, niface, newparamfile):
+        "Sets paramfile for given interface"
+        self.d.set_paramfile(niface, newparamfile)
+
+    def delete_paramfile(self, niface):
+        "Deletes paramfile for given interface"
+        self.d.delete_paramfile(niface)
         
     def get_direction(self, index):
         "Returns direction of interface index"

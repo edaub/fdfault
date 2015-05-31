@@ -362,6 +362,17 @@ class domain(object):
         for i in range(3):
             assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
         self.blocks[coords[0]][coords[1]][coords[2]].set_surf(loc, surf)
+
+    def delete_block_surf(self, coords, loc):
+        """
+        Sets boundary surface for block with coords
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        self.blocks[coords[0]][coords[1]][coords[2]].delete_surf(loc)
         
     def __set_block_coords(self):
         "Adjust corners of each block to match neighbors"
@@ -483,13 +494,43 @@ class domain(object):
 
     def delete_pert(self, niface, index = -1):
         "Deletes perturbation from index niface at position index from the list of loads. Default is most recently added"
-        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         self.interfaces[niface].delete_pert(index)
 
     def get_pert(self, niface, index = None):
         "Returns perturbation for index niface at position index. If no index provided, returns entire list"
-        assert niface is int and i >=0 and i < self.nifaces, "Must give integer index for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         return self.interfaces[niface].get_pert(index)
+
+    def get_loadfile(self, niface):
+        "Returns loadfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_loadfile()
+
+    def set_loadfile(self, niface, newloadfile):
+        "Sets loadfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].set_loadfile(newloadfile)
+
+    def delete_loadfile(self, niface):
+        "Deletes loadfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].delete_loadfile()
+
+    def get_paramfile(self, niface):
+        "Returns paramfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_paramfile()
+
+    def set_paramfile(self, niface, newparamfile):
+        "Sets paramfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].set_paramfile(newparamfile)
+
+    def delete_paramfile(self, niface):
+        "Deletes paramfile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].delete_paramfile()
 
     def get_direction(self, index):
         "Returns direction of interface index"
@@ -515,6 +556,11 @@ class domain(object):
         "Sets interface surface for given index"
         assert index >= 0 and index < self.nifaces, "Index out of range"
         self.interfaces[index].set_surface(surf)
+
+    def delete_iface_surf(self, index):
+        "Deletes interface surface for given index"
+        assert index >= 0 and index < self.nifaces, "Index out of range"
+        self.interfaces[index].delete_surface()
 
     def write_input(self, f, probname, endian = '='):
         "Writes domain information to input file"

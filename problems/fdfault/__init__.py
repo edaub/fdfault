@@ -24,7 +24,7 @@ fdfault.output -- details for writing simulation data to file
 
 While the module contains all classes (and you can set up simulations yourself using them),
 mostly you will be using the wrappers provided through the problem class, plus the constructors
-for material, load, swparam, and output. To create a problem, you must supply a name:
+for material, load, loadfile, swparam, and output. To create a problem, you must supply a name:
 
 >>> import fdfault
 >>> p = fdfault.problem("myproblem")
@@ -44,7 +44,8 @@ from .block import block
 from .domain import domain
 from .fields import fields
 from .front import front
-from .interface import interface, friction, slipweak, load, swparam
+from .interface import interface, friction, slipweak
+from .pert import load, swparam, loadfile, swparamfile
 from .problem import problem
 from .material import material
 from .output import output

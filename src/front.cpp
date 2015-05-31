@@ -128,55 +128,9 @@ void front::write_front(const domain& d) const {
     
     // determine which processes have data to create new communicator
     
-    int np, np_out, part, id, count;
-    int* incl_tot;
-    
-    MPI_Comm_size(MPI_COMM_WORLD, &np);
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
-    incl_tot = new int [np];
-    
-    if (no_data) {
-        part = -1;
-    } else {
-        part = id;
-    }
-    
-    MPI_Allgather(&part, 1, MPI_INT, incl_tot, 1, MPI_INT, MPI_COMM_WORLD);
-    
-    np_out = 0;
-    
-    for (int i=0; i<np; i++) {
-        if (incl_tot[i] != -1) {
-            np_out++;
-        }
-    }
-    
-    int* incl_proc;
-    
-    incl_proc = new int [np_out];
-    
-    count = 0;
-    
-    for (int i=0; i<np; i++) {
-        if (incl_tot[i] != -1) {
-            incl_proc[count] = incl_tot[i];
-            count++;
-        }
-    }
-    
-    // create new communicator for output
-    
     MPI_Comm comm;
     
-    MPI_Group world_group, outgroup;
-    
-    MPI_Comm_group(MPI_COMM_WORLD, &world_group);
-    MPI_Group_incl(world_group, np_out, incl_proc, &outgroup);
-    MPI_Comm_create(MPI_COMM_WORLD, outgroup, &comm);
-    
-    delete[] incl_proc;
-    delete[] incl_tot;
+    comm = create_comm(no_data);
     
     // if process has data to output, create MPI derived datatypes for output
     
@@ -219,7 +173,7 @@ void front::write_front(const domain& d) const {
         
         MPI_Type_commit(&filearray);
         
-        // all processes open distributed file for data output
+        // open distributed file for data output
         
         MPI_File outfile;
         
@@ -280,7 +234,7 @@ void front::write_front(const domain& d) const {
         
         MPI_File xfile;
         MPI_Datatype xarray;
-        int ntot = nx_loc[0]*nx_loc[1];
+        int ntot = nx_loc[0]*nx_loc[1], count;
         int* disp;
         
         disp = new int [ntot];
@@ -359,6 +313,10 @@ void front::write_front(const domain& d) const {
     }
     
     // if master, open files for matlab and python
+    
+    int id;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &id);
         
     if (id == 0) {
         

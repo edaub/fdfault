@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <string.h>
 #include <cmath>
 #include "block.hpp"
 #include "cartesian.hpp"
@@ -9,6 +11,7 @@
 #include "friction.hpp"
 #include "interface.hpp"
 #include "load.hpp"
+#include "utilities.h"
 #include <mpi.h>
 
 using namespace std;
@@ -21,28 +24,30 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     
     // allocate memory for slip and slip rate arrays
     
-    if (no_data) {return;}
+    if (!no_data) {
     
-    ux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
-    dux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
-    vx = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+        ux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+        dux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+        vx = new double [(ndim-1)*n_loc[0]*n_loc[1]];
     
-    u = new double [n_loc[0]*n_loc[1]];
-    du = new double [n_loc[0]*n_loc[1]];
-    v = new double [n_loc[0]*n_loc[1]];
-    
-    // initialize slip, change in slip, and slip velocity
-    
-    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
-        ux[i] = 0.;
-        dux[i] = 0.;
-        vx[i] = 0.;
-    }
-    
-    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
-        u[i] = 0.;
-        du[i] = 0.;
-        v[i] = 0.;
+        u = new double [n_loc[0]*n_loc[1]];
+        du = new double [n_loc[0]*n_loc[1]];
+        v = new double [n_loc[0]*n_loc[1]];
+        
+        // initialize slip, change in slip, and slip velocity
+        
+        for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+            ux[i] = 0.;
+            dux[i] = 0.;
+            vx[i] = 0.;
+        }
+        
+        for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+            u[i] = 0.;
+            du[i] = 0.;
+            v[i] = 0.;
+        }
+        
     }
     
     // read loads from input file
@@ -61,7 +66,7 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     
     ss << niface;
     
-    string line;
+    string line, loadfile;
     ifstream paramfile(filename, ifstream::in);
     if (paramfile.is_open()) {
         // scan to start of appropriate interface list
@@ -104,6 +109,7 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
                 paramfile >> s2[i];
                 paramfile >> s3[i];
             }
+            paramfile >> loadfile;
         }
     } else {
         cerr << "Error opening input file in interface.cpp\n";
@@ -111,45 +117,51 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     }
     paramfile.close();
     
-    double x_2d[2], l_2d[2];
-    int xm_2d[2], xm_loc2d[2];
+    // create 2d lengths and locations for boundary perturbations
     
-    switch (direction) {
-        case 0:
-            x_2d[0] = x[1];
-            x_2d[1] = x[2];
-            l_2d[0] = l[1];
-            l_2d[1] = l[2];
-            xm_2d[0] = xm[1];
-            xm_2d[1] = xm[2];
-            xm_loc2d[0] = xm_loc[1];
-            xm_loc2d[1] = xm_loc[2];
-            break;
-        case 1:
-            x_2d[0] = x[0];
-            x_2d[1] = x[2];
-            l_2d[0] = l[0];
-            l_2d[1] = l[2];
-            xm_2d[0] = xm[0];
-            xm_2d[1] = xm[2];
-            xm_loc2d[0] = xm_loc[0];
-            xm_loc2d[1] = xm_loc[2];
-            break;
-        case 2:
-            x_2d[0] = x[0];
-            x_2d[1] = x[1];
-            l_2d[0] = l[0];
-            l_2d[1] = l[1];
-            xm_2d[0] = xm[0];
-            xm_2d[1] = xm[1];
-            xm_loc2d[0] = xm_loc[0];
-            xm_loc2d[1] = xm_loc[1];
-    }
-    
-    loads = new load* [nloads];
-    
-    for (int i=0; i<nloads; i++) {
-        loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, sn[i], s2[i], s3[i]);
+    if (!no_data) {
+        
+        double x_2d[2], l_2d[2];
+        int xm_2d[2], xm_loc2d[2];
+        
+        switch (direction) {
+            case 0:
+                x_2d[0] = x[1];
+                x_2d[1] = x[2];
+                l_2d[0] = l[1];
+                l_2d[1] = l[2];
+                xm_2d[0] = xm[1];
+                xm_2d[1] = xm[2];
+                xm_loc2d[0] = xm_loc[1];
+                xm_loc2d[1] = xm_loc[2];
+                break;
+            case 1:
+                x_2d[0] = x[0];
+                x_2d[1] = x[2];
+                l_2d[0] = l[0];
+                l_2d[1] = l[2];
+                xm_2d[0] = xm[0];
+                xm_2d[1] = xm[2];
+                xm_loc2d[0] = xm_loc[0];
+                xm_loc2d[1] = xm_loc[2];
+                break;
+            case 2:
+                x_2d[0] = x[0];
+                x_2d[1] = x[1];
+                l_2d[0] = l[0];
+                l_2d[1] = l[1];
+                xm_2d[0] = xm[0];
+                xm_2d[1] = xm[1];
+                xm_loc2d[0] = xm_loc[0];
+                xm_loc2d[1] = xm_loc[1];
+        }
+        
+        loads = new load* [nloads];
+        
+        for (int i=0; i<nloads; i++) {
+            loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, sn[i], s2[i], s3[i]);
+        }
+        
     }
     
     delete[] ltype;
@@ -161,6 +173,15 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     delete[] sn;
     delete[] s2;
     delete[] s3;
+    
+    // if needed, read load data from file
+    
+    if (loadfile == "none") {
+        load_file = false;
+    } else {
+        load_file = true;
+        read_load(loadfile);
+    }
     
 }
 
@@ -182,6 +203,12 @@ friction::~friction() {
     }
     
     delete[] loads;
+    
+    if (load_file) {
+        delete[] sn;
+        delete[] s2;
+        delete[] s3;
+    }
 
 }
 
@@ -219,14 +246,28 @@ iffields friction::solve_interface(const boundfields b1, const boundfields b2, c
     
 }
 
-iffields friction::solve_friction(iffields iffin, double sn, const double z1, const double z2, const int i, const int j, const double t) {
+iffields friction::solve_friction(iffields iffin, double snc, const double z1, const double z2, const int i, const int j, const double t) {
     // solve friction law for shear tractions and slip velocities
     
     const double eta = z1*z2/(z1+z2);
     double phi, phi2, phi3, v2, v3;
     
+    // calculate index
+    
+    int index = i*n_loc[1]+j;
+    
+    // add boundary loads
+    
+    if (load_file) {
+        snc += sn[index];
+        iffin.s12 += s2[index];
+        iffin.s22 += s2[index];
+        iffin.s13 += s3[index];
+        iffin.s23 += s3[index];
+    }
+    
     for (int k=0; k<nloads; k++) {
-        sn += loads[k]->get_sn(i,j,t);
+        snc += loads[k]->get_sn(i,j,t);
         iffin.s12 += loads[k]->get_s2(i,j,t);
         iffin.s22 += loads[k]->get_s2(i,j,t);
         iffin.s13 += loads[k]->get_s3(i,j,t);
@@ -237,7 +278,7 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     phi3 = eta*(iffin.s13/z1-iffin.v13+iffin.s23/z2+iffin.v23);
     phi = sqrt(pow(phi2,2)+pow(phi3,2));
     
-    boundchar b = solve_fs(phi, eta, sn, i, j, t);
+    boundchar b = solve_fs(phi, eta, snc, i, j, t);
     
     if (fabs(b.v) < 1.e-14 && fabs(b.s) < 1.e-14) {
         v2 = 0.;
@@ -276,6 +317,14 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
     iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
     
+    // subtract boundary loads
+    
+    if (load_file) {
+        iffout.s12 -= s2[index];
+        iffout.s22 -= s2[index];
+        iffout.s13 -= s3[index];
+        iffout.s23 -= s3[index];
+    }
     
     for (int k=0; k<nloads; k++) {
         iffout.s12 -= loads[k]->get_s2(i,j,t);
@@ -288,7 +337,7 @@ iffields friction::solve_friction(iffields iffin, double sn, const double z1, co
     
 }
 
-boundchar friction::solve_fs(const double phi, const double eta, const double sn, const int i, const int j, const double t) {
+boundchar friction::solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t) {
     // solves friction law for slip velocity and strength
     // frictionless interface
     
@@ -367,4 +416,85 @@ void friction::write_fields() {
 
 }
 
+void friction::read_load(const string loadfile) {
+    // reads load data from input file
+    
+    // allocate memory for loads
+    
+    if (!no_data) {
+    
+        sn = new double [n_loc[0]*n_loc[1]];
+        s2 = new double [n_loc[0]*n_loc[1]];
+        s3 = new double [n_loc[0]*n_loc[1]];
+    
+    }
+    
+    // create communicator
+    
+    MPI_Comm comm;
+    
+    comm = create_comm(no_data);
+    
+    // create MPI subarray for reading distributed array
+    
+    if (!no_data) {
+    
+        int starts[2];
+        
+        if (direction == 0) {
+            starts[0] = xm_loc[1]-xm[1];
+            starts[1] = xm_loc[2]-xm[2];
+        } else if (direction == 1) {
+            starts[0] = xm_loc[0]-xm[0];
+            starts[1] = xm_loc[2]-xm[2];
+        } else {
+            starts[0] = xm_loc[0]-xm[0];
+            starts[1] = xm_loc[1]-xm[1];
+        }
+        
+        MPI_Datatype filearray;
+        
+        MPI_Type_create_subarray(2, n, n_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
+        
+        MPI_Type_commit(&filearray);
+        
+        // open file
+        
+        int rc;
+        char* filename;
+        char filetype[] = "native";
+
+        filename = new char [loadfile.size()+1];
+        strcpy(filename, loadfile.c_str());
+        
+        MPI_File infile;
+        
+        rc = MPI_File_open(comm, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &infile);
+        
+        delete[] filename;
+        
+        if(rc != MPI_SUCCESS){
+            std::cerr << "Error opening file in friction.cpp\n";
+            MPI_Abort(MPI_COMM_WORLD, rc);
+        }
+
+        // set view to beginning
+        
+        MPI_File_set_view(infile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+        
+        // read data
+        
+        MPI_File_read(infile, sn, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, s2, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, s3, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        
+        // close file
+        
+        MPI_File_close(&infile);
+        
+        MPI_Type_free(&filearray);
+        
+    }
+    
+}
 

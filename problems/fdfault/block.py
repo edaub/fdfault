@@ -171,6 +171,15 @@ class block(object):
             assert type(surf) is curve
         self.surfs[loc] = surf
 
+    def delete_surf(self, loc):
+        """
+        Deletes boundary surface at corresponding location
+        locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back, 4 = bottom, 5 = top
+        Note that the location must be 0 <= loc < 2*ndim
+        """
+        assert type(loc) is int and (loc >= 0 and loc < 2*self.ndim), "location out of range"
+        self.surfs[loc] = None
+
     def get_material(self):
         "Returns material type"
         return self.m
