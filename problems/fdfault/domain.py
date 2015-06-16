@@ -380,19 +380,19 @@ class domain(object):
             for j in range(self.nblocks[1]):
                 for k in range(self.nblocks[2]):
                     if (i == 0):
-                        x0 = 0.
+                        x0 = self.blocks[i][j][k].get_xm()[0]
                     else:
                         x = self.blocks[i-1][j][k].get_xm()[0]
                         l = self.blocks[i-1][j][k].get_lx()[0]
                         x0 = x+l
                     if (j == 0):
-                        x1 = 0.
+                        x1 = self.blocks[i][j][k].get_xm()[1]
                     else:
                         x = self.blocks[i][j-1][k].get_xm()[1]
                         l = self.blocks[i][j-1][k].get_lx()[1]
                         x1 = x+l
                     if (k == 0):
-                        x2 = 0.
+                        x2 = self.blocks[i][j][k].get_xm()[2]
                     else:
                         x = self.blocks[i][j][k-1].get_xm()[2]
                         l = self.blocks[i][j][k-1].get_lx()[2]
