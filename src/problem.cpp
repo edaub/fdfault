@@ -140,7 +140,7 @@ void problem::solve() {
         // advance domain by a time step by looping over RK stages
         
         for (int stage=0; stage<nstages; stage++) {
-            d->do_rk_stage(dt,stage,(double)(i*nt),*rk);
+            d->do_rk_stage(dt,stage,(double)i*dt,*rk);
         }
         
         // output data (uses absolute stress values)

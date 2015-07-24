@@ -33,6 +33,7 @@ public:
     double get_min_dx(fields& f) const;
     void calc_df(const double dt, fields& f, const fd_type& fd);
     void set_boundaries(const double dt, fields& f);
+    void set_mms(const double dt, const double t, fields& f);
 //    void calc_plastic(const double dt);
 private:
 	int ndim;
@@ -55,6 +56,10 @@ private:
     void calc_df_mode2(const double dt, fields& f, const fd_type& fd);
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
+    void calc_mms_mode3(const double dt, const double t, fields& f);
+    double mms_v_mode3(const double t, const double x, const double y) const;
+    double mms_sx_mode3(const double t, const double x, const double y) const;
+    double mms_sy_mode3(const double t, const double x, const double y) const;
 };
 
 #endif

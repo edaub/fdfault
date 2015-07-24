@@ -14,6 +14,8 @@
 #include "surface.hpp"
 #include <mpi.h>
 
+const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 1.5*pi, k3 = 4.*pi, k4 = 3.5*pi;
+
 using namespace std;
 
 block::block(const char* filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
@@ -1372,7 +1374,58 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     
 }
 
+void block::set_mms(const double dt, const double t, fields& f) {
+    // calculates MMS source term
+    
+    if (no_data) { return; }
+    
+    switch (ndim) {
+        case 3:
+            break;
+        case 2:
+            switch (mode) {
+                case 2:
+                    break;
+                case 3:
+                    calc_mms_mode3(dt,t,f);
+            }
+    }
+    
+}
 
+void block::calc_mms_mode3(const double dt, const double t, fields& f) {
+    // calculates MMS source term for mode 3 problem
+    
+    int index1;
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            f.df[0*nxd[0]+index1] += dt*mms_v_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[1*nxd[0]+index1] += dt*mms_sx_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[2*nxd[0]+index1] += dt*mms_sy_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+        }
+    }
+    
+}
 
+double block::mms_v_mode3(const double t, const double x, const double y) const {
+    // mms source function for mode 3 velocity
+    
+    return freq*cos(freq*t)*cos(k1*x)*cos(k3*y)+k2*sin(freq*t)*sin(k2*x)*cos(k3*y)+k4*sin(freq*t)*cos(k1*x)*sin(k4*y);
+    
+}
 
+double block::mms_sx_mode3(const double t, const double x, const double y) const {
+    // mms source function for mode 3 sxz
+    
+    return freq*cos(freq*t)*cos(k2*x)*cos(k3*y)+k1*sin(freq*t)*sin(k1*x)*cos(k3*y);
+    
+}
 
+double block::mms_sy_mode3(const double t, const double x, const double y) const {
+    // mms source function for mode 3 syz
+    
+    return freq*cos(freq*t)*cos(k1*x)*cos(k4*y)+k3*sin(freq*t)*cos(k1*x)*sin(k3*y);
+    
+}

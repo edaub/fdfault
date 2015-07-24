@@ -280,57 +280,107 @@ iffields friction::solve_friction(iffields iffin, double snc, const double z1, c
     
     boundchar b = solve_fs(phi, eta, snc, i, j, t);
     
-    if (fabs(b.v) < 1.e-14 && fabs(b.s) < 1.e-14) {
+    iffields iffout;
+    
+    if (b.v == 0.) {
+        
+        // fault is locked
+        
         v2 = 0.;
         v3 = 0.;
+        
+        // re-solve for locked fault characteristics
+        
+        if (load_file) {
+            iffin.s12 -= s2[index];
+            iffin.s22 -= s2[index];
+            iffin.s13 -= s3[index];
+            iffin.s23 -= s3[index];
+        }
+        
+        for (int k=0; k<nloads; k++) {
+            iffin.s12 -= loads[k]->get_s2(i,j,t);
+            iffin.s22 -= loads[k]->get_s2(i,j,t);
+            iffin.s13 -= loads[k]->get_s3(i,j,t);
+            iffin.s23 -= loads[k]->get_s3(i,j,t);
+        }
+        
+        ifchar ifcs1, ifcs2, ifchats1, ifchats2;
+        
+        ifcs1.v1 = iffin.v12;
+        ifcs1.v2 = iffin.v22;
+        ifcs1.s1 = iffin.s12;
+        ifcs1.s2 = iffin.s22;
+        
+        ifchats1 = solve_locked(ifcs1,zs1,zs2);
+        
+        ifcs2.v1 = iffin.v13;
+        ifcs2.v2 = iffin.v23;
+        ifcs2.s1 = iffin.s13;
+        ifcs2.s2 = iffin.s23;
+        
+        ifchats2 = solve_locked(ifcs2,zs1,zs2);
+        
+        iffout.v12 = ifchats1.v1;
+        iffout.v22 = ifchats1.v2;
+        iffout.s12 = ifchats1.s1;
+        iffout.s22 = ifchats1.s2;
+        iffout.v13 = ifchats2.v1;
+        iffout.v23 = ifchats2.v2;
+        iffout.s13 = ifchats2.s1;
+        iffout.s23 = ifchats2.s2;
+        
     } else {
+        
+        // fault slips
+        
         v2 = b.v*phi2/(eta*b.v+b.s);
         v3 = b.v*phi3/(eta*b.v+b.s);
+        
+        // solve for characteristics assuming fault is slipping
+    
+        iffout.s12 = phi2-eta*v2;
+        iffout.s22 = iffout.s12;
+        iffout.s13 = phi3-eta*v3;
+        iffout.s23 = iffout.s13;
+        iffout.v12 = (iffout.s12-iffin.s12)/z1+iffin.v12;
+        iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
+        iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
+        iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
+        
+        // subtract boundary loads
+        
+        if (load_file) {
+            iffout.s12 -= s2[index];
+            iffout.s22 -= s2[index];
+            iffout.s13 -= s3[index];
+            iffout.s23 -= s3[index];
+        }
+        
+        for (int k=0; k<nloads; k++) {
+            iffout.s12 -= loads[k]->get_s2(i,j,t);
+            iffout.s22 -= loads[k]->get_s2(i,j,t);
+            iffout.s13 -= loads[k]->get_s3(i,j,t);
+            iffout.s23 -= loads[k]->get_s3(i,j,t);
+        }
     }
     
     // set interface variables to hat variables
     
-    v[i*n_loc[1]+j] = b.v;
+    v[index] = b.v;
     switch (ndim) {
         case 3:
-            vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v2;
-            vx[1*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v3;
+            vx[0*n_loc[0]*n_loc[1]+index] = v2;
+            vx[1*n_loc[0]*n_loc[1]+index] = v3;
             break;
         case 2:
             switch (mode) {
                 case 2:
-                    vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v2;
+                    vx[0*n_loc[0]*n_loc[1]+index] = v2;
                     break;
                 case 3:
-                    vx[0*n_loc[0]*n_loc[1]+i*n_loc[1]+j] = v3;
+                    vx[0*n_loc[0]*n_loc[1]+index] = v3;
             }
-    }
-    
-    iffields iffout;
-    
-    iffout.s12 = phi2-eta*v2;
-    iffout.s22 = iffout.s12;
-    iffout.s13 = phi3-eta*v3;
-    iffout.s23 = iffout.s13;
-    iffout.v12 = (iffout.s12-iffin.s12)/z1+iffin.v12;
-    iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
-    iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
-    iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
-    
-    // subtract boundary loads
-    
-    if (load_file) {
-        iffout.s12 -= s2[index];
-        iffout.s22 -= s2[index];
-        iffout.s13 -= s3[index];
-        iffout.s23 -= s3[index];
-    }
-    
-    for (int k=0; k<nloads; k++) {
-        iffout.s12 -= loads[k]->get_s2(i,j,t);
-        iffout.s22 -= loads[k]->get_s2(i,j,t);
-        iffout.s13 -= loads[k]->get_s3(i,j,t);
-        iffout.s23 -= loads[k]->get_s3(i,j,t);
     }
     
     return iffout;

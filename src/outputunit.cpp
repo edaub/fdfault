@@ -680,7 +680,7 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
     // write time data if master and limits are not identical
     
     if (master && tp > tm) {
-        double t = (double)tstep*dt;
+        double t = (double)(tstep+1)*dt;
         tfile->write((char*) &t, sizeof(double));
     }
     
