@@ -51,15 +51,22 @@ private:
 	int nbound;
 	boundary** bound;
     material mat;
+    double xfact;
     void calc_process_info(const cartesian& cart, const int sbporder);
     void set_grid(surface** surf, fields& f, const cartesian& cart, const fd_type& fd);
     void calc_df_mode2(const double dt, fields& f, const fd_type& fd);
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
     void calc_mms_mode3(const double dt, const double t, fields& f);
-    double mms_v_mode3(const double t, const double x, const double y) const;
-    double mms_sx_mode3(const double t, const double x, const double y) const;
-    double mms_sy_mode3(const double t, const double x, const double y) const;
+    void calc_mms_mode2(const double dt, const double t, fields& f);
+    double mms_vz_mode3(const double t, const double x, const double y) const;
+    double mms_sxz_mode3(const double t, const double x, const double y) const;
+    double mms_syz_mode3(const double t, const double x, const double y) const;
+    double mms_vx_mode2(const double t, const double x, const double y) const;
+    double mms_vy_mode2(const double t, const double x, const double y) const;
+    double mms_sxx_mode2(const double t, const double x, const double y) const;
+    double mms_sxy_mode2(const double t, const double x, const double y) const;
+    double mms_syy_mode2(const double t, const double x, const double y) const;
 };
 
 #endif

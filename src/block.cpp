@@ -14,7 +14,7 @@
 #include "surface.hpp"
 #include <mpi.h>
 
-const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 1.5*pi, k3 = 4.*pi, k4 = 3.5*pi;
+const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 3.*pi, k3 = 2.5*pi, k4 = 1.75*pi;
 
 using namespace std;
 
@@ -99,6 +99,12 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
     mat.set_lambda(lambda_in);
     mat.set_rho(rho_in);
     mat.set_g(g_in);
+    
+    if (coords[0] == 0) {
+        xfact = 1.;
+    } else {
+        xfact = -1.;
+    }
     
     // if process has data, allocate grid, fields, and boundaries
     
@@ -1385,6 +1391,7 @@ void block::set_mms(const double dt, const double t, fields& f) {
         case 2:
             switch (mode) {
                 case 2:
+                    calc_mms_mode2(dt,t,f);
                     break;
                 case 3:
                     calc_mms_mode3(dt,t,f);
@@ -1401,31 +1408,84 @@ void block::calc_mms_mode3(const double dt, const double t, fields& f) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
-            f.df[0*nxd[0]+index1] += dt*mms_v_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
-            f.df[1*nxd[0]+index1] += dt*mms_sx_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
-            f.df[2*nxd[0]+index1] += dt*mms_sy_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[0*nxd[0]+index1] += dt/mat.get_rho()*mms_vz_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[1*nxd[0]+index1] += dt*mms_sxz_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[2*nxd[0]+index1] += dt*mms_syz_mode3(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
         }
     }
     
 }
 
-double block::mms_v_mode3(const double t, const double x, const double y) const {
+void block::calc_mms_mode2(const double dt, const double t, fields& f) {
+    // calculates MMS source term for mode 2 problem
+    
+    int index1;
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            f.df[0*nxd[0]+index1] += dt/mat.get_rho()*mms_vx_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[1*nxd[0]+index1] += dt/mat.get_rho()*mms_vy_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[2*nxd[0]+index1] += dt*mms_sxx_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[3*nxd[0]+index1] += dt*mms_sxy_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            f.df[4*nxd[0]+index1] += dt*mms_syy_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+        }
+    }
+    
+}
+
+double block::mms_vz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 velocity
     
-    return freq*cos(freq*t)*cos(k1*x)*cos(k3*y)+k2*sin(freq*t)*sin(k2*x)*cos(k3*y)+k4*sin(freq*t)*cos(k1*x)*sin(k4*y);
+    return xfact*mat.get_rho()/mat.get_zs()*freq*cos(freq*t)*cos(k1*x)*cos(k3*y)+xfact*k2*sin(freq*t)*cos(k2*fabs(x-1.))*cos(k3*y)+xfact*k4*sin(freq*t)*cos(k1*x)*sin(k4*y);
     
 }
 
-double block::mms_sx_mode3(const double t, const double x, const double y) const {
+double block::mms_sxz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 sxz
     
-    return freq*cos(freq*t)*cos(k2*x)*cos(k3*y)+k1*sin(freq*t)*sin(k1*x)*cos(k3*y);
+    return freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k3*y)+xfact*mat.get_g()/mat.get_zs()*k1*sin(freq*t)*sin(k1*x)*cos(k3*y);
     
 }
 
-double block::mms_sy_mode3(const double t, const double x, const double y) const {
+double block::mms_syz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 syz
     
-    return freq*cos(freq*t)*cos(k1*x)*cos(k4*y)+k3*sin(freq*t)*cos(k1*x)*sin(k3*y);
+    return xfact*freq*cos(freq*t)*cos(k1*x)*cos(k4*y)+xfact*mat.get_g()/mat.get_zs()*k3*sin(freq*t)*cos(k1*x)*sin(k3*y);
+    
+}
+
+double block::mms_vx_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 vx
+    
+    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k1*y)+k2*sin(freq*t)*sin(k2*x)*cos(k1*y)+mat.get_zs()/mat.get_zp()*k3*sin(freq*t)*cos(k3*x)*sin(k3*y);
+    
+}
+
+double block::mms_vy_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 vy
+    
+    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k2*x)*cos(k3*y)+mat.get_zs()/mat.get_zp()*k3*sin(freq*t)*sin(k3*x)*cos(k3*y)+k3*sin(freq*t)*cos(k2*x)*sin(k3*y);
+    
+}
+
+double block::mms_sxx_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 sxx
+    
+    return freq*cos(freq*t)*cos(k2*x)*cos(k1*y)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k3*sin(freq*t)*sin(k3*x)*cos(k1*y)+mat.get_lambda()/mat.get_zp()*k3*sin(freq*t)*cos(k2*x)*sin(k3*y);
+    
+}
+
+double block::mms_sxy_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 sxy
+    
+    return mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k3*y)+mat.get_g()/mat.get_zp()*sin(freq*t)*(k1*cos(k3*x)*sin(k1*y)+k2*sin(k2*x)*cos(k3*y));
+    
+}
+
+double block::mms_syy_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 syy
+    
+    return freq*cos(freq*t)*cos(k2*x)*cos(k3*y)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k3*sin(freq*t)*cos(k2*x)*sin(k3*y)+mat.get_lambda()/mat.get_zp()*k3*sin(freq*t)*sin(k3*x)*cos(k1*y);
     
 }
