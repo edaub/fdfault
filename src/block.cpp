@@ -1458,7 +1458,7 @@ double block::mms_syz_mode3(const double t, const double x, const double y) cons
 double block::mms_vx_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 vx
     
-    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k1*y)+k2*sin(freq*t)*sin(k2*x)*cos(k1*y)+mat.get_zs()/mat.get_zp()*k3*sin(freq*t)*cos(k3*x)*sin(k3*y);
+    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*sin(k3*fabs(x-1.))*cos(k1*y)+k2*sin(freq*t)*sin(k2*x)*cos(k1*y)+mat.get_zs()/mat.get_zp()*k3*sin(freq*t)*cos(k3*x)*sin(k3*y);
     
 }
 

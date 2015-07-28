@@ -228,7 +228,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
             for (int k=0; k<nblocks[2]; k++) {
                 blocks[i][j][k]->calc_df(dt,*f,*fd);
                 blocks[i][j][k]->set_boundaries(dt,*f);
-                blocks[i][j][k]->set_mms(dt, t+rk.get_C(stage)*dt,*f);
+//                blocks[i][j][k]->set_mms(dt, t+rk.get_C(stage)*dt,*f);
             }
         }
     }
