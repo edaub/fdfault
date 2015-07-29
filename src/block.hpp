@@ -59,6 +59,7 @@ private:
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
     void calc_mms_mode3(const double dt, const double t, fields& f);
     void calc_mms_mode2(const double dt, const double t, fields& f);
+    void calc_mms_3d(const double dt, const double t, fields& f);
     double mms_vz_mode3(const double t, const double x, const double y) const;
     double mms_sxz_mode3(const double t, const double x, const double y) const;
     double mms_syz_mode3(const double t, const double x, const double y) const;
@@ -67,6 +68,15 @@ private:
     double mms_sxx_mode2(const double t, const double x, const double y) const;
     double mms_sxy_mode2(const double t, const double x, const double y) const;
     double mms_syy_mode2(const double t, const double x, const double y) const;
+    double mms_vx_3d(const double t, const double x, const double y, const double z) const;
+    double mms_vy_3d(const double t, const double x, const double y, const double z) const;
+    double mms_vz_3d(const double t, const double x, const double y, const double z) const;
+    double mms_sxx_3d(const double t, const double x, const double y, const double z) const;
+    double mms_sxy_3d(const double t, const double x, const double y, const double z) const;
+    double mms_sxz_3d(const double t, const double x, const double y, const double z) const;
+    double mms_syy_3d(const double t, const double x, const double y, const double z) const;
+    double mms_syz_3d(const double t, const double x, const double y, const double z) const;
+    double mms_szz_3d(const double t, const double x, const double y, const double z) const;
 };
 
 #endif

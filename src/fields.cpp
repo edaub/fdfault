@@ -93,6 +93,10 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
         f[i] = 0.;
     }
     
+    for (int i=0; i<ndatadf; i++) {
+        df[i] = 0.;
+    }
+    
     // set up information on stress for calculating absolute stress
     
     switch (ndim) {
