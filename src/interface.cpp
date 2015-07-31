@@ -87,12 +87,13 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     }
     
     // set boolean saying this is not frictional (needed in output)
+    // note that this is overridden in the constructor for a frictional interface
     
     is_friction = false;
     
     // set number of grid points
     // note do not need to reference ghost cells here as boundary conditions are imposed
-    // point by point
+    // point by point and do not require ghost cell data
     
     nxd[0] = cart.get_nx_tot(0)*cart.get_nx_tot(1)*cart.get_nx_tot(2);
     nxd[1] = cart.get_nx_tot(1)*cart.get_nx_tot(2);

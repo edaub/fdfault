@@ -349,7 +349,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 bcharp.s = b_rot.s11;
                 
                 bhatp = calc_hat(bcharp, zp);
-                    
+                
                 bchars1.v = b_rot.v2;
                 bchars1.s = b_rot.s12;
                     

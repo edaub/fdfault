@@ -47,6 +47,7 @@ private:
     double x_block[3];
     double l_block[3];
     bool no_data;
+    bool is_plastic;
 	coord c;
 	int nbound;
 	boundary** bound;
@@ -57,6 +58,7 @@ private:
     void calc_df_mode2(const double dt, fields& f, const fd_type& fd);
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
+    void calc_df_szz(const double dt, fields&f);
     void calc_mms_mode3(const double dt, const double t, fields& f);
     void calc_mms_mode2(const double dt, const double t, fields& f);
     void calc_mms_3d(const double dt, const double t, fields& f);
