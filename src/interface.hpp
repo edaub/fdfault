@@ -21,8 +21,8 @@ class interface
     friend class frontlist;
     friend class front;
 public:
-    interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
-              block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
+    interface(const char* filename, const int ndim_in, const int mode_in, const std::string material_in,
+              const int niface, block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~interface();
     void apply_bcs(const double dt, const double t, fields& f, const bool no_sat);
     virtual void scale_df(const double A);
@@ -62,6 +62,7 @@ protected:
     bool data1;
     bool data2;
     bool is_friction;
+    bool is_plastic;
     double* u;
     double* v;
     double* ux;

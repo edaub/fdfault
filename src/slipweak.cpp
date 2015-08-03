@@ -14,8 +14,8 @@
 
 using namespace std;
 
-slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, const int niface,
-                   block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : friction(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
+slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, const string material_in, const int niface,
+                   block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : friction(filename, ndim_in, mode_in, material_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface
     
     // read perturbations from input file

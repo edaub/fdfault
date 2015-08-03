@@ -61,6 +61,11 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     
     ndim = ndim_in;
     mode = mode_in;
+    if (material_in == "elastic") {
+        is_plastic = false;
+    } else {
+        is_plastic = true;
+    }
     if (direction_in == "x") {
         direction = 0;
     } else if (direction_in == "y") {
@@ -743,6 +748,9 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                     f.df[2*nxd[0]+index1] -= cp1*h1*b1.s11;
                                     f.df[3*nxd[0]+index1] -= cp1*h1*b1.s12;
                                     f.df[4*nxd[0]+index1] -= cp1*h1*b1.s22;
+                                    if (is_plastic) {
+                                        f.df[5*nxd[0]+index1] -= cp1*h1*b1.s33;
+                                    }
                                 }
                                 if (data2) {
                                     f.df[0*nxd[0]+index2] -= cp2*h2*b2.v1;
@@ -750,6 +758,9 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                     f.df[2*nxd[0]+index2] -= cp2*h2*b2.s11;
                                     f.df[3*nxd[0]+index2] -= cp2*h2*b2.s12;
                                     f.df[4*nxd[0]+index2] -= cp2*h2*b2.s22;
+                                    if (is_plastic) {
+                                        f.df[5*nxd[0]+index2] -= cp1*h1*b2.s33;
+                                    }
                                 }
                         }
                 }

@@ -327,11 +327,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                                 b.s13 = 0.;
                                 b.s22 = f.f[4*nxd[0]+index];
                                 b.s23 = 0.;
-                                if (is_plastic) {
-                                    b.s33 = f.f[5*nxd[0]+index];
-                                } else {
-                                    b.s33 = 0.;
-                                }
+                                b.s33 = 0.;
                                 break;
                             case 3:
                                 b.v1 = 0.;

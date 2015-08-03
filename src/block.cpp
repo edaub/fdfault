@@ -1122,7 +1122,7 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
 void block::calc_df_szz(const double dt, fields& f) {
     // calculates change in szz for a mode 2 plastic problem
     
-    double nu = dt*0.5*mat.get_lambda()/(mat.get_lambda()+mat.get_g());
+    double nu = 0.5*mat.get_lambda()/(mat.get_lambda()+mat.get_g());
     int index;
     
     for (int i=mlb[0]; i<prb[0]; i++) {

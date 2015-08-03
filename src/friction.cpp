@@ -16,8 +16,8 @@
 
 using namespace std;
 
-friction::friction(const char* filename, const int ndim_in, const int mode_in, const int niface,
-                   block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : interface(filename, ndim_in, mode_in, niface, blocks, f, cart, fd) {
+friction::friction(const char* filename, const int ndim_in, const int mode_in, const string material_in, const int niface,
+                   block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) : interface(filename, ndim_in, mode_in, material_in, niface, blocks, f, cart, fd) {
     // constructor initializes interface and then allocates memory for slip velocity and slip
     
     is_friction = true;

@@ -367,11 +367,11 @@ void domain::allocate_interfaces(const char* filename, string* iftype) {
     
     for (int i=0; i<nifaces; i++) {
         if (iftype[i] == "locked") {
-            interfaces[i] = new interface(filename, ndim, mode, i, blocks, *f, *cart, *fd);
+            interfaces[i] = new interface(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
         } else if (iftype[i] == "frictionless") {
-            interfaces[i] = new friction(filename, ndim, mode, i, blocks, *f, *cart, *fd);
+            interfaces[i] = new friction(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
         } else { // slip weakening
-            interfaces[i] = new slipweak(filename, ndim, mode, i, blocks, *f, *cart, *fd);
+            interfaces[i] = new slipweak(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
         }
     }
 }
