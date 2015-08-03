@@ -9,10 +9,14 @@
 #include "fields.hpp"
 #include "material.hpp"
 
+struct plastp {
+    double sxx, sxy, sxz, syy, syz, szz, gammap, lambda;
+};
+
 class block
 {
 public:
-    block(const char* filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3],
+    block(const char* filename, const int ndim_in, const int mode_in, const std::string material_in, const int coords[3], const int nx_in[3], const int xm_in[3],
           const cartesian& cart, fields& f, const fd_type& fd);
     ~block();
     int get_nx(const int index) const;
@@ -34,7 +38,7 @@ public:
     void calc_df(const double dt, fields& f, const fd_type& fd);
     void set_boundaries(const double dt, fields& f);
     void set_mms(const double dt, const double t, fields& f);
-//    void calc_plastic(const double dt);
+    void calc_plastic(const double dt, fields& f);
 private:
 	int ndim;
     int mode;
@@ -59,6 +63,10 @@ private:
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
     void calc_df_szz(const double dt, fields&f);
+    plastp plastic_flow(const double dt, const plastp s_in) const;
+    double calc_tau(const plastp s) const;
+    double calc_sigma(const plastp s) const;
+    double yield(const double tau, const double sigma) const;
     void calc_mms_mode3(const double dt, const double t, fields& f);
     void calc_mms_mode2(const double dt, const double t, fields& f);
     void calc_mms_3d(const double dt, const double t, fields& f);

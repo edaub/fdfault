@@ -10,11 +10,12 @@
 
 using namespace std;
 
-fields::fields(const char* filename, const int ndim_in, const int mode_in, const cartesian& cart) {
+fields::fields(const char* filename, const int ndim_in, const int mode_in, const string material_in, const cartesian& cart) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in ==3);
     assert(mode_in == 2 || mode_in == 3);
+    assert(material_in == "elastic" || material_in == "plastic");
     
     // read from input file
     
@@ -32,7 +33,6 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
             MPI_Abort(MPI_COMM_WORLD,-1);
         } else {
             // read problem variables
-            paramfile >> material;
             for (int i=0; i<6; i++) {
                 paramfile >> s0[i];
             }
@@ -43,10 +43,9 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     }
     paramfile.close();
     
-    assert(material == "elastic" || material == "plastic");
-    
     ndim = ndim_in;
     mode = mode_in;
+    material = material_in;
     
     if (ndim == 3) {
         nfields = 9;

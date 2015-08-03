@@ -18,12 +18,16 @@ const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 2.5*pi, k3
 
 using namespace std;
 
-block::block(const char* filename, const int ndim_in, const int mode_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
+block::block(const char* filename, const int ndim_in, const int mode_in, const string material_in, const int coords[3], const int nx_in[3], const int xm_in[3], const cartesian& cart, fields& f, const fd_type& fd) {
     // constructor, no default constructor due to necessary memory allocation
+    
+    assert(ndim_in == 2 || ndim_in == 3);
+    assert(mode_in == 2 || mode_in == 3);
+    assert(material_in == "elastic" || material_in == "plastic");
     
     // open input file, find appropriate place and read in parameters
     
-    double rho_in, lambda_in, g_in, mu_in, beta_in, eta_in;
+    double rho_in, lambda_in, g_in, mu_in, beta_in, eta_in, c_in;
     string boundtype[6], boundfile[6];
     
     stringstream ss;
@@ -36,7 +40,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
         l_block[i] = 0.;
     }
     
-    if (f.material == "elastic") {
+    if (material_in == "elastic") {
         is_plastic = false;
     } else {
         is_plastic = true;
@@ -63,6 +67,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
                 paramfile >> mu_in;
                 paramfile >> beta_in;
                 paramfile >> eta_in;
+                paramfile >> c_in;
             }
             for (int i=0; i<ndim_in; i++) {
                 paramfile >> x_block[i];
@@ -114,6 +119,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
         mat.set_mu(mu_in);
         mat.set_beta(beta_in);
         mat.set_eta(eta_in);
+        mat.set_c(c_in);
     }
     
     if (coords[0] == 0) {
@@ -240,7 +246,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const i
     bound = new boundary* [nbound];
 
     for (int i=0; i<nbound; i++) {
-        bound[i] = new boundary(ndim, mode, i, boundtype[i], c, dx, *(surf[i]), f, mat, cart, fd);
+        bound[i] = new boundary(ndim, mode, material_in, i, boundtype[i], c, dx, *(surf[i]), f, mat, cart, fd);
     }
     
     for (int i=0; i<nbound; i++) {
@@ -420,25 +426,200 @@ void block::set_boundaries(const double dt, fields& f) {
 
 }
 
-/*void block::calc_plastic(const double dt) {
-    // calculates final value of fields based on plastic deformation
+void block::calc_plastic(const double dt, fields& f) {
+    // calculates plastic deformation
     
-    for (int i=0; i<nx; i++) {
-        for (int j=0; j<ny; j++) {
-            for (int k=0; k<nz; k++) {
-                vx[i][j][k] = 0.;
-                vy[i][j][k] = 0.;
-                vz[i][j][k] = 0.;
-                sxx[i][j][k] = 0.;
-                syy[i][j][k] = 0.;
-                szz[i][j][k] = 0.;
-                sxy[i][j][k] = 0.;
-                sxz[i][j][k] = 0.;
-                syz[i][j][k] = 0.;
+    if (no_data) { return; }
+    
+    plastp s_out, s_in;
+    int index;
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            for (int k=mlb[2]; k<prb[2]; k++) {
+                
+                index = i*nxd[1]+j*nxd[2]+k;
+                
+                // assign appropriate fields to stress tensor
+                
+                switch (ndim) {
+                    case 3:
+                        s_in.sxx = f.f[3*nxd[0]+index];
+                        s_in.sxy = f.f[4*nxd[0]+index];
+                        s_in.sxz = f.f[5*nxd[0]+index];
+                        s_in.syy = f.f[6*nxd[0]+index];
+                        s_in.syz = f.f[7*nxd[0]+index];
+                        s_in.szz = f.f[8*nxd[0]+index];
+                        s_in.lambda = f.f[9*nxd[0]+index];
+                        s_in.gammap = f.f[10*nxd[0]+index];
+                        break;
+                    case 2:
+                        switch (mode) {
+                            case 2:
+                                s_in.sxx = f.f[2*nxd[0]+index];
+                                s_in.sxy = f.f[3*nxd[0]+index];
+                                s_in.sxz = 0.;
+                                s_in.syy = f.f[4*nxd[0]+index];
+                                s_in.syz = 0.;
+                                s_in.szz = f.f[5*nxd[0]+index];
+                                s_in.lambda = f.f[6*nxd[0]+index];
+                                s_in.gammap = f.f[7*nxd[0]+index];
+                                break;
+                            case 3:
+                                s_in.sxx = f.s0[0];
+                                s_in.sxy = 0.;
+                                s_in.sxz = f.f[1*nxd[0]+index];
+                                s_in.syy = f.s0[3];
+                                s_in.syz = f.f[2*nxd[0]+index];
+                                s_in.szz = f.s0[5];
+                                s_in.lambda = f.f[3*nxd[0]+index];
+                                s_in.gammap = f.f[4*nxd[0]+index];
+                                break;
+                        }
+                }
+                
+                // solve plasticity equations
+                
+                s_out = plastic_flow(dt, s_in);
+                
+                // adjust stress values
+                
+                switch (ndim) {
+                    case 3:
+                        f.f[3*nxd[0]+index] = s_out.sxx;
+                        f.f[4*nxd[0]+index] = s_out.sxy;
+                        f.f[5*nxd[0]+index] = s_out.sxz;
+                        f.f[6*nxd[0]+index] = s_out.syy;
+                        f.f[7*nxd[0]+index] = s_out.syz;
+                        f.f[8*nxd[0]+index] = s_out.szz;
+                        f.f[9*nxd[0]+index] = s_out.lambda;
+                        f.f[10*nxd[0]+index] = s_out.gammap;
+                        break;
+                    case 2:
+                        switch (mode) {
+                            case 2:
+                                f.f[2*nxd[0]+index] = s_out.sxx;
+                                f.f[3*nxd[0]+index] = s_out.sxy;
+                                f.f[4*nxd[0]+index] = s_out.syy;
+                                f.f[5*nxd[0]+index] = s_out.szz;
+                                f.f[6*nxd[0]+index] = s_out.lambda;
+                                f.f[7*nxd[0]+index] = s_out.gammap;
+                                break;
+                            case 3:
+                                f.f[1*nxd[0]+index] = s_out.sxz;
+                                f.f[2*nxd[0]+index] = s_out.syz;
+                                f.f[3*nxd[0]+index] = s_out.lambda;
+                                f.f[4*nxd[0]+index] = s_out.gammap;
+                                break;
+                        }
+                }
             }
         }
     }
-}*/
+}
+
+plastp block::plastic_flow(const double dt, const plastp s_in) const {
+    // solves for stresses and plastic strain
+    
+    // calculate shear and normal stresses
+    
+    double sigma = calc_sigma(s_in);
+    double tau = calc_tau(s_in);
+    
+    // determine if stress exceeds yield stress
+    
+    double y = yield(tau, sigma);
+    
+    plastp s_out;
+    
+    double sd[6];
+    
+    double k = mat.get_lambda()+2./3.*mat.get_g();
+    
+    if (y <= 0.) {
+        
+        // no yielding, return existing stress and set lambda = 0
+        
+        s_out = s_in;
+        s_out.lambda = 0.;
+        
+    } else {
+        
+        // yields, must solve for stresses, lambda, and gammap
+        
+        // solve for lambda
+        
+        if (tau*mat.get_mu()*mat.get_beta()*k > (mat.get_mu()*sigma-mat.get_c())*mat.get_g()) {
+            s_out.lambda = (tau+mat.get_mu()*sigma-mat.get_c())/(mat.get_eta()+dt*(mat.get_g()+mat.get_mu()*mat.get_beta()*k));
+        } else { // special case
+            s_out.lambda = tau/(mat.get_eta()+dt*mat.get_g());
+        }
+        
+        // update gammap
+        
+        s_out.gammap = s_in.gammap+dt*s_out.lambda;
+        
+        // calculate deviatoric stress
+        
+        sd[0] = s_in.sxx-sigma;
+        sd[1] = s_in.sxy;
+        sd[2] = s_in.sxz;
+        sd[3] = s_in.syy-sigma;
+        sd[4] = s_in.syz;
+        sd[5] = s_in.szz-sigma;
+        
+        // correct tau and sigma
+        
+        tau -= dt*s_out.lambda*mat.get_g();
+        sigma -= dt*s_out.lambda*mat.get_beta()*k;
+        
+        // correct deviatoric stress
+        
+        for (int i = 0; i<6; i++) {
+            sd[i] *= tau/(tau+dt*s_out.lambda*mat.get_g());
+        }
+        
+        // set new stresses from deviatoric stress
+        
+        s_out.sxx = sd[0]+sigma;
+        s_out.sxy = sd[1];
+        s_out.sxz = sd[2];
+        s_out.syy = sd[3]+sigma;
+        s_out.syz = sd[4];
+        s_out.szz = sd[5]+sigma;
+    
+    }
+    
+    return s_out;
+    
+}
+    
+double block::calc_tau(const plastp s) const {
+    // returns second invariant of shear stress
+    
+    return sqrt((pow(s.sxx-s.syy,2)+pow(s.syy-s.szz,2)+pow(s.szz-s.sxx,2))/6.+pow(s.sxy,2)+pow(s.sxz,2)+pow(s.syz,2));
+
+}
+
+double block::calc_sigma(const plastp s) const {
+    // returns mean stress
+    
+    return (s.sxx+s.syy+s.szz)/3.;
+
+}
+
+double block::yield(const double tau, const double sigma) const {
+    // returns yield function given stresses
+    
+    double yf = mat.get_c()-mat.get_mu()*sigma;
+    
+    if (yf < 0.) {
+        yf = 0.;
+    }
+    
+    return tau-yf;
+
+}
 
 void block::calc_process_info(const cartesian& cart, const int sbporder) {
     // calculate local process-specific information
@@ -947,7 +1128,7 @@ void block::calc_df_szz(const double dt, fields& f) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index = i*nxd[1]+j;
-            f.df[6*nxd[0]+index] += nu*(f.df[3*nxd[0]+index]+f.df[5*nxd[0]+index]);
+            f.df[5*nxd[0]+index] += nu*(f.df[2*nxd[0]+index]+f.df[4*nxd[0]+index]);
         }
     }
 

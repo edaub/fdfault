@@ -9,8 +9,8 @@ material::material() {
     // units can be set to any desired units, however the default values have one thing
     // of note: default density has funny units of MPa s^2 / km / m such that measuring
     // velocity in m/s, stress in MPa, and distance in km will lead to correct unit scaling
-    // similarly, with these choices, measuring modulii in GPa (= MPa km / m) will give
-    // correct values. However
+    // similarly, with these choices, measuring moduli in GPa (= MPa km / m) will give
+    // correct values
     
     rho = 2.67;
     lambda = 32.04;
@@ -18,6 +18,7 @@ material::material() {
     mu = 0.5735;
     beta = 0.2867;
     eta = 0.2775;
+    c = 0.;
 }
 
 void material::set_rho(const double newrho) {
@@ -54,7 +55,7 @@ void material::set_mu(const double newmu) {
 void material::set_beta(const double newbeta) {
     // sets plasticity dilatancy
     
-    assert(newbeta > 0.);
+    assert(newbeta >= 0.);
     
     beta = newbeta;
 }
@@ -66,6 +67,14 @@ void material::set_eta(const double neweta) {
     assert(neweta > 0.);
     
     eta = neweta;
+}
+
+void material::set_c(const double newc) {
+    // sets material cohesion
+    
+    assert(newc >= 0.);
+    
+    c = newc;
 }
 
 double material::get_rho() const {
@@ -102,6 +111,12 @@ double material::get_eta() const {
     // returns plastic viscosity
 
     return eta;
+}
+
+double material::get_c() const {
+    // returns cohesion
+    
+    return c;
 }
 
 double material::get_cs() const {

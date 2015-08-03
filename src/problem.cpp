@@ -153,7 +153,7 @@ void problem::solve() {
         
         // update front
         
-        front->set_front((double)i*dt, *d);
+        front->set_front((double)(i+1)*dt, *d);
         
         // update status
         

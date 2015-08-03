@@ -11,7 +11,7 @@
 
 using namespace std;
 
-boundary::boundary(const int ndim_in, const int mode_in, const int location_in, const std::string boundtype_in,
+boundary::boundary(const int ndim_in, const int mode_in, const string material_in, const int location_in, const std::string boundtype_in,
                    const coord c, const double dx[3], const surface& surf, fields& f, material& m, const cartesian& cart, const fd_type& fd) {
     // constructor
     
@@ -19,11 +19,18 @@ boundary::boundary(const int ndim_in, const int mode_in, const int location_in, 
     assert(mode_in == 2 || mode_in == 3);
     assert(location_in >=0 && location_in < 2*ndim_in);
     assert(boundtype_in == "none" || boundtype_in == "absorbing" || boundtype_in == "free" || boundtype_in == "rigid");
+    assert(material_in == "elastic" || material_in == "plastic");
     
 	boundtype = boundtype_in;
     ndim = ndim_in;
     mode = mode_in;
     location = location_in;
+    
+    if (material_in == "plastic") {
+        is_plastic = true;
+    } else {
+        is_plastic = false;
+    }
     
     // check if these points are in this process
     
@@ -320,7 +327,11 @@ void boundary::apply_bcs(const double dt, fields& f) {
                                 b.s13 = 0.;
                                 b.s22 = f.f[4*nxd[0]+index];
                                 b.s23 = 0.;
-                                b.s33 = 0.;
+                                if (is_plastic) {
+                                    b.s33 = f.f[5*nxd[0]+index];
+                                } else {
+                                    b.s33 = 0.;
+                                }
                                 break;
                             case 3:
                                 b.v1 = 0.;
@@ -396,6 +407,9 @@ void boundary::apply_bcs(const double dt, fields& f) {
                                 f.df[2*nxd[0]+index] -= cp*h*b.s11;
                                 f.df[3*nxd[0]+index] -= cp*h*b.s12;
                                 f.df[4*nxd[0]+index] -= cp*h*b.s22;
+                                if (is_plastic) {
+                                    f.df[5*nxd[0]+index] -= cp*h*b.s33;
+                                }
                         }
                 }
                 

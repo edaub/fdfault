@@ -15,7 +15,7 @@
 
 using namespace std;
 
-interface::interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
+interface::interface(const char* filename, const int ndim_in, const int mode_in, const string material_in, const int niface,
                      block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd) {
     // constructor
     
@@ -57,7 +57,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
 
     assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
-    assert(direction_in == "x" || direction_in == "y" || direction_in == "z");
+    assert(direction_in == "x" || direction_in == "y" || (ndim_in == 3 && direction_in == "z"));
     
     ndim = ndim_in;
     mode = mode_in;
@@ -531,12 +531,16 @@ void interface::deallocate_normals() {
     
 }
 
-void interface::apply_bcs(const double dt, const double t, fields& f) {
+void interface::apply_bcs(const double dt, const double t, fields& f, const bool no_sat) {
     // applies interface conditions
     
     // only proceed if boundary local to this process
     
     if (no_data) { return; }
+    
+    // if not updating, no need to solve
+    
+    if ((!is_friction) && (no_sat)) { return; }
 
     int ii, jj, index1, index2;
     double nn[3] = {0., 0., 0.}, t1[3], t2[3], h1, h2;
@@ -674,6 +678,10 @@ void interface::apply_bcs(const double dt, const double t, fields& f) {
                 iffields iffhat;
                 
                 iffhat = solve_interface(b_rot1, b_rot2, ii, jj, t);
+                
+                // if not updating, skip remainder of loop
+                
+                if (no_sat) { continue; }
                 
                 // rotate normal targets back to xyz
                 

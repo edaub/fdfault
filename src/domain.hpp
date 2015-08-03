@@ -31,6 +31,8 @@ public:
 private:
 	int ndim;
     int mode;
+    std::string material;
+    bool is_plastic;
 	int nx[3];
 	int nblockstot;
     int nblocks[3];

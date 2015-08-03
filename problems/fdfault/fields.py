@@ -34,7 +34,6 @@ class fields(object):
     def write_input(self,f):
         "Writes field information to input file"
         f.write("[fdfault.fields]\n")
-        f.write(self.material+"\n")
         outstring = ""
         for sc in self.s:
             outstring += str(sc)+" "

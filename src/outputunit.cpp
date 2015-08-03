@@ -21,6 +21,9 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         assert(xs_in[i] > 0);
         assert(xp_in[i] >= xm_in[i]);
     }
+    if (field_in == "lambda" || field_in == "gammap") {
+        assert(d.is_plastic);
+    }
     
     // set input parameters
     
@@ -58,7 +61,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
     // set location
     
     if (field_in == "vx" || field_in == "vy" || field_in == "vz" || field_in == "sxx" || field_in == "sxy" || field_in == "sxz" || field_in == "syy" ||
-        field_in == "syz" || field_in == "szz") {
+        field_in == "syz" || field_in == "szz" || field_in == "lambda" || field_in == "gammap") {
         location = -1;
     } else {
         // find interface corresponding to input indices
@@ -123,6 +126,10 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                 field = 7;
             } else if (field_in == "szz") {
                 field = 8;
+            } else if (field_in == "lambda") {
+                field = 9;
+            } else if (field_in == "gammap") {
+                field = 10;
             } else if (field_in == "Vx") {
                 field = 0;
             } else if (field_in == "Vy") {
@@ -157,6 +164,12 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 3;
                     } else if (field_in == "syy") {
                         field = 4;
+                    } else if (field_in == "szz") {
+                        field = 5;
+                    } else if (field_in == "lambda") {
+                        field = 6;
+                    } else if (field_in == "gammap") {
+                        field = 7;
                     } else if (field_in == "Vx") {
                         field = 0;
                     } else if (field_in == "Vy") {
@@ -181,6 +194,10 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 1;
                     } else if (field_in == "syz") {
                         field = 2;
+                    } else if (field_in == "lambda") {
+                        field = 3;
+                    } else if (field_in == "gammap") {
+                        field = 4;
                     } else if (field_in == "Vz") {
                         field = 0;
                     } else if (field_in == "V") {

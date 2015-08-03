@@ -24,7 +24,7 @@ public:
     interface(const char* filename, const int ndim_in, const int mode_in, const int niface,
               block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~interface();
-    void apply_bcs(const double dt, const double t, fields& f);
+    void apply_bcs(const double dt, const double t, fields& f, const bool no_sat);
     virtual void scale_df(const double A);
     virtual void calc_df(const double dt);
     virtual void update(const double B);

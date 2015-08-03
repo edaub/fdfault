@@ -24,7 +24,7 @@ boundfields rotate_nt_xy(const boundfields b, const double nn[3], const double t
 class boundary
 {
 public:
-	boundary(const int ndim_in, const int mode_in, const int location_in, const std::string boundtype_in,
+    boundary(const int ndim_in, const int mode_in, const std::string material_in, const int location_in, const std::string boundtype_in,
              const coord c, const double dx[3], const surface& surf, fields& f, material& m, const cartesian& cart, const fd_type& fd);
     ~boundary();
     virtual void apply_bcs(const double dt, fields& f);
@@ -39,6 +39,7 @@ private:
     int mlb[3];
     int prb[3];
     bool no_data;
+    bool is_plastic;
     double cp;
     double cs;
     double zp;

@@ -10,6 +10,7 @@ class domain(object):
         "Initialize problem, default configuration is one block with one grid point"
         self.ndim = 2
         self.mode = 2
+        self.mattype = 'elastic'
         self.nx = (1, 1, 1)
         self.nblocks = (1, 1, 1)
         self.nx_block = ([1],[1],[1])
@@ -251,11 +252,12 @@ class domain(object):
 
     def get_mattype(self):
         "Returns material type"
-        return self.f.get_material()
+        return self.mattype
 
     def set_mattype(self, mattype):
         "Sets field and block material type"
         assert mattype == "elastic" or mattype == "plastic", "Material type must be elastic or plastic"
+        self.mattype = mattype
         self.f.set_material(mattype)
         for b1 in self.blocks:
             for b2 in b1:
@@ -580,6 +582,7 @@ class domain(object):
         for i in self.iftype:
             f.write(i+"\n")
         f.write(str(self.sbporder)+"\n")
+        f.write(self.mattype+"\n")
         f.write("\n")
         self.f.write_input(f)
 

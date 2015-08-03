@@ -66,6 +66,7 @@ domain::domain(const char* filename) {
                 paramfile >> iftype[i];
             }
             paramfile >> sbporder;
+            paramfile >> material;
         }
     } else {
         cerr << "Error opening input file in domain.cpp\n";
@@ -77,6 +78,7 @@ domain::domain(const char* filename) {
 
 	assert(ndim == 2 || ndim == 3);
     assert(mode == 2 || mode == 3);
+    assert(material == "elastic" || material == "plastic");
     if (ndim == 2) {
         assert(nx[2] == 1);
     }
@@ -91,6 +93,12 @@ domain::domain(const char* filename) {
 	}
 	
     // set other domain parameters
+    
+    if (material == "elastic") {
+        is_plastic = false;
+    } else {
+        is_plastic = true;
+    }
     
 	nblockstot = nblocks[0]*nblocks[1]*nblocks[2];
     
@@ -112,7 +120,7 @@ domain::domain(const char* filename) {
 	
 	cart = new cartesian(ndim, nx, nblocks, nx_block, xm_block, sbporder);
     
-    f = new fields(filename, ndim, mode, *cart);
+    f = new fields(filename, ndim, mode, material, *cart);
 	
     // allocate memory and create blocks
     
@@ -228,7 +236,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
             for (int k=0; k<nblocks[2]; k++) {
                 blocks[i][j][k]->calc_df(dt,*f,*fd);
                 blocks[i][j][k]->set_boundaries(dt,*f);
-                blocks[i][j][k]->set_mms(dt, t+rk.get_C(stage)*dt,*f);
+//                blocks[i][j][k]->set_mms(dt, t+rk.get_C(stage)*dt, *f);
             }
         }
     }
@@ -242,7 +250,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
     // apply interface conditions
     
     for (int i=0; i<nifaces; i++) {
-        interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f);
+        interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f,false);
     }
     
     // update interfaces
@@ -253,6 +261,34 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
     // update fields
     
     f->update(rk.get_B(stage));
+    
+    // if last stage and response is plastic, solve plasticity equations
+    
+    if (stage+1 == rk.get_nstages() && is_plastic) {
+        
+        // set absolute stress
+        
+        f->set_stress();
+        
+        for (int i=0; i<nblocks[0]; i++) {
+            for (int j=0; j<nblocks[1]; j++) {
+                for (int k=0; k<nblocks[2]; k++) {
+                    blocks[i][j][k]->calc_plastic(dt,*f);
+                }
+            }
+        }
+        
+        // subtract stress
+        
+        f->remove_stress();
+    
+        // apply interface conditions to correctly set slip rates
+        
+        for (int i=0; i<nifaces; i++) {
+            interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f,true);
+        }
+        
+    }
     
     // exchange neighbors
     
@@ -313,7 +349,7 @@ void domain::allocate_blocks(const char* filename, int** nx_block, int** xm_bloc
                 coords[0] = i;
                 coords[1] = j;
                 coords[2] = k;
-                blocks[i][j][k] = new block(filename, ndim, mode, coords, nxtmp, xmtmp, *cart, *f, *fd);
+                blocks[i][j][k] = new block(filename, ndim, mode, material, coords, nxtmp, xmtmp, *cart, *f, *fd);
             }
         }
     }

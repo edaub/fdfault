@@ -19,9 +19,9 @@ data/
 1
 slipweak
 4
+elastic
 
 [fdfault.fields]
-elastic
 0. 0. 0. 0. 0. 0.
 
 [fdfault.block000]
@@ -62,10 +62,12 @@ constant 0. 0. 0. 0. 0. -120. 70. 0.
 boxcar 0. 20. 1.5 0. 0. 0. 11.6 0.
 boxcar 0. 0. 5. 0. 0. 0. 0. 0.
 boxcar 0. 40. 5. 0. 0. 0. 0. 0.
+none
 
 [fdfault.slipweak]
 1
 constant 0. 0. 0. 0. 0. 0.4 0.677 0.525
+none
 
 [fdfault.outputlist]
 v

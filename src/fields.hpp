@@ -15,7 +15,7 @@ class fields
     friend class outputunit;
     friend class front;
 public:
-    fields(const char* filename, const int ndim_in, const int mode, const cartesian& cart);
+    fields(const char* filename, const int ndim_in, const int mode, const std::string material_in, const cartesian& cart);
 	~fields();
     void scale_df(const double A);
     void update(const double B);

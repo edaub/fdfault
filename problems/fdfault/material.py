@@ -7,14 +7,15 @@ class material(object):
     material class
     describes material parameters (elastic and plastic) for dynamic rupture
     '''
-    def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, beta = 0.2867, eta = 0.2775):
+    def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, beta = 0.2867, eta = 0.2775, c = 0.):
         assert mattype == "elastic" or mat == "plastic", "Material type must be elastic or plastic"
         assert(rho > 0.)
         assert(lam > 0.)
         assert(g > 0.)
         assert(mu > 0.)
-        assert(beta > 0.)
+        assert(beta >= 0.)
         assert(eta > 0.)
+        assert(c >= 0.)
         self.mattype = mattype
         self.rho = rho
         self.lam = lam
@@ -22,6 +23,7 @@ class material(object):
         self.mu = mu
         self.beta = beta
         self.eta = eta
+        self.c = c
 
     def get_type(self):
         "returns material type"
@@ -50,6 +52,10 @@ class material(object):
     def get_eta(self):
         'returns plastic viscosity'
         return self.eta
+
+    def get_c(self):
+        'returns cohesion'
+        return self.c
 
     def get_cs(self):
         'returns shear wave speed'
@@ -92,9 +98,9 @@ class material(object):
         assert(mu > 0.)
         self.mu = float(mu)
 
-    def set_eta(self,beta):
+    def set_beta(self,beta):
         'sets plastic dilatancy to new value'
-        assert(beta > 0.)
+        assert(beta >= 0.)
         self.beta = float(beta)
 
     def set_eta(self,eta):
@@ -102,18 +108,23 @@ class material(object):
         assert(eta > 0.)
         self.eta = float(eta)
 
+    def set_c(self,c):
+        'sets cohesion to new value'
+        assert(c >= 0.)
+        self.c = float(c)
+
     def write_input(self,f):
         "Writes material properties to input file"
         if self.mattype == "elastic":
             f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+"\n")
         else:
-            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+str(self.get_mu())+" "+str(self.get_beta())+" "+str(self.m.get_eta())+"\n")
+            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+str(self.get_mu())+" "+str(self.get_beta())+" "+str(self.m.get_eta())+" "+str(self.m.get_c())+"\n")
 
     def __str__(self):
         'returns string representation'
-        outstring = ('Material:\nrho = ' + str(self.rho) + '\nlam = ' + str(self.lam) +
-                '\ng = ' + str(self.g))
+        outstring = ('Material:\nrho = ' + str(self.get_rho()) + '\nlam = ' + str(self.get_lam()) +
+                '\ng = ' + str(self.get_g()))
         if self.mattype == "plastic":
-            outstring += ('\nmu = ' + str(self.mu) + '\nbeta = ' + str(self.beta) + '\neta = ' + str(self.eta))
+            outstring += ('\nmu = ' + str(self.get_mu()) + '\nbeta = ' + str(self.get_beta()) + '\neta = ' + str(self.get_eta())+ '\nc = ' + str(self.get_c()))
         return outstring
 

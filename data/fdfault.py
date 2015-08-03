@@ -71,6 +71,10 @@ class output(object):
             self.syz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_syz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
         elif self.field == 'szz':
             self.szz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_szz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'lambda':
+            self.lam = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_lambda.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'gammap':
+            self.gammap = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_gammap.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
         elif self.field == 'V':
             self.V = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_V.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
         elif self.field == 'U':
