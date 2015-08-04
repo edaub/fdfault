@@ -27,7 +27,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
     
     // open input file, find appropriate place and read in parameters
     
-    double rho_in, lambda_in, g_in, mu_in, beta_in, eta_in, c_in;
+    double rho_in, lambda_in, g_in, mu_in, c_in, beta_in, eta_in;
     string boundtype[6], boundfile[6];
     
     stringstream ss;
@@ -65,9 +65,9 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
             paramfile >> g_in;
             if (is_plastic) {
                 paramfile >> mu_in;
+                paramfile >> c_in;
                 paramfile >> beta_in;
                 paramfile >> eta_in;
-                paramfile >> c_in;
             }
             for (int i=0; i<ndim_in; i++) {
                 paramfile >> x_block[i];

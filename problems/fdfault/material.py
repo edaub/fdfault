@@ -7,7 +7,7 @@ class material(object):
     material class
     describes material parameters (elastic and plastic) for dynamic rupture
     '''
-    def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, beta = 0.2867, eta = 0.2775, c = 0.):
+    def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, c = 0., beta = 0.2867, eta = 0.2775):
         assert mattype == "elastic" or mattype == "plastic", "Material type must be elastic or plastic"
         assert(rho > 0.)
         assert(lam > 0.)
@@ -118,13 +118,13 @@ class material(object):
         if self.mattype == "elastic":
             f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+"\n")
         else:
-            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+" "+str(self.get_mu())+" "+str(self.get_beta())+" "+str(self.get_eta())+" "+str(self.get_c())+"\n")
+            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+" "+str(self.get_mu())+" "+str(self.get_c())+" "+str(self.get_beta())+" "+str(self.get_eta())+"\n")
 
     def __str__(self):
         'returns string representation'
         outstring = ('Material:\nrho = ' + str(self.get_rho()) + '\nlam = ' + str(self.get_lam()) +
                 '\ng = ' + str(self.get_g()))
         if self.mattype == "plastic":
-            outstring += ('\nmu = ' + str(self.get_mu()) + '\nbeta = ' + str(self.get_beta()) + '\neta = ' + str(self.get_eta())+ '\nc = ' + str(self.get_c()))
+            outstring += ('\nmu = ' + str(self.get_mu()) + '\nc = ' + str(self.get_c()) + '\nbeta = ' + str(self.get_beta()) + '\neta = ' + str(self.get_eta()))
         return outstring
 

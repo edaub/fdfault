@@ -71,6 +71,14 @@ function output = load_output(probname, name, datadir)
         f = fopen([ datadir probname '_' name '_szz.dat'], 'rb');
         output.szz = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
         fclose(f);
+    elseif strcmp(field,'lambda')
+        f = fopen([ datadir probname '_' name '_lambda.dat'], 'rb');
+        output.lambda = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
+    elseif strcmp(field,'gammap')
+        f = fopen([ datadir probname '_' name '_gammap.dat'], 'rb');
+        output.gammap = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
     elseif strcmp(field,'V')
         f = fopen([ datadir probname '_' name '_V.dat'], 'rb');
         output.V = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
