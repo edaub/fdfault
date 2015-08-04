@@ -276,7 +276,7 @@ class curve(surface):
         self.x = np.array(x)
         self.y = np.array(y)
         self.z = np.array([0.])
-        self.nx, self.ny = generate_normals_2d(x, y, direction) 
+        self.nx, self.ny = generate_normals_2d(self.x, self.y, direction) 
         self.nz = np.array([0.])
 
         assert (n,) == self.x.shape, "x must have length n"
