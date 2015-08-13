@@ -9,7 +9,8 @@ class fields(object):
         self.ndim = ndim
         self.mode = mode
         self.material = "elastic"
-        self.s = [0., 0., 0., 0., 0., 0.]
+        self.s0 = [0., 0., 0., 0., 0., 0.]
+        self.s = None
         
     def get_material(self):
         "Returns material type"
@@ -21,24 +22,49 @@ class fields(object):
         self.material = material
 
     def get_stress(self):
-        "Returns intial stress values"
-        return self.s[:]
+        "Returns uniform intial stress values"
+        return self.s0[:]
 
-    def set_stress(self,s):
+    def set_stress(self, s):
         "Sets uniform intial stress"
         assert len(s) == 6, "Initial stress must hav 6 components"
         for sc in s:
             assert (type(sc) is float or type(sc) is int), "Initial stress must be a number"
+        self.s0 = s[:]
+
+    def get_het_stress(self):
+        "returns hetergeneous initial stress"
+        return self.s[:]
+
+    def set_het_stress(self, s):
+        """
+        sets heterogeneous initial stress
+        note: no grid information here, so number of grid points checked at domain level
+        """
+        if self.ndim == 3:
+            assert(s.shape[0] == 6), "for 3D problems, heterogeneous stress must have 6 components"
+        else:
+            if self.mode == 2:
+                assert(s.shape[0] == 3), "for mode 2 problems, heterogeneous stress must have 3 components"
+            else:
+                assert(s.shape[0] == 2), "for mode 3 problems, heterogeneous stress must have 2 components"
         self.s = s[:]
 
-    def write_input(self,f):
+    def write_input(self,f, probname, endian = '='):
         "Writes field information to input file"
         f.write("[fdfault.fields]\n")
         outstring = ""
-        for sc in self.s:
+        for sc in self.s0:
             outstring += str(sc)+" "
         outstring = outstring[0:-1]
         f.write(outstring+"\n")
+        if self.s is None:
+            f.write("none\n")
+        else:
+            f.write("problems/"+probname+".load\n")
+            loadfile = open(probname+".load","wb")
+            loadfile.write(self.s.astype(endian+'f8').tobytes())
+            loadfile.close()
         f.write("\n")
 
     def __str__(self):

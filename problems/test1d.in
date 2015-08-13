@@ -23,6 +23,7 @@ elastic
 
 [fdfault.fields]
 0. 0. 0. 0. 0. 0.
+none
 
 [fdfault.block000]
 2.67 32.04 32.04
@@ -71,7 +72,7 @@ none
 
 [fdfault.outputlist]
 v
-V
+vx
 0 400 1
 50 350 1
 201 201 1

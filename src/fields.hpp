@@ -29,6 +29,7 @@ private:
 	int ndim;
     int mode;
     std::string material;
+    bool heterogeneous;
     int nv;
     int ns;
     int nxyz;
@@ -50,6 +51,7 @@ private:
 	int shiftm_dest_index[3];
 	coord c;
     double s0[6];
+    double* s;
 	double* f;
 	double* df;
     double* x;
@@ -58,8 +60,8 @@ private:
 	MPI_Comm comm;
 	MPI_Datatype slicep[3];
 	MPI_Datatype slicem[3];
-    void init_fields(const int mode, const double s[6]);
 	void init_exchange(const cartesian& cart);
+    void read_load(const std::string loadfile);
 };
 
 #endif

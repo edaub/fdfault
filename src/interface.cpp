@@ -625,6 +625,20 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                         b2.s22 = f.f[6*nxd[0]+index2]+f.s0[3];
                         b2.s23 = f.f[7*nxd[0]+index2]+f.s0[4];
                         b2.s33 = f.f[8*nxd[0]+index2]+f.s0[5];
+                        if (f.heterogeneous) {
+                            b1.s11 = f.f[3*nxd[0]+index1]+f.s[0*nxd[0]+index1];
+                            b1.s12 = f.f[4*nxd[0]+index1]+f.s[1*nxd[0]+index1];
+                            b1.s13 = f.f[5*nxd[0]+index1]+f.s[2*nxd[0]+index1];
+                            b1.s22 = f.f[6*nxd[0]+index1]+f.s[3*nxd[0]+index1];
+                            b1.s23 = f.f[7*nxd[0]+index1]+f.s[4*nxd[0]+index1];
+                            b1.s33 = f.f[8*nxd[0]+index1]+f.s[5*nxd[0]+index1];
+                            b2.s11 = f.f[3*nxd[0]+index2]+f.s[0*nxd[0]+index2];
+                            b2.s12 = f.f[4*nxd[0]+index2]+f.s[1*nxd[0]+index2];
+                            b2.s13 = f.f[5*nxd[0]+index2]+f.s[2*nxd[0]+index2];
+                            b2.s22 = f.f[6*nxd[0]+index2]+f.s[3*nxd[0]+index2];
+                            b2.s23 = f.f[7*nxd[0]+index2]+f.s[4*nxd[0]+index2];
+                            b2.s33 = f.f[8*nxd[0]+index2]+f.s[5*nxd[0]+index2];
+                        }
                         break;
                     case 2:
                         switch (mode) {
@@ -647,6 +661,14 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                 b2.s22 = f.f[4*nxd[0]+index2]+f.s0[3];
                                 b2.s23 = 0.;
                                 b2.s33 = 0.;
+                                if (f.heterogeneous) {
+                                    b1.s11 = f.f[2*nxd[0]+index1]+f.s[0*nxd[0]+index1];
+                                    b1.s12 = f.f[3*nxd[0]+index1]+f.s[1*nxd[0]+index1];
+                                    b1.s22 = f.f[4*nxd[0]+index1]+f.s[2*nxd[0]+index1];
+                                    b2.s11 = f.f[2*nxd[0]+index2]+f.s[0*nxd[0]+index2];
+                                    b2.s12 = f.f[3*nxd[0]+index2]+f.s[1*nxd[0]+index2];
+                                    b2.s22 = f.f[4*nxd[0]+index2]+f.s[2*nxd[0]+index2];
+                                }
                                 break;
                             case 3:
                                 b1.v1 = 0.;
@@ -667,6 +689,12 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                 b2.s22 = f.s0[3];
                                 b2.s23 = f.f[2*nxd[0]+index2]+f.s0[4];
                                 b2.s33 = 0.;
+                                if (f.heterogeneous) {
+                                    b1.s13 = f.f[1*nxd[0]+index1]+f.s[0*nxd[0]+index1];
+                                    b1.s23 = f.f[2*nxd[0]+index1]+f.s[1*nxd[0]+index1];
+                                    b2.s13 = f.f[1*nxd[0]+index2]+f.s[0*nxd[0]+index2];
+                                    b2.s23 = f.f[2*nxd[0]+index2]+f.s[1*nxd[0]+index2];
+                                }
                         }
                 }
                 

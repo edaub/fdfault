@@ -402,12 +402,24 @@ class domain(object):
                     self.blocks[i][j][k].set_xm((x0,x1,x2))
 
     def get_stress(self):
-        "Returns intial stress values"
+        "Returns uniform intial stress values"
         return self.f.get_stress()
 
     def set_stress(self,s):
         "Sets uniform intial stress"
         self.f.set_stress(s)
+
+    def get_het_stress(self):
+        "Returns heterogeneous intial stress values"
+        return self.f.get_het_stress()
+
+    def set_het_stress(self,s):
+        "Sets heterogeneous intial stress"
+        if self.ndim == 3:
+            assert (s.shape[1:] == self.nx), "heterogeneous stress shape must match grid sizes"
+        else:
+            assert (s.shape[1:] == self.nx[0:2]), "heterogeneous stress shape must match grid sizes"
+        self.f.set_het_stress(s)
 
     def get_nifaces(self):
         "Returns number of interfaces"
@@ -584,7 +596,7 @@ class domain(object):
         f.write(str(self.sbporder)+"\n")
         f.write(self.mattype+"\n")
         f.write("\n")
-        self.f.write_input(f)
+        self.f.write_input(f, probname, endian)
 
         for b1 in self.blocks:
             for b2 in b1:

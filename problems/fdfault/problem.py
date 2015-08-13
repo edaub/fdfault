@@ -229,12 +229,20 @@ class problem(object):
         self.d.delete_block_surf(coords, loc)
 
     def get_stress(self):
-        "Returns intial stress values"
+        "Returns uniform intial stress values"
         return self.d.get_stress()
 
     def set_stress(self,s):
         "Sets uniform intial stress"
         self.d.set_stress(s)
+
+    def get_het_stress(self):
+        "Returns heterogeneous intial stress values"
+        return self.d.get_het_stress()
+
+    def set_het_stress(self,s):
+        "Sets heterogeneous intial stress"
+        self.d.set_het_stress(s)
 
     def get_nifaces(self):
         "Returns number of interfaces"

@@ -13,13 +13,13 @@ using namespace std;
 fields::fields(const char* filename, const int ndim_in, const int mode_in, const string material_in, const cartesian& cart) {
     // constructor
     
-    assert(ndim_in == 2 || ndim_in ==3);
+    assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
     assert(material_in == "elastic" || material_in == "plastic");
     
     // read from input file
     
-    string line;
+    string line, loadfile;
     ifstream paramfile(filename, ios::in);
     if (paramfile.is_open()) {
         // scan to start of fields list
@@ -36,6 +36,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
             for (int i=0; i<6; i++) {
                 paramfile >> s0[i];
             }
+            paramfile >> loadfile;
         }
     } else {
         cerr << "Error opening input file in fields.cpp\n";
@@ -79,6 +80,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     ndatax = ndim*c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
     ndatametric = ndim*ndim*c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
     ndatajac = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
+    nxyz = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
     
     f = new double [ndataf];
 	df = new double [ndatadf];
@@ -130,7 +132,14 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
             }
     }
     
-    nxyz = c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2);
+    // if problem heterogeneous, read load data from file
+    
+    if (loadfile == "none") {
+        heterogeneous = false;
+    } else {
+        heterogeneous = true;
+        read_load(loadfile);
+    }
 	
 	// initialize MPI datatypes for exchanging with neighbors
 	
@@ -145,6 +154,10 @@ fields::~fields() {
     delete[] x;
     delete[] metric;
     delete[] jac;
+    
+    if (heterogeneous) {
+        delete[] s;
+    }
 	
 }
 
@@ -156,6 +169,14 @@ void fields::set_stress() {
             f[(nv+i)*nxyz+j] += s0[index[i]];
         }
 	}
+    
+    if (!heterogeneous) { return; }
+    
+    for (int i=0; i<ns; i++) {
+        for (int j=0; j<nxyz; j++) {
+            f[(nv+i)*nxyz+j] += s[i*nxyz+j];
+        }
+    }
 		
 }
 
@@ -165,6 +186,14 @@ void fields::remove_stress() {
     for (int i=0; i<ns; i++) {
         for (int j=0; j<nxyz; j++) {
             f[(nv+i)*nxyz+j] -= s0[index[i]];
+        }
+    }
+    
+    if (!heterogeneous) { return; }
+    
+    for (int i=0; i<ns; i++) {
+        for (int j=0; j<nxyz; j++) {
+            f[(nv+i)*nxyz+j] -= s[i*nxyz+j];
         }
     }
     
@@ -438,6 +467,89 @@ void fields::free_exchange() {
     MPI_Type_free(&slicep[0]);
     MPI_Type_free(&slicep[1]);
     MPI_Type_free(&slicep[2]);
+    
+}
+
+void fields::read_load(const string loadfile) {
+    // read heterogeneous load data from file
+
+    // allocate memory for stress
+        
+    s = new double [ns*nxyz];
+    
+    // allocate memory for array without ghost cells
+    
+    double* s_temp;
+    
+    s_temp = new double [ns*c.get_nx_loc(0)*c.get_nx_loc(1)*c.get_nx_loc(2)];
+    
+    // create MPI subarray for reading distributed array
+    
+    int starts[3], nx[3], nx_loc[3];
+        
+    for (int i=0; i<3; i++) {
+        starts[i] = c.get_xm_loc(i);
+        nx[i] = c.get_nx(i);
+        nx_loc[i] = c.get_nx_loc(i);
+    }
+    
+    MPI_Datatype filearray;
+        
+    MPI_Type_create_subarray(3, nx, nx_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
+        
+    MPI_Type_commit(&filearray);
+        
+    // open file
+        
+    int rc;
+    char* filename;
+    char filetype[] = "native";
+    
+    filename = new char [loadfile.size()+1];
+    strcpy(filename, loadfile.c_str());
+    
+    MPI_File infile;
+    
+    rc = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &infile);
+    
+    delete[] filename;
+    
+    if(rc != MPI_SUCCESS){
+        std::cerr << "Error opening file in fields.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD, rc);
+    }
+    
+    // set view to beginning
+    
+    MPI_File_set_view(infile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+    
+    // read data
+    
+    for (int i=0; i<ns; i++) {
+        MPI_File_read(infile, &s_temp[i*nxyz], nx_loc[0]*nx_loc[1]*nx_loc[2], MPI_DOUBLE, MPI_STATUS_IGNORE);
+    }
+    
+    // copy to appropriate place in s array (avoid ghost cells
+    
+    for (int i=0; i<ns; i++) {
+        for (int j=0; j<nx_loc[0]; j++) {
+            for (int k=0; k<nx_loc[1]; k++) {
+                for (int l=0; l<nx_loc[2]; l++) {
+                    s[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] = s_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]+j*nx_loc[1]*nx_loc[2]+k*nx_loc[2]+l];
+                }
+            }
+        }
+    }
+    
+    // close file
+    
+    MPI_File_close(&infile);
+    
+    MPI_Type_free(&filearray);
+    
+    // deallocate temporary array
+    
+    delete[] s_temp;
     
 }
 	
