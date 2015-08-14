@@ -13,14 +13,12 @@ public:
              const int niface, block**** blocks, const fields& f, const cartesian& cart, const fd_type& fd);
     ~slipweak();
 protected:
-    int nperts;
     swparam** perts;
-    bool param_file;
     double* dc;
     double* mus;
     double* mud;
-    void read_params(const std::string paramfilename);
-    virtual boundchar solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t);
+    virtual void read_params(const std::string paramfile);
+    virtual double calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const;
 };
 
 #endif

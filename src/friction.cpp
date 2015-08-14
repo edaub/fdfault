@@ -389,20 +389,52 @@ iffields friction::solve_friction(iffields iffin, double snc, const double z1, c
 
 boundchar friction::solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t) {
     // solves friction law for slip velocity and strength
-    // frictionless interface
+    // each friction law supplies its own function for calc_mu
     
     boundchar b;
     
-    b.v = phi/eta;
-    b.s = 0.;
+    if (snc < 0.) {
+        // compressive normal stress
+        
+        double mu = calc_mu(phi, eta, snc, i, j, t);
+        
+        if (mu*fabs(snc) > phi) {
+            // locked
+            b.v = 0.;
+            b.s = phi;
+        } else {
+            // slipping
+            b.s = mu*fabs(snc);
+            b.v = (phi-b.s)/eta;
+            
+        }
+        
+    } else {
+        // tensile normal stress, no shear strength
+        b.s = 0.;
+        b.v = phi/eta;
+    }
+    
+    // if state variable, set time derivative using hat variables
+    
+    if (has_state) {
+        dstatedt[i*n_loc[1]+j] = calc_dstatedt(b.v, b.s, i, j, t);
+    }
     
     return b;
+}
+
+double friction::calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const {
+    // calculates friction coefficient
+    
+    return 0.;
+    
 }
 
 void friction::scale_df(const double A) {
     // scale df for state variables by rk constant A
     
-    if (no_data) {return;}
+    if (no_data) { return; }
     
     for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
         dux[i] *= A;
@@ -410,6 +442,12 @@ void friction::scale_df(const double A) {
     
     for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
         du[i] *= A;
+    }
+    
+    if (!has_state) { return; }
+    
+    for (int i=0; i<(ndim-1)*n_loc[0]*n_loc[1]; i++) {
+        dstate[i] *= A;
     }
     
 }
@@ -426,6 +464,12 @@ void friction::calc_df(const double dt) {
     for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
         du[i] += dt*v[i];
     }
+
+    if (!has_state) { return; }
+    
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        dstate[i] += dt*dstatedt[i];
+    }
     
 }
 
@@ -441,7 +485,13 @@ void friction::update(const double B) {
     for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
         u[i] += B*du[i];
     }
-        
+
+    if (!has_state) { return; }
+    
+    for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+        state[i] += B*dstate[i];
+    }
+    
 }
 
 void friction::write_fields() {
@@ -524,7 +574,7 @@ void friction::read_load(const string loadfile) {
         delete[] filename;
         
         if(rc != MPI_SUCCESS){
-            std::cerr << "Error opening file in friction.cpp\n";
+            std::cerr << "Error opening load file in friction.cpp\n";
             MPI_Abort(MPI_COMM_WORLD, rc);
         }
 
@@ -548,3 +598,72 @@ void friction::read_load(const string loadfile) {
     
 }
 
+void friction::read_state(const string statefile) {
+    // reads state data from input file
+    
+    // create communicator
+    
+    MPI_Comm comm;
+    
+    comm = create_comm(no_data);
+    
+    // create MPI subarray for reading distributed array
+    
+    if (!no_data) {
+        
+        int starts[2];
+        
+        if (direction == 0) {
+            starts[0] = xm_loc[1]-xm[1];
+            starts[1] = xm_loc[2]-xm[2];
+        } else if (direction == 1) {
+            starts[0] = xm_loc[0]-xm[0];
+            starts[1] = xm_loc[2]-xm[2];
+        } else {
+            starts[0] = xm_loc[0]-xm[0];
+            starts[1] = xm_loc[1]-xm[1];
+        }
+        
+        MPI_Datatype filearray;
+        
+        MPI_Type_create_subarray(2, n, n_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
+        
+        MPI_Type_commit(&filearray);
+        
+        // open file
+        
+        int rc;
+        char* filename;
+        char filetype[] = "native";
+        
+        filename = new char [statefile.size()+1];
+        strcpy(filename, statefile.c_str());
+        
+        MPI_File infile;
+        
+        rc = MPI_File_open(comm, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &infile);
+        
+        delete[] filename;
+        
+        if(rc != MPI_SUCCESS){
+            std::cerr << "Error opening state file in friction.cpp\n";
+            MPI_Abort(MPI_COMM_WORLD, rc);
+        }
+        
+        // set view to beginning
+        
+        MPI_File_set_view(infile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+        
+        // read data
+        
+        MPI_File_read(infile, state, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        
+        // close file
+        
+        MPI_File_close(&infile);
+        
+        MPI_Type_free(&filearray);
+        
+    }
+    
+}

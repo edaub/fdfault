@@ -169,11 +169,8 @@ slipweak::~slipweak() {
     
 }
 
-boundchar slipweak::solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t) {
-    // solves friction law for slip velocity and strength
-    // frictionless interface
-    
-    boundchar b;
+double slipweak::calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const {
+    // calculates friciton coefficient for index i,j
     
     double mu, dct = 0., mudt = 0., must = 0.;
     
@@ -197,28 +194,11 @@ boundchar slipweak::solve_fs(const double phi, const double eta, const double sn
         mu = mudt+(1.-u[index]/dct)*(must-mudt);
     }
     
-    if (snc < 0.) {
-        // compressive normal stress
-        if (mu*fabs(snc) > phi) {
-            // locked
-            b.v = 0.;
-            b.s = phi;
-        } else {
-            // slipping
-            b.s = mu*fabs(snc);
-            b.v = (phi-b.s)/eta;
-            
-        }
-    } else {
-        // tensile normal stress, no shear strength
-        b.s = 0.;
-        b.v = phi/eta;
-    }
+    return mu;
     
-    return b;
 }
 
-void slipweak::read_params(const string swparamfile) {
+void slipweak::read_params(const string paramfile) {
     // reads load data from input file
     
     // allocate memory for loads
@@ -266,8 +246,8 @@ void slipweak::read_params(const string swparamfile) {
         char* filename;
         char filetype[] = "native";
         
-        filename = new char [swparamfile.size()+1];
-        strcpy(filename, swparamfile.c_str());
+        filename = new char [paramfile.size()+1];
+        strcpy(filename, paramfile.c_str());
         
         MPI_File infile;
         

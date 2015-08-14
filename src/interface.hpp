@@ -62,11 +62,13 @@ protected:
     bool data1;
     bool data2;
     bool is_friction;
+    bool has_state;
     bool is_plastic;
     double* u;
     double* v;
     double* ux;
     double* vx;
+    double* state;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd);
     void deallocate_normals();
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);

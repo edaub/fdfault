@@ -91,10 +91,11 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         no_data = false;
     }
     
-    // set boolean saying this is not frictional (needed in output)
-    // note that this is overridden in the constructor for a frictional interface
+    // set boolean saying this is not frictional and does not have a state variable (needed in output)
+    // note that this is overridden in the constructor for a derived class for a friction law
     
     is_friction = false;
+    has_state = false;
     
     // set number of grid points
     // note do not need to reference ghost cells here as boundary conditions are imposed

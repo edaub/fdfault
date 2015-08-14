@@ -23,16 +23,24 @@ public:
 protected:
     double* du;
     double* dux;
+    double* dstate;
+    double* dstatedt;
     bool load_file;
+    bool param_file;
+    int nperts;
     int nloads;
     load** loads;
     double* sn;
     double* s2;
     double* s3;
-    void read_load(const std::string filename);
+    void read_load(const std::string loadfile);
+    void read_state(const std::string statefile);
+    virtual void read_params(const std::string paramfile);
     virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);
     virtual iffields solve_friction(iffields iffin, double snc, const double z1, const double z2, const int i, const int j, const double t);
     virtual boundchar solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t);
+    virtual double calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const;
+    virtual double calc_dstatedt(const double vhat, const double shat, const int i, const int j, const double t) const;
 };
 
 #endif

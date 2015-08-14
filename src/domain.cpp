@@ -11,6 +11,7 @@
 #include "interface.hpp"
 #include "rk.hpp"
 #include "slipweak.hpp"
+#include "stz.hpp"
 #include <mpi.h>
 
 using namespace std;
@@ -240,12 +241,6 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
             }
         }
     }
-    
-    // calculate df for interfaces
-    
-    for (int i=0; i<nifaces; i++) {
-        interfaces[i]->calc_df(dt);
-    }
         
     // apply interface conditions
     
@@ -253,7 +248,14 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
         interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f,false);
     }
     
+    // calculate df for interfaces
+    
+    for (int i=0; i<nifaces; i++) {
+        interfaces[i]->calc_df(dt);
+    }
+    
     // update interfaces
+    
     for (int i=0; i<nifaces; i++) {
         interfaces[i]->update(rk.get_B(stage));
     }
@@ -282,7 +284,7 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
         
         f->remove_stress();
     
-        // apply interface conditions to correctly set slip rates
+        // apply interface conditions to correctly set slip rates (needed for correct output)
         
         for (int i=0; i<nifaces; i++) {
             interfaces[i]->apply_bcs(dt,t+rk.get_C(stage)*dt,*f,true);
@@ -360,7 +362,7 @@ void domain::allocate_interfaces(const char* filename, string* iftype) {
     // allocate memory for interfaces
     
     for (int i=0; i<nifaces; i++) {
-        assert(iftype[i] == "locked" || iftype[i] == "frictionless" || iftype[i] == "slipweak");
+        assert(iftype[i] == "locked" || iftype[i] == "frictionless" || iftype[i] == "slipweak" || iftype[i] == "stz");
     }
     
     interfaces = new interface* [nifaces];
@@ -370,8 +372,10 @@ void domain::allocate_interfaces(const char* filename, string* iftype) {
             interfaces[i] = new interface(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
         } else if (iftype[i] == "frictionless") {
             interfaces[i] = new friction(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
-        } else { // slip weakening
+        } else if (iftype[i] == "slipweak") {
             interfaces[i] = new slipweak(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
+        } else if (iftype[i] == "stz") {
+            interfaces[i] = new stz(filename, ndim, mode, material, i, blocks, *f, *cart, *fd);
         }
     }
 }

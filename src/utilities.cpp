@@ -83,3 +83,40 @@ MPI_Comm create_comm(const bool no_data) {
 
     return comm;
 }
+
+double solve_newton(const double mu, const double phi, const double eta, const double snc, const int i, const int j, const double t, double (*f)(const double, const double, const double, const double, const int, const int, const double), double (*df)(const double, const double, const double, const double, const int, const int, const double)) {
+    // newton's method to solve friction laws for friction coefficient
+
+    const int nmax = 100;
+    const double tol = 1.e-16;
+    double func, der, dx;
+
+    for (int i=0; i<nmax; i++) {
+
+        func = f(mu, phi, eta, snc, i, j, t);
+        
+        if (fabs(func) < tol) {
+            return mu;
+        }
+
+        der = df(mu, phi, eta, snc, i, j, t)
+        
+        if (der == 0.) {
+            cerr << "zero derivative in Newton's method in utilities.cpp\n";
+            MPI_Abort(MPI_COMM_WORLD, -1);
+        }
+
+        dx = -func/der;
+
+        if (fabs(dx) < tol) {
+            return mu;
+        }
+
+        mu += dx;
+
+    }
+
+    cerr << "Newton's method failed to converge in utilities.cpp\n";
+    MPI_Abort(MPI_COMM_WORLD, -1);
+
+}

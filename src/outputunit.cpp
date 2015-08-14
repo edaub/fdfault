@@ -50,7 +50,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         }
     } else if (field_in == "Vz" || field_in == "Uz") {
         assert(xm_in[0] == xp_in[0] || xm_in[1] == xp_in[1]);
-    } else if (field_in == "V" || field_in == "U") {
+    } else if (field_in == "V" || field_in == "U" || field_in == "state") {
         if (ndim == 3) {
             assert(xm_in[0] == xp_in[0] || xm_in[1] == xp_in[1] || xm_in[2] == xp_in[2]);
         } else {
@@ -102,6 +102,11 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
             cerr << "Interface for output is not frictional in outputunit.cpp\n";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
+        // if needed, check if interface has state variable
+        if (field_in == "state" && !d.interfaces[location]->has_state) {
+            cerr << "Interface for output does not have a state variable in outputunit.cpp\n";
+            MPI_Abort(MPI_COMM_WORLD, -1);
+        }
     }
     
     // set field type
@@ -146,6 +151,8 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                 field = 6;
             } else if (field_in == "U") {
                 field = 7;
+            } else if (field_in == "state") {
+                field = 8;
             } else {
                 std::cerr << "Error in specifying output field in outputunit.cpp\n";
                 MPI_Abort(MPI_COMM_WORLD, -1);
@@ -182,6 +189,8 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 4;
                     } else if (field_in == "U") {
                         field = 5;
+                    } else if (field_in == "state") {
+                        field = 6;
                     } else {
                         std::cerr << "Error in specifying output field in outputunit.cpp\n";
                         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -206,6 +215,8 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 2;
                     } else if (field_in == "U") {
                         field = 3;
+                    } else if (field_in == "state") {
+                        field = 4;
                     } else {
                         std::cerr << "Error in specifying output field in outputunit.cpp\n";
                         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -344,7 +355,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         int direction = d.interfaces[location]->direction;
         if (ndim == 3) {
             if (direction == 0) {
-                if (field == 1 || field == 3 || field == 5 || field == 7) {
+                if (field == 1 || field == 3 || field == 5 || field == 7 || field == 8) {
                     start = (xm_loc[1]-d.interfaces[location]->xm_loc[1])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else if (field == 2 || field == 6) {
                     start = d.interfaces[location]->n_loc[0]*d.interfaces[location]->n_loc[1]+(xm_loc[1]-d.interfaces[location]->xm_loc[1])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
@@ -353,7 +364,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                     MPI_Abort(MPI_COMM_WORLD, -1);
                 }
             } else if (direction == 1) {
-                if (field == 0 || field == 3 || field == 4 || field == 7) {
+                if (field == 0 || field == 3 || field == 4 || field == 7 || field == 8) {
                     start = (xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else if (field == 2 || field == 6) {
                     start = d.interfaces[location]->n_loc[0]*d.interfaces[location]->n_loc[1]+(xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
@@ -362,7 +373,7 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                     MPI_Abort(MPI_COMM_WORLD, -1);
                 }
             } else {
-                if (field == 0 || field == 3 || field == 4 || field == 7) {
+                if (field == 0 || field == 3 || field == 4 || field == 7 || field == 8) {
                     start = (xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[1]-d.interfaces[location]->xm_loc[1]);
                 } else if (field == 1 || field == 5) {
                     start = d.interfaces[location]->n_loc[0]*d.interfaces[location]->n_loc[1]+(xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[1]-d.interfaces[location]->xm_loc[1]);
@@ -373,14 +384,14 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
             }
         } else if (mode == 2) {
             if (direction == 0) {
-                if (field == 1 || field == 2 || field == 4 || field == 5) {
+                if (field == 1 || field == 2 || field == 4 || field == 5 || field == 6) {
                     start = (xm_loc[1]-d.interfaces[location]->xm_loc[1])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else {
                     cerr << "Field not associated with this interface in outputunit.cpp\n";
                     MPI_Abort(MPI_COMM_WORLD, -1);
                 }
             } else {
-                if (field == 0 || field == 2 || field == 3 || field == 5) {
+                if (field == 0 || field == 2 || field == 3 || field == 5 || field == 6) {
                     start = (xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else {
                     cerr << "Field not associated with this interface in outputunit.cpp\n";
@@ -389,14 +400,14 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
             }
         } else {
             if (direction == 0) {
-                if (field == 0 || field == 1 || field == 2) {
+                if (field == 0 || field == 1 || field == 2 || field == 3) {
                     start = (xm_loc[1]-d.interfaces[location]->xm_loc[1])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else {
                     cerr << "Field not associated with this interface in outputunit.cpp\n";
                     MPI_Abort(MPI_COMM_WORLD, -1);
                 }
             } else {
-                if (field == 0 || field == 1 || field == 2) {
+                if (field == 0 || field == 1 || field == 2 || field == 3) {
                     start = (xm_loc[0]-d.interfaces[location]->xm_loc[0])*d.interfaces[location]->n_loc[1]+(xm_loc[2]-d.interfaces[location]->xm_loc[2]);
                 } else {
                     cerr << "Field not associated with this interface in outputunit.cpp\n";
@@ -728,6 +739,8 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                             break;
                         case 7:
                             MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                        case 8:
+                            MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                     }
                     break;
                 case 2:
@@ -747,6 +760,8 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                                     break;
                                 case 5:
                                     MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                                case 6:
+                                    MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                             }
                             break;
                         case 3:
@@ -760,8 +775,10 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                                 case 2:
                                     MPI_File_write(outfile, &(d.interfaces[location]->ux[start]), 1, dataarray, MPI_STATUS_IGNORE);
                                     break;
-                                case 4:
+                                case 3:
                                     MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                                case 4:
+                                    MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                             }
                     }
             }

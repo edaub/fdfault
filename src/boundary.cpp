@@ -7,6 +7,7 @@
 #include "coord.hpp"
 #include "fd.hpp"
 #include "fields.hpp"
+#include "material.hpp"
 #include "surface.hpp"
 
 using namespace std;

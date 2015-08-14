@@ -5,6 +5,7 @@
 #include <string>
 #include <string.h>
 #include "cartesian.hpp"
+#include "domain.hpp"
 #include "fields.hpp"
 #include "front.hpp"
 #include "interface.hpp"
