@@ -232,81 +232,42 @@ stz::~stz() {
 double stz::calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const {
     // calculates friciton coefficient for index i,j and time t
     
-    // initial guess is zero
+    // pack parameters into array
     
-    return solve_newton(0., phi, eta, snc, i, j, t, stz::fric_func, stz::fric_der);
+    double* params;
     
-}
-
-double stz::fric_func(const double mu, const double phi, const double eta, const double snc, const int i, const int j, const double t) {
-    // friction function for solving for friction with newton's method
+    params = new double [8];
     
-    return eta*calc_vpl(mu, i, j, t)-snc*mu-phi;
+    int index = i*n_loc[1]+j;
     
-}
-
-double stz::fric_der(const double mu, const double phi, const double eta, const double snc, const int i, const int j, const double t) {
-    // friction derivative for solving for friction with newton's method
-    
-    return eta*calc_dvpldmu(mu, i, j, t)-snc;
-    
-}
-
-double stz::calc_vpl(const double mu, const int i, const int j, const double t) const {
-    // calculates slip velocity given friction coefficient, coordinate, and time info
-    
-    double vpl, v0t = 0., f0t = 0., at = 0., muyt = 0.;
+    params[0] = phi;
+    params[1] = eta;
+    params[2] = snc;
+    params[3] = state[index];
+    params[4] = 0.;
+    params[5] = 0.;
+    params[6] = 0.;
+    params[7] = 0.;
     
     for (int k=0; k<nperts; k++) {
-        v0t += perts[k]->get_v0(i, j, t);
-        f0t += perts[k]->get_f0(i, j, t);
-        at += perts[k]->get_a(i, j, t);
-        muyt += perts[k]->get_muy(i, j, t);
+        params[4] += perts[k]->get_v0(i, j, t);
+        params[5] += perts[k]->get_f0(i, j, t);
+        params[6] += perts[k]->get_a(i, j, t);
+        params[7] += perts[k]->get_muy(i, j, t);
     }
-    
-    const int index = i*n_loc[1]+j;
     
     if (param_file) {
-        v0t += v0[index];
-        f0t += f0[index];
-        at += a[index];
-        muyt += muy[index];
+        params[4] += v0[index];
+        params[5] += f0[index];
+        params[6] += a[index];
+        params[7] += muy[index];
     }
     
-    if (mu <= muyt) {
-        vpl = 0.;
-    } else {
-        vpl = v0t*exp(-f0t+mu/at-1./state[index])*(1.-muyt/mu);
-    }
+    double mu =  solve_newton(0., params, &stz_func, &stz_der);
     
-    return vpl;
+    delete[] params;
     
-}
-
-double stz::calc_dvpldmu(const double mu, const int i, const int j, const double t) const {
-    // calculates slip velocity given friction coefficient, coordinate, and time info
-    
-    double dvpldmu, at = 0., muyt = 0.;
-    
-    for (int k=0; k<nperts; k++) {
-        at += perts[k]->get_a(i, j, t);
-        muyt += perts[k]->get_muy(i, j, t);
-    }
-    
-    const int index = i*n_loc[1]+j;
-    
-    if (param_file) {
-        at += a[index];
-        muyt += muy[index];
-    }
-    
-    if (mu <= muyt) {
-        dvpldmu = 0.;
-    } else {
-        dvpldmu = calc_vpl(mu, i, j, t)*(1./at-muyt/mu/(mu-muyt));
-    }
-    
-    return dvpldmu;
+    return mu;
     
 }
 
@@ -333,7 +294,7 @@ double stz::calc_dstatedt(const double vhat, const double shat, const int i, con
         v1t += v1[index];
     }
     
-    return vhat*shat/c0t*(1.-state[index]/chihat(vhat, chiwt, v1t)); //-R*exp(-betat/state[index]);
+    return vhat*shat/c0t*(1.-state[index]/chihat(vhat, chiwt, v1t))-Rt*exp(-betat/state[index]);
     
 }
 
@@ -440,6 +401,48 @@ void stz::read_params(const string paramfile) {
         MPI_Type_free(&filearray);
         
     }
+    
+}
+
+double stz_func(const double mu, double* params) {
+    // friction function for solving for friction with newton's method
+    
+    double phi = params[0], eta = params[1], snc = params[2];
+    
+    return eta*calc_vpl(mu, params)-snc*mu-phi;
+    
+}
+
+double stz_der(const double mu, double* params) {
+    // friction derivative for solving for friction with newton's method
+    
+    double eta = params[1], snc = params[2];
+    
+    return eta*calc_dvpldmu(mu, params)-snc;
+    
+}
+
+double calc_vpl(const double mu, double* params) {
+    // calcualtes slip velocity
+    
+    double vpl, chi = params[3], v0 = params[4], f0 = params[5], a = params[6], muy = params[7];
+    
+    if (mu <= muy) {
+        vpl = 0.;
+    } else {
+        vpl = v0*exp(-f0+mu/a-1./chi)*(1.-muy/mu);
+    }
+    
+    return vpl;
+    
+}
+
+double calc_dvpldmu(const double mu, double* params) {
+    // calculates derivative of slip velocity with respect to friction coefficient
+    
+    double a = params[6], muy = params[7];
+    
+    return calc_vpl(mu, params)*(1./a-muy/mu/(mu-muy));
     
 }
 

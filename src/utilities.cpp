@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include <stdint.h>
 #include <mpi.h>
 
@@ -84,22 +85,25 @@ MPI_Comm create_comm(const bool no_data) {
     return comm;
 }
 
-double solve_newton(const double mu, const double phi, const double eta, const double snc, const int i, const int j, const double t, double (*f)(const double, const double, const double, const double, const int, const int, const double), double (*df)(const double, const double, const double, const double, const int, const int, const double)) {
+double solve_newton(const double x0, double* params, double (*f)(const double, double*), double (*df)(const double, double*)) {
     // newton's method to solve friction laws for friction coefficient
 
+    int i;
     const int nmax = 100;
     const double tol = 1.e-16;
-    double func, der, dx;
+    double func, der, x, dx;
+    
+    x = x0;
 
-    for (int i=0; i<nmax; i++) {
+    while (i < nmax) {
 
-        func = f(mu, phi, eta, snc, i, j, t);
+        func = f(x, params);
         
         if (fabs(func) < tol) {
-            return mu;
+            break;
         }
 
-        der = df(mu, phi, eta, snc, i, j, t)
+        der = df(x, params);
         
         if (der == 0.) {
             cerr << "zero derivative in Newton's method in utilities.cpp\n";
@@ -109,14 +113,19 @@ double solve_newton(const double mu, const double phi, const double eta, const d
         dx = -func/der;
 
         if (fabs(dx) < tol) {
-            return mu;
+            break;
         }
 
-        mu += dx;
+        x += dx;
+        i++;
 
     }
 
-    cerr << "Newton's method failed to converge in utilities.cpp\n";
-    MPI_Abort(MPI_COMM_WORLD, -1);
+    if (i == nmax) {
+        cerr << "Newton's method failed to converge in utilities.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD, -1);
+    }
+    
+    return x;
 
 }

@@ -667,3 +667,15 @@ void friction::read_state(const string statefile) {
     }
     
 }
+
+void friction::read_params(const string filename) {
+    // reads friction parameters from file
+    
+}
+
+double friction::calc_dstatedt(const double vhat, const double shat, const int i, const int j, const double t) const {
+    // calculates state variable derivative based on hat variables
+
+    return 0.;
+
+}
