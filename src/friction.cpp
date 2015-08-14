@@ -112,7 +112,7 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
             paramfile >> loadfile;
         }
     } else {
-        cerr << "Error opening input file in interface.cpp\n";
+        cerr << "Error opening input file in friction.cpp\n";
         MPI_Abort(MPI_COMM_WORLD,-1);
     }
     paramfile.close();

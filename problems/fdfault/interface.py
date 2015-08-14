@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from .pert import load, swparam, loadfile, swparamfile
+from .pert import load, swparam, stzparam, loadfile, swparamfile, stzparamfile, statefile
 from .surface import surface, curve
 
 class interface(object):
@@ -221,11 +221,10 @@ class friction(interface):
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)+"\nnloads = "
                 +str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.loadfile))
 
-class slipweak(friction):
-    "Class describing slip weakening friction interface"
+class paramfric(friction):
+    "generic friction class with parameters"
     def __init__(self, ndim, index, direction, bm, bp):
         friction.__init__(self, ndim, index, direction, bm, bp)
-        self.iftype = "slipweak"
         self.nperts = 0
         self.perts = []
         self.paramfile = None
@@ -236,7 +235,6 @@ class slipweak(friction):
 
     def add_pert(self,newpert):
         "Adds a perturbation to list of parameter perturbations"
-        assert type(newpert) is swparam, "Cannot add types other than swparam to parameter list"
         self.perts.append(newpert)
         self.nperts = len(self.perts)
 
@@ -259,7 +257,6 @@ class slipweak(friction):
 
     def set_paramfile(self, newparamfile):
         "sets paramfile to provided paramfile"
-        assert type(newparamfile) is swparamfile, "parameter file must have appropriate type"
         self.paramfile = newparamfile
 
     def delete_paramfile(self):
@@ -270,7 +267,7 @@ class slipweak(friction):
         "Write parameters to input file"
         friction.write_input(self, f, probname, endian)
 
-        f.write("[fdfault.slipweak]\n")
+        f.write("[fdfault."+self.iftype+"]\n")
         f.write(str(self.nperts)+"\n")
         for p in self.perts:
             p.write_input(f)
@@ -278,17 +275,126 @@ class slipweak(friction):
         if self.paramfile is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+".sw\n")
-            self.paramfile.write(probname+"_interface"+str(self.index)+".sw",endian)
+            f.write("problems/"+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(probname+"_interface"+str(self.index)+"."+self.suffix,endian)
 
         f.write("\n")
 
     def __str__(self):
-        "Returns string representation of slipweakening friction law"
+        "Returns string representation of generic friction law"
         loadstring = ""
         for load in self.loads:
             loadstring += "\n"+str(load)
-        return ('Slip weakening interface '+str(self.index)+":\ndirection = "+self.direction+
+        return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
-                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.swparamfile))
+                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.paramfile))
 
+class statefric(paramfric):
+    "class describing generic friction law with a state variable
+    def __init__(self, ndim, index, direction, bm, bp):
+        "initialize friction law with state variable"
+        paramfric.__init__(self, ndim, index, direction, bm, bp)
+        self.state = 0.
+        self.statefile = None
+
+    def get_state(self):
+        "returns initial state variable"
+        return self.state
+
+    def set_state(self, newstate):
+        "sets initial state to new value"
+        self.state = float(newstate)
+
+    def get_statefile(self):
+        "returns state file"
+        return self.statefile
+
+    def set_statefile(self, newstatefile):
+        "sets state file"
+        assert type(newstatefile) is statefile, "new state file must be of type statefile"
+        self.statefile = newstatefile
+
+    def delete_statefile(self):
+        "deletes statefile"
+        self.statefile = None
+
+    def write_input(self, f, probname, endian = '='):
+        "Write parameters to input file"
+        friction.write_input(self, f, probname, endian)
+
+        f.write("[fdfault."+self.iftype+"]\n")
+        f.write(str(self.state)+"\n")
+        if self.statefile is None:
+            f.write("none\n")
+        else:
+            f.write("problems/"+probname+"_interface"+str(self.index)+".state\n")
+            self.statefile.write(probname+"_interface"+str(self.index)+".state", endian)
+        
+        f.write(str(self.nperts)+"\n")
+        for p in self.perts:
+            p.write_input(f)
+
+        if self.paramfile is None:
+            f.write("none\n")
+        else:
+            f.write("problems/"+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(probname+"_interface"+str(self.index)+"."+self.suffix,endian)
+
+        f.write("\n")
+
+    def __str__(self):
+        "Returns string representation of generic state variable friction law"
+        loadstring = ""
+        for load in self.loads:
+            loadstring += "\n"+str(load)
+        return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
+                +"\nstate = "+str(self.state)+"\nstatefile = "+str(self.statefile)+
+                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.paramfile))
+        
+
+class slipweak(paramfric):
+    "Class describing slip weakening friction interface"
+    def __init__(self, ndim, index, direction, bm, bp):
+        paramfric.__init__(self, ndim, index, direction, bm, bp)
+        self.iftype = "slipweak"
+        self.suffix = 'sw'
+
+    def add_pert(self,newpert):
+        "Adds a perturbation to list of parameter perturbations"
+        assert type(newpert) is swparam, "Cannot add types other than swparam to parameter list"
+
+        paramfric.add_pert(self, newpert)
+
+    def set_paramfile(self, newparamfile):
+        "sets paramfile to provided paramfile"
+        assert type(newparamfile) is swparamfile, "parameter file must have appropriate type"
+        paramfric.set_paramfile(self, newparamfile)
+
+    def __str__(self):
+        "Returns string representation of slip weakening friction law"
+        return ('Slip weakening'+paramfric.__str__(self))
+
+class stz(statefric):
+    "Class describing stz friction interface"
+    def __init__(self, ndim, index, direction, bm, bp):
+        paramfric.__init__(self, ndim, index, direction, bm, bp)
+        self.iftype = "stz"
+        self.suffix = "stz"
+
+    def add_pert(self,newpert):
+        "Adds a perturbation to list of parameter perturbations"
+        assert type(newpert) is stzparam, "Cannot add types other than swparam to parameter list"
+
+        paramfric.add_pert(self, newpert)
+
+    def set_paramfile(self, newparamfile):
+        "sets paramfile to provided paramfile"
+        assert type(newparamfile) is stzparamfile, "parameter file must have appropriate type"
+        paramfric.set_paramfile(self, newparamfile)
+
+    def __str__(self):
+        "Returns string representation of stz friction law"
+    def __str__(self):
+        "Returns string representation of slip weakening friction law"
+        return ('STZ'+paramfric.__str__(self))

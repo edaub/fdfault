@@ -88,9 +88,9 @@ MPI_Comm create_comm(const bool no_data) {
 double solve_newton(const double x0, double* params, double (*f)(const double, double*), double (*df)(const double, double*)) {
     // newton's method to solve friction laws for friction coefficient
 
-    int i;
+    int i = 0;
     const int nmax = 100;
-    const double tol = 1.e-16;
+    const double tol = 1.e-15;
     double func, der, x, dx;
     
     x = x0;
@@ -111,12 +111,17 @@ double solve_newton(const double x0, double* params, double (*f)(const double, d
         }
 
         dx = -func/der;
-
+        
         if (fabs(dx) < tol) {
             break;
         }
 
         x += dx;
+        
+        if (x < 0.) {
+            x = 0.;
+        }
+        
         i++;
 
     }

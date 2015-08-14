@@ -157,6 +157,15 @@ stz::stz(const char* filename, const int ndim_in, const int mode_in, const strin
         
         state = new double [n_loc[0]*n_loc[1]];
         dstate = new double [n_loc[0]*n_loc[1]];
+        dstatedt = new double [n_loc[0]*n_loc[1]];
+        
+        // set state arrays to zero
+        
+        for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+            state[i] = 0.;
+            dstate[i] = 0.;
+            dstatedt[i] = 0.;
+        }
         
         // if needed, read state from file
         
@@ -164,12 +173,10 @@ stz::stz(const char* filename, const int ndim_in, const int mode_in, const strin
             read_state(statefile);
         }
         
-        // initialize state to constant value
+        // initialize state
         
         for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
             state[i] += chi0;
-            dstate[i] = 0.;
-            dstatedt[i] = 0.;
         }
         
     }
@@ -214,6 +221,7 @@ stz::~stz() {
     
     delete[] state;
     delete[] dstate;
+    delete[] dstatedt;
     
     if (param_file) {
         delete[] v0;
@@ -440,9 +448,15 @@ double calc_vpl(const double mu, double* params) {
 double calc_dvpldmu(const double mu, double* params) {
     // calculates derivative of slip velocity with respect to friction coefficient
     
-    double a = params[6], muy = params[7];
+    double dvpldmu, a = params[6], muy = params[7];
     
-    return calc_vpl(mu, params)*(1./a-muy/mu/(mu-muy));
+    if (mu <= muy) {
+        dvpldmu = 0.;
+    } else {
+        dvpldmu = calc_vpl(mu, params)*(1./a-muy/mu/(mu-muy));
+    }
+    
+    return dvpldmu;
     
 }
 

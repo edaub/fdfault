@@ -111,6 +111,10 @@ function output = load_output(probname, name, datadir)
         f = fopen([ datadir probname '_' name '_Uz.dat'], 'rb');
         output.Uz = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
         fclose(f);
+    elseif strcmp(field,'state')
+        f = fopen([ datadir probname '_' name '_state.dat'], 'rb');
+        output.state = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
     end
 
 end

@@ -168,7 +168,109 @@ class swparam(pert):
     def __str__(self):
         "Returns a string representation"
         return (pert.__str__(self)+", dc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud))
-    
+
+
+class stzparam(pert):
+    "Class representing perturbations to slip weakening parameters"
+    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., v0 = 0., f0 = 0., a = 0.,
+                 muy = 0., c0 = 0., R = 0., beta = 0., chiw = 0., v1 = 0.):
+        "Initialize interface load perturbation"
+
+        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+
+        self.v0 = float(v0)
+        self.f0 = float(f0)
+        self.a = float(a)
+        self.muy = float(muy)
+        self.c0 = float(c0)
+        self.R = float(R)
+        self.beta = float(beta)
+        self.chiw = float(chiw)
+        self.v1 = float(v1)
+
+    def get_v0(self):
+        "returns reference velocity perturbation"
+        return self.v0
+
+    def set_v0(self, v0):
+        "sets reference velocity perturbation"
+        self.v0 = float(v0)
+
+    def get_f0(self):
+        "returns activation barrier perturbation"
+        return self.f0
+
+    def set_f0(self, f0):
+        "sets activation barrier perturbation"
+        self.f0 = float(f0)
+
+    def get_a(self):
+        "returns direct effect perturbation"
+        return self.a
+
+    def set_a(self, a):
+        "sets direct effect perturbation"
+        self.a = float(a)
+
+    def get_muy(self):
+        "returns yield friction perturbation"
+        return self.muy
+
+    def set_muy(self, muy):
+        "sets yield friction perturbation"
+        self.muy = float(muy)
+
+    def get_c0(self):
+        "returns specific heat perturbation"
+        return self.c0
+
+    def set_c0(self, c0):
+        "sets specific heat perturbation"
+        self.c0 = float(c0)
+
+    def get_R(self):
+        "returns relaxation rate perturbation"
+        return self.R
+
+    def set_R(self, R):
+        "sets relaxation rate perturbation"
+        self.R = float(R)
+
+    def get_beta(self):
+        "returns relaxation barrier perturbation"
+        return self.beta
+
+    def set_beta(self, beta):
+        "sets relaxation barrier perturbation"
+        self.beta = float(beta)
+
+    def get_chiw(self):
+        "returns effective temperature activation barrier perturbation"
+        return self.chiw
+
+    def set_chiw(self, chiw):
+        "sets effective temperature activation barrier perturbation"
+        self.chiw = float(chiw)
+
+    def get_v1(self):
+        "returns melting velocity perturbation"
+        return self.v1
+
+    def set_v1(self, v1):
+        "sets melting velocity perturbation"
+        self.v1 = float(v1)
+
+    def write_input(self, f):
+        "Writes loads to input file"
+        pert.write_input(self, f)
+        f.write(" "+str(self.v0)+" "+str(self.f0)+" "+str(self.a)+" "+str(self.muy)+" "+str(self.c0)+" "+str(self.R)
+                +" "+str(self.beta)+" "+str(self.chiw)+" "+str(self.v1)+"\n")
+
+    def __str__(self):
+        "Returns a string representation"
+        return (pert.__str__(self)+", v0 = "+str(self.v0)+", f0 = "+str(self.f0)+", a = "+str(self.a)
+                +", muy = "+str(self.muy)+", c0 = "+str(self.c0)+", R = "+str(self.R)+", beta = "
+                +str(self.beta)+", chiw = "+str(self.chiw)+", v1 = "+str(self.v1)+    
 
 class loadfile(object):
     "class representing a load perturbation (to be written to file)"
@@ -234,6 +336,51 @@ class loadfile(object):
     def __str__(self):
         "returns string representation"
         return "Load File with n1 = "+str(self.n1)+", n2 = "+str(self.n2)
+
+class statefile(object):
+    "class representing a load perturbation (to be written to file)"
+    def __init__(self, n1, n2, state):
+        "create loadfile given number of grid points and load data (normal, horizontal, and vertical)"
+        self.n1 = int(n1)
+        self.n2 = int(n2)
+        self.state = np.array(state)
+        assert (n1, n2) == self.state.shape, "state must have shape (n1, n2)"
+
+    def get_n1(self):
+        "returns number of grid points in 1st coordinate direction"
+        return self.n1
+
+    def get_n2(self):
+        "returns number of grid points in 2nd coordinate direction"
+        return self.n2
+
+    def get_state(self, index = None):
+        "returns state of given indices, if none provided returns entire array"
+        if index is None:
+            return self.state
+        else:
+            return self.state[index]
+
+    def write(self, filename, endian = '='):
+        """
+        write perturbation data to file with given endianness
+        = native
+        < little endian
+        > big endian
+        if endianness not provided uses native
+        """
+
+        assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
+
+        f = open(filename, 'wb')
+
+        f.write(self.get_state().astype(endian+'f8').tobytes())
+
+        f.close()
+
+    def __str__(self):
+        "returns string representation"
+        return "State File with n1 = "+str(self.n1)+", n2 = "+str(self.n2)
         
 class swparamfile(object):
     "class representing sw parameter perturbations (to be written to file)"
@@ -268,14 +415,14 @@ class swparamfile(object):
         if index is None:
             return self.mus
         else:
-            return self.mud[index]
+            return self.mus[index]
 
     def get_mud(self, index = None):
         "returns dynamic friction of given indices, if none provided returns entire array"
         if index is None:
             return self.mud
         else:
-            return self.mus[index]
+            return self.mud[index]
 
     def write(self, filename, endian = '='):
         """
@@ -299,3 +446,128 @@ class swparamfile(object):
     def __str__(self):
         "returns string representation"
         return "SW Parameter File with n1 = "+str(self.n1)+", n2 = "+str(self.n2)
+
+class stzparamfile(object):
+    "class representing sw parameter perturbations (to be written to file)"
+    def __init__(self, n1, n2, v0, f0, a, muy, c0, R, beta, chiw, v1):
+        "create swparamfile given number of grid points and parameter data (dc, mus, mud)"
+        self.n1 = int(n1)
+        self.n2 = int(n2)
+        self.v0 = np.array(v0)
+        self.f0 = np.array(f0)
+        self.a = np.array(a)
+        self.muy = np.array(muy)
+        self.c0 = np.array(c0)
+        self.R = np.array(R)
+        self.beta = np.array(beta)
+        self.chiw = np.array(chiw)
+        self.v1 = np.array(v1)
+        assert (n1, n2) == self.v0.shape, "v0 must have shape (n1, n2)"
+        assert (n1, n2) == self.f0.shape, "f0 must have shape (n1, n2)"
+        assert (n1, n2) == self.a.shape, "a must have shape (n1, n2)"
+        assert (n1, n2) == self.muy.shape, "muy must have shape (n1, n2)"
+        assert (n1, n2) == self.c0.shape, "c0 must have shape (n1, n2)"
+        assert (n1, n2) == self.R.shape, "R must have shape (n1, n2)"
+        assert (n1, n2) == self.beta.shape, "beta must have shape (n1, n2)"
+        assert (n1, n2) == self.chiw.shape, "chiw must have shape (n1, n2)"
+        assert (n1, n2) == self.v1.shape, "v1 must have shape (n1, n2)"
+
+    def get_n1(self):
+        "returns number of grid points in 1st coordinate direction"
+        return self.n1
+
+    def get_n2(self):
+        "returns number of grid points in 2nd coordinate direction"
+        return self.n2
+
+    def get_v0(self, index = None):
+        "returns v0 parameter of given indices, if none provided returns entire array"
+        if index is None:
+            return self.v0
+        else:
+            return self.v0[index]
+
+    def get_f0(self, index = None):
+        "returns activation barrier of given indices, if none provided returns entire array"
+        if index is None:
+            return self.f0
+        else:
+            return self.f0[index]
+
+    def get_a(self, index = None):
+        "returns direct effect of given indices, if none provided returns entire array"
+        if index is None:
+            return self.a
+        else:
+            return self.a[index]
+
+    def get_muy(self, index = None):
+        "returns yield friction of given indices, if none provided returns entire array"
+        if index is None:
+            return self.muy
+        else:
+            return self.muy[index]
+
+    def get_c0(self, index = None):
+        "returns specific heat of given indices, if none provided returns entire array"
+        if index is None:
+            return self.c0
+        else:
+            return self.c0[index]
+
+    def get_R(self, index = None):
+        "returns relaxation rate of given indices, if none provided returns entire array"
+        if index is None:
+            return self.R
+        else:
+            return self.R[index]
+
+    def get_beta(self, index = None):
+        "returns relaxation barrier of given indices, if none provided returns entire array"
+        if index is None:
+            return self.beta
+        else:
+            return self.beta[index]
+
+    def get_chiw(self, index = None):
+        "returns effective temperature activation barrier of given indices, if none provided returns entire array"
+        if index is None:
+            return self.chiw
+        else:
+            return self.chiw[index]
+
+    def get_v1(self, index = None):
+        "returns melting velocity of given indices, if none provided returns entire array"
+        if index is None:
+            return self.v1
+        else:
+            return self.v1[index]
+
+    def write(self, filename, endian = '='):
+        """
+        write perturbation data to file with given endianness
+        = native
+        < little endian
+        > big endian
+        if endianness not provided uses native
+        """
+
+        assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
+
+        f = open(filename, 'wb')
+
+        f.write(self.get_v0().astype(endian+'f8').tobytes())
+        f.write(self.get_f0().astype(endian+'f8').tobytes())
+        f.write(self.get_a().astype(endian+'f8').tobytes())
+        f.write(self.get_muy().astype(endian+'f8').tobytes())
+        f.write(self.get_c0().astype(endian+'f8').tobytes())
+        f.write(self.get_R().astype(endian+'f8').tobytes())
+        f.write(self.get_beta().astype(endian+'f8').tobytes())
+        f.write(self.get_chiw().astype(endian+'f8').tobytes())
+        f.write(self.get_v1().astype(endian+'f8').tobytes())
+
+        f.close()
+
+    def __str__(self):
+        "returns string representation"
+        return "STZ Parameter File with n1 = "+str(self.n1)+", n2 = "+str(self.n2)
