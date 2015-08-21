@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from .fields import fields
 from .block import block
-from .interface import interface, friction, slipweak
+from .interface import interface, friction, slipweak, stz
 
 class domain(object):
     "Class describing rupture problem domain"
@@ -436,7 +436,7 @@ class domain(object):
     def set_iftype(self, index, iftype):
         "Sets iftype of interface index"
         assert index >=0 and index < self.nifaces, "Index not in range"
-        assert (iftype == "locked" or iftype == "frictionless" or iftype == "slipweak")
+        assert (iftype == "locked" or iftype == "frictionless" or iftype == "slipweak" or iftype == "stz")
 
         if iftype == self.interfaces[index].get_type():
             return
@@ -449,8 +449,10 @@ class domain(object):
             self.interfaces[index] = interface(self.ndim, index, direction, bm, bp)
         elif iftype == "frictionless":
             self.interfaces[index] = friction(self.ndim, index, direction, bm, bp)
-        else:
+        elif iftype == "slipweak":
             self.interfaces[index] = slipweak(self.ndim, index,direction,bm,bp)
+        else:
+            self.interfaces[index] = stz(self.ndim, index,direction,bm,bp)
 
     def get_nloads(self, index):
         "Returns number of loads on given interface"
@@ -545,6 +547,26 @@ class domain(object):
         "Deletes paramfile for given interface"
         assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         self.interfaces[niface].delete_paramfile()
+
+    def get_state(self, niface):
+        "gets initial state variable for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_state()
+
+    def set_state(self, niface, state):
+        "sets initial state variable for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].set_state(state)
+
+    def get_statefile(self, niface):
+        "gets state fie for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        return self.interfaces[niface].get_statefile()
+
+    def set_statefile(self, niface, newstatefile):
+        "sets state file for interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].set_statefile(newstatefile)
 
     def get_direction(self, index):
         "Returns direction of interface index"

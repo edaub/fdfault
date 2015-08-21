@@ -323,6 +323,22 @@ class problem(object):
     def delete_paramfile(self, niface):
         "Deletes paramfile for given interface"
         self.d.delete_paramfile(niface)
+
+    def get_state(self, niface):
+        "gets initial state variable for interface"
+        return self.d.get_state(niface)
+
+    def set_state(self, niface, state):
+        "sets initial state variable for interface"
+        self.d.set_state(niface, state)
+        
+    def get_statefile(self, niface):
+        "gets state fie for interface"
+        return self.d.get_statefile(niface)
+
+    def set_statefile(self, niface, newstatefile):
+        "sets state file for interface"
+        self.d.set_statefile(niface, newstatefile)
         
     def get_direction(self, index):
         "Returns direction of interface index"

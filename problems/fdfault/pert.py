@@ -270,7 +270,7 @@ class stzparam(pert):
         "Returns a string representation"
         return (pert.__str__(self)+", v0 = "+str(self.v0)+", f0 = "+str(self.f0)+", a = "+str(self.a)
                 +", muy = "+str(self.muy)+", c0 = "+str(self.c0)+", R = "+str(self.R)+", beta = "
-                +str(self.beta)+", chiw = "+str(self.chiw)+", v1 = "+str(self.v1)+    
+                +str(self.beta)+", chiw = "+str(self.chiw)+", v1 = "+str(self.v1))
 
 class loadfile(object):
     "class representing a load perturbation (to be written to file)"

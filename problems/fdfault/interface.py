@@ -290,7 +290,7 @@ class paramfric(friction):
                 +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.paramfile))
 
 class statefric(paramfric):
-    "class describing generic friction law with a state variable
+    "class describing generic friction law with a state variable"
     def __init__(self, ndim, index, direction, bm, bp):
         "initialize friction law with state variable"
         paramfric.__init__(self, ndim, index, direction, bm, bp)
@@ -378,13 +378,13 @@ class slipweak(paramfric):
 class stz(statefric):
     "Class describing stz friction interface"
     def __init__(self, ndim, index, direction, bm, bp):
-        paramfric.__init__(self, ndim, index, direction, bm, bp)
+        statefric.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "stz"
         self.suffix = "stz"
 
     def add_pert(self,newpert):
         "Adds a perturbation to list of parameter perturbations"
-        assert type(newpert) is stzparam, "Cannot add types other than swparam to parameter list"
+        assert type(newpert) is stzparam, "Cannot add types other than stzparam to parameter list"
 
         paramfric.add_pert(self, newpert)
 
