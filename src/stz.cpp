@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <cassert>
 #include "block.hpp"
 #include "cartesian.hpp"
 #include "fd.hpp"
@@ -314,7 +315,15 @@ double stz::chihat(const double vt, const double chiwt, const double v1t) const 
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
     
-    return chiwt/log(v1t/vt);
+    double chihat;
+    
+    if (vt == 0.) {
+        chihat = chiwt;
+    } else {
+        chihat = chiwt/log(v1t/vt);
+    }
+    
+    return chihat;
     
 }
 
