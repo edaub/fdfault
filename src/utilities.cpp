@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <cassert>
 #include <stdint.h>
 #include <mpi.h>
 
@@ -85,16 +86,19 @@ MPI_Comm create_comm(const bool no_data) {
     return comm;
 }
 
-double solve_newton(const double x0, double* params, double (*f)(const double, double*), double (*df)(const double, double*)) {
-    // newton's method to solve friction laws for friction coefficient
+double solve_newton(const double xmin, const double xmax, double* params, double (*f)(const double, double*), double (*df)(const double, double*)) {
+    // bracketed newton's method to solve friction laws for friction coefficient
 
     int i = 0;
     const int nmax = 100;
-    const double tol = 1.e-15;
-    double func, der, x, dx;
+    const double tol = 2.e-16;
+    double func, der, x, dx, ub, lb;
     
-    x = x0;
-
+    x = 0.5*(xmin+xmax);
+    
+    ub = xmax;
+    lb = xmin;
+ 
     while (i < nmax) {
 
         func = f(x, params);
@@ -102,8 +106,20 @@ double solve_newton(const double x0, double* params, double (*f)(const double, d
         if (fabs(func) < tol) {
             break;
         }
+        
+        if (isinf(func) || func > 0.) {
+            ub = x;
+        } else {
+            lb = x;
+        }
+        
+        if (fabs(0.5*(lb+ub)-x) < tol) {
+            break;
+        }
+        
+        x = 0.5*(lb+ub);
 
-        der = df(x, params);
+/*        der = df(x, params);
         
         if (der == 0.) {
             cerr << "zero derivative in Newton's method in utilities.cpp\n";
@@ -116,11 +132,18 @@ double solve_newton(const double x0, double* params, double (*f)(const double, d
             break;
         }
 
-        x += dx;
-        
-        if (x < 0.) {
-            x = 0.;
+        if (x+dx >= ub) {
+            x = ub;
+        } else if (x+dx <= xmin) {
+            x = xmin;
         }
+        
+        if (isinf(func) || isnan(func)) {
+            ub = x;
+            x = 0.25*(xmin+ub);
+        } else {
+            x += dx;
+        }*/
         
         i++;
 

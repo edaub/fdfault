@@ -272,7 +272,13 @@ double stz::calc_mu(const double phi, const double eta, const double snc, const 
         params[7] += muy[index];
     }
     
-    double mu =  solve_newton(0., params, &stz_func, &stz_der);
+    double mu;
+    
+    if (params[7] >= -phi/snc) {
+        mu = -phi/snc;
+    } else {
+        mu =  solve_newton(params[7], -phi/snc, params, &stz_func, &stz_der);
+    }
     
     delete[] params;
     
