@@ -92,58 +92,75 @@ double solve_newton(const double xmin, const double xmax, double* params, double
     int i = 0;
     const int nmax = 100;
     const double tol = 2.e-16;
-    double func, der, x, dx, ub, lb;
+    double func, der, x, xl, xh, fl, fh, dx, dxold, temp;
     
     x = 0.5*(xmin+xmax);
     
-    ub = xmax;
-    lb = xmin;
+    xh = xmax;
+    xl = xmin;
+    
+    // remove overflow in upper bound, if needed
+    
+    func = f(x, params);
+    
+    while (true) {
+        if (!isinf(func)) {
+            if (func > 0.) {
+                xh = x;
+                break;
+            } else {
+                xl = x;
+            }
+        } else {
+            xh = x;
+        }
+        x = 0.5*(xh+xl);
+        func = f(x, params);
+    }
+    
+    x = 0.5*(xh+xl);
+    func = f(x, params);
+    der = df(x, params);
+    
+    dx = fabs(xh-xl);
+    dxold = dx;
  
     while (i < nmax) {
-
-        func = f(x, params);
-        
-        if (fabs(func) < tol) {
-            break;
-        }
-        
-        if (isinf(func) || func > 0.) {
-            ub = x;
-        } else {
-            lb = x;
-        }
-        
-        if (fabs(0.5*(lb+ub)-x) < tol) {
-            break;
-        }
-        
-        x = 0.5*(lb+ub);
-
-/*        der = df(x, params);
         
         if (der == 0.) {
             cerr << "zero derivative in Newton's method in utilities.cpp\n";
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
 
-        dx = -func/der;
+        if ((((x-xh)*der-func)*((x-xl)*der-func) > 0.) || fabs(2.*func) > fabs(dxold*der)) {
+            dxold = dx;
+            dx = 0.5*(xh-xl);
+            x = xl+dx;
+            if (xl == x) {
+                break;
+            }
+        } else {
+            dxold = dx;
+            dx = func/der;
+            temp = x;
+            x = x-dx;
+            if (temp == x) {
+                break;
+            }
+        }
         
         if (fabs(dx) < tol) {
             break;
         }
-
-        if (x+dx >= ub) {
-            x = ub;
-        } else if (x+dx <= xmin) {
-            x = xmin;
-        }
         
-        if (isinf(func) || isnan(func)) {
-            ub = x;
-            x = 0.25*(xmin+ub);
+        func = f(x, params);
+        der = df(x, params);
+        
+        if (func < 0.) {
+            xl = x;
         } else {
-            x += dx;
-        }*/
+            xh = x;
+        }
         
         i++;
 
