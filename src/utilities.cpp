@@ -102,20 +102,24 @@ double solve_newton(const double xmin, const double xmax, double* params, double
     // remove overflow in upper bound, if needed
     
     func = f(x, params);
+    fh = f(xh, params);
     
-    while (true) {
-        if (!isinf(func)) {
-            if (func > 0.) {
-                xh = x;
-                break;
+    if (isinf(fh)) {
+        while (true) {
+            if (!isinf(func)) {
+                if (func > 0.) {
+                    xh = x;
+                    break;
+                } else {
+                    xl = x;
+                }
             } else {
-                xl = x;
+                xh = x;
             }
-        } else {
-            xh = x;
+            x = 0.5*(xh+xl);
+            func = f(x, params);
         }
-        x = 0.5*(xh+xl);
-        func = f(x, params);
+        
     }
     
     x = 0.5*(xh+xl);

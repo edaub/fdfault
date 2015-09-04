@@ -874,36 +874,40 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
     
     // z derivatives
     
-    for (int i=mlb[0]; i<prb[0]; i++) {
-        for (int j=mlb[1]; j<prb[1]; j++) {
-            for (int k=mlb[2]; k<mc[2]; k++) {
-                // left boundaries
-                for (int l=0; l<ndim; l++) {
-                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
-                    for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[k-mlb[2]+1][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]/dx[2];
+    if (ndim == 3) {
+    
+        for (int i=mlb[0]; i<prb[0]; i++) {
+            for (int j=mlb[1]; j<prb[1]; j++) {
+                for (int k=mlb[2]; k<mc[2]; k++) {
+                    // left boundaries
+                    for (int l=0; l<ndim; l++) {
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
+                        for (int n=0; n<3*(fd.sbporder-1); n++) {
+                            xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[k-mlb[2]+1][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(mlb[2]+n)]/dx[2];
+                        }
                     }
                 }
-            }
-            for (int k=mc[2]; k<mrb[2]; k++) {
-                // interior points
-                for (int l=0; l<ndim; l++) {
-                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
-                    for (int n=0; n<2*fd.sbporder-1; n++) {
-                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]/dx[2];
+                for (int k=mc[2]; k<mrb[2]; k++) {
+                    // interior points
+                    for (int l=0; l<ndim; l++) {
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
+                        for (int n=0; n<2*fd.sbporder-1; n++) {
+                            xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] += fd.fdcoeff[0][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(k-fd.sbporder+1+n)]/dx[2];
+                        }
                     }
                 }
-            }
-            for (int k=mrb[2]; k<prb[2]; k++) {
-                // right boundaries
-                for (int l=0; l<ndim; l++) {
-                    xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
-                    for (int n=0; n<3*(fd.sbporder-1); n++) {
-                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] -= fd.fdcoeff[prb[2]-k][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]/dx[2];
+                for (int k=mrb[2]; k<prb[2]; k++) {
+                    // right boundaries
+                    for (int l=0; l<ndim; l++) {
+                        xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] = 0.;
+                        for (int n=0; n<3*(fd.sbporder-1); n++) {
+                            xp[l][2][i-mlb[0]][j-mlb[1]][k-mlb[2]] -= fd.fdcoeff[prb[2]-k][n]*f.x[l*nxd[0]+i*nxd[1]+j*nxd[2]+(prb[2]-1-n)]/dx[2];
+                        }
                     }
                 }
             }
         }
+        
     }
     
     // calculate metric derivatives and jacobian
