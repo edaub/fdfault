@@ -739,6 +739,7 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                             break;
                         case 7:
                             MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                            break;
                         case 8:
                             MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                     }
@@ -760,6 +761,7 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                                     break;
                                 case 5:
                                     MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                                    break;
                                 case 6:
                                     MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                             }
@@ -777,6 +779,7 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
                                     break;
                                 case 3:
                                     MPI_File_write(outfile, &(d.interfaces[location]->u[start]), 1, dataarray, MPI_STATUS_IGNORE);
+                                    break;
                                 case 4:
                                     MPI_File_write(outfile, &(d.interfaces[location]->state[start]), 1, dataarray, MPI_STATUS_IGNORE);
                             }
