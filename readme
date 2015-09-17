@@ -1,0 +1,15 @@
+fdfault is a finite difference code for solving elastodynamic rupture problems
+
+Features:
+
+- High order finite difference method
+- Complex geometries handled through coordinate transforms on structured mesh
+- Supports elastic and elastic-plastic material response
+- Several friction laws, permits heterogeneous parameters in several ways
+- Included Python module to simplify setting up problems and generating input files
+- Analysis tools for Python and MATLAB
+
+Requirements:
+
+- C++ compiler with an MPI library
+- Python (supports both Python 2 and 3) with numpy required for scripting problem setup
