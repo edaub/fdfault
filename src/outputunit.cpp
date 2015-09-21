@@ -265,6 +265,9 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
             } else {
                 xp[i] = xp_in[i]-(xp_in[i]-xm_in[i])%xs_in[i];
             }
+            if (xm[i] > xp[i]) {
+                xp[i] = xm[i];
+            }
         }
         xs[i] = xs_in[i];
         nx[i] = (xp[i]-xm[i])/xs[i]+1;
