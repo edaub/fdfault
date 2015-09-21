@@ -936,7 +936,7 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
             }
         }
     }
-            
+    
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
             for (int k=0; k<c.get_nx_loc(0); k++) {
@@ -1737,62 +1737,62 @@ double block::mms_syy_mode2(const double t, const double x, const double y) cons
 double block::mms_vx_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d vx
     
-    return 0.*mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k1*x)*sin(k1*y)*sin(k1*z)+0.*k3*sin(freq*t)*sin(k3*x)*sin(k1*y)*sin(k1*z);
+    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
     
 }
 
 double block::mms_vy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d vy
     
-    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*sin(k1*x)*sin(k1*y)*cos(k2*z)+mat.get_zs()/mat.get_zp()*k2*sin(freq*t)*sin(k1*x)*sin(k1*y)*sin(k2*z);
+    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
     
 }
 
 double block::mms_vz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d velocity
     
-    return -mat.get_zs()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*cos(k1*y)*cos(k2*z);
+    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
     
 }
 
 double block::mms_sxx_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxx
     
-    return 0.*freq*cos(freq*t)*cos(k3*x)*sin(k1*y)*sin(k1*z)+0.*(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*sin(k1*y)*sin(k1*z)-mat.get_lambda()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*cos(k1*y)*cos(k2*z);
+    return 0.;
     
 }
 
 double block::mms_sxy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxy
     
-    return -0.*mat.get_g()/mat.get_zp()*k1*sin(freq*t)*cos(k1*x)*cos(k1*y)*sin(k1*z)-mat.get_g()/mat.get_zp()*k1*sin(freq*t)*cos(k1*x)*sin(k1*y)*cos(k2*z);
+    return 0.;
     
 }
 
 double block::mms_sxz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxz
     
-    return -0.*mat.get_g()/mat.get_zp()*k1*sin(freq*t)*cos(k1*x)*sin(k1*y)*cos(k1*z);
+    return freq*cos(freq*t)*sin(k1*z)+mat.get_g()*sin(freq*t)*k1*sin(k1*z);
     
 }
 
 double block::mms_syy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d syy
     
-    return 0.*mat.get_lambda()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*sin(k1*y)*sin(k1*z)-(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*cos(k1*y)*cos(k2*z);
+    return 0.;
 
 }
 
 double block::mms_syz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d syz
     
-    return mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*sin(k1*x)*sin(k1*y)*cos(k2*z)+mat.get_g()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*sin(k1*y)*sin(k2*z);
+    return freq*cos(freq*t)*sin(k1*z)+mat.get_g()*sin(freq*t)*k1*sin(k1*z);
     
 }
 
 double block::mms_szz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d szz
     
-    return 0.*mat.get_lambda()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*sin(k1*y)*sin(k1*z)-mat.get_lambda()/mat.get_zp()*k1*sin(freq*t)*sin(k1*x)*cos(k1*y)*cos(k2*z);
+    return freq*cos(freq*t)*sin(k1*z)+(mat.get_lambda()+2.*mat.get_g())*sin(freq*t)*k1*sin(k1*z);
     
 }

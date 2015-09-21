@@ -360,9 +360,9 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 
                 bchars1.v = b_rot.v2;
                 bchars1.s = b_rot.s12;
-                    
+                
                 bhats1 = calc_hat(bchars1,zs);
-                    
+                
                 bchars2.v = b_rot.v3;
                 bchars2.s = b_rot.s13;
                     
@@ -379,7 +379,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 b_rot.s12 = 0.;
                 b_rot.s13 = 0.;
                 b_rot.s23 = 0.;
-                    
+                
                 b = rotate_nt_xy(b_rot,nn,t1,t2);
         
                 // add SAT term for normal characteristics
@@ -461,7 +461,7 @@ void boundary::apply_bcs(const double dt, fields& f) {
     }
 
 }
-            
+
 boundchar boundary::calc_hat(const boundchar b, const double z) {
    // calculate target values for a given characteristic
    
@@ -485,22 +485,22 @@ boundfields rotate_xy_nt(const boundfields b, const double nn[3], const double t
 
     b_out.s11 = (nn[0]*(b.s11*nn[0]+b.s12*nn[1]+b.s13*nn[2])+
                  nn[1]*(b.s12*nn[0]+b.s22*nn[1]+b.s23*nn[2])+
-                 nn[2]*(b.s13*nn[0]+b.s23*nn[1]+b.s33*nn[3]));
+                 nn[2]*(b.s13*nn[0]+b.s23*nn[1]+b.s33*nn[2]));
     b_out.s12 = (nn[0]*(b.s11*t1[0]+b.s12*t1[1]+b.s13*t1[2])+
                  nn[1]*(b.s12*t1[0]+b.s22*t1[1]+b.s23*t1[2])+
-                 nn[2]*(b.s13*t1[0]+b.s23*t1[1]+b.s33*t1[3]));
+                 nn[2]*(b.s13*t1[0]+b.s23*t1[1]+b.s33*t1[2]));
     b_out.s13 = (nn[0]*(b.s11*t2[0]+b.s12*t2[1]+b.s13*t2[2])+
                  nn[1]*(b.s12*t2[0]+b.s22*t2[1]+b.s23*t2[2])+
-                 nn[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[3]));
+                 nn[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[2]));
     b_out.s22 = (t1[0]*(b.s11*t1[0]+b.s12*t1[1]+b.s13*t1[2])+
                  t1[1]*(b.s12*t1[0]+b.s22*t1[1]+b.s23*t1[2])+
-                 t1[2]*(b.s13*t1[0]+b.s23*t1[1]+b.s33*t1[3]));
+                 t1[2]*(b.s13*t1[0]+b.s23*t1[1]+b.s33*t1[2]));
     b_out.s23 = (t1[0]*(b.s11*t2[0]+b.s12*t2[1]+b.s13*t2[2])+
                  t1[1]*(b.s12*t2[0]+b.s22*t2[1]+b.s23*t2[2])+
-                 t1[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[3]));
+                 t1[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[2]));
     b_out.s33 = (t2[0]*(b.s11*t2[0]+b.s12*t2[1]+b.s13*t2[2])+
                  t2[1]*(b.s12*t2[0]+b.s22*t2[1]+b.s23*t2[2])+
-                 t2[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[3]));
+                 t2[2]*(b.s13*t2[0]+b.s23*t2[1]+b.s33*t2[2]));
     
     return b_out;
 }
