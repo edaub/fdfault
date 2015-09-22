@@ -34,7 +34,7 @@ def generate_normals_2d(x, y, direction):
     x and y must be array-like of the same length
     direction indicates whether the surface has a normal in the 'x' direction or 'y' direction
     coordinates normal to direction must be evenly spaced
-    nx and ny are array-like and of the same length as x and y
+    returnsL nx and ny, array-like and of the same length as x and y
     """
     assert x.shape == y.shape, "x and y must have the same length"
     assert len(x.shape) == 1 and len(y.shape) == 1, "x and y must be 1d arrays"
@@ -87,6 +87,10 @@ class surface(object):
         assert (n1, n2) == self.nx.shape, "nx must have shape (n1, n2)"
         assert (n1, n2) == self.ny.shape, "ny must have shape (n1, n2)"
         assert (n1, n2) == self.nz.shape, "nz must have shape (n1, n2)"
+
+    def get_direction():
+        "returns approximate normal direction"
+        return self.direction
 
     def get_n1(self):
         '''
