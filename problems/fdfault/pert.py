@@ -127,7 +127,7 @@ class load(pert):
     
 class swparam(pert):
     "Class representing perturbations to slip weakening parameters"
-    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., dc = 0., mus = 0., mud =0.):
+    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., dc = 0., mus = 0., mud =0., c0 = 0., trup = 0., tc = 0.):
         "Initialize interface load perturbation"
 
         pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
@@ -135,6 +135,9 @@ class swparam(pert):
         self.dc = float(dc)
         self.mus = float(mus)
         self.mud = float(mud)
+        self.c0 = float(c0)
+        self.trup = float(trup)
+        self.tc = float(tc)
 
     def get_dc(self):
         "returns slip weakening distance perturbation"
@@ -160,14 +163,40 @@ class swparam(pert):
         "sets dynamic friction perturbation"
         self.mud = float(mud)
 
+    def get_c0(self):
+        "returns cohesion perturbation"
+        return self.c0
+
+    def set_c0(self, c0):
+        "sets cohesion perturbation"
+        self.c0 = float(c0)
+
+    def get_trup(self):
+        "returns forced rupture time perturbation"
+        return self.trup
+
+    def set_trup(self, trup):
+        "sets forced rupture time perturbation"
+        self.trup = float(trup)
+
+    def get_tc(self):
+        "returns time weakening scale perturbation"
+        return self.tc
+
+    def set_tc(self, tc):
+        "sets time weakening scale perturbation"
+        self.tc = float(tc)
+
     def write_input(self, f):
         "Writes loads to input file"
         pert.write_input(self, f)
-        f.write(" "+str(self.dc)+" "+str(self.mus)+" "+str(self.mud)+"\n")
+        f.write(" "+str(self.dc)+" "+str(self.mus)+" "+str(self.mud)+" "+str(self.c0)+" "+
+                str(self.trup)+" "+str(self.t0)+"\n")
 
     def __str__(self):
         "Returns a string representation"
-        return (pert.__str__(self)+", dc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud))
+        return (pert.__str__(self)+", dc = "+str(self.dc)+", mus = "+str(self.mus)+", mud = "+str(self.mud)+
+                ", c0 = "+str(self.c0)+", trup = "+str(self.trup)+", tc = "+str(self.tc))
 
 
 class stzparam(pert):
@@ -384,16 +413,22 @@ class statefile(object):
         
 class swparamfile(object):
     "class representing sw parameter perturbations (to be written to file)"
-    def __init__(self, n1, n2, dc, mus, mud):
+    def __init__(self, n1, n2, dc, mus, mud, c0, trup, tc):
         "create swparamfile given number of grid points and parameter data (dc, mus, mud)"
         self.n1 = int(n1)
         self.n2 = int(n2)
         self.dc = np.array(dc)
         self.mus = np.array(mus)
         self.mud = np.array(mud)
+        self.dc = np.array(c0)
+        self.mus = np.array(trup)
+        self.mud = np.array(tc)
         assert (n1, n2) == self.dc.shape, "dc must have shape (n1, n2)"
         assert (n1, n2) == self.mus.shape, "mus must have shape (n1, n2)"
         assert (n1, n2) == self.mud.shape, "mud must have shape (n1, n2)"
+        assert (n1, n2) == self.c0.shape, "c0 must have shape (n1, n2)"
+        assert (n1, n2) == self.trup.shape, "trup must have shape (n1, n2)"
+        assert (n1, n2) == self.tc.shape, "tc must have shape (n1, n2)"
 
     def get_n1(self):
         "returns number of grid points in 1st coordinate direction"
@@ -424,6 +459,27 @@ class swparamfile(object):
         else:
             return self.mud[index]
 
+    def get_c0(self, index = None):
+        "returns cohesion of given indices, if none provided returns entire array"
+        if index is None:
+            return self.c0
+        else:
+            return self.c0[index]
+
+    def get_trup(self, index = None):
+        "returns rutpure time of given indices, if none provided returns entire array"
+        if index is None:
+            return self.trup
+        else:
+            return self.trup[index]
+
+    def get_tc(self, index = None):
+        "returns time weakening scale of given indices, if none provided returns entire array"
+        if index is None:
+            return self.tc
+        else:
+            return self.tc[index]
+
     def write(self, filename, endian = '='):
         """
         write perturbation data to file with given endianness
@@ -440,6 +496,9 @@ class swparamfile(object):
         f.write(self.get_dc().astype(endian+'f8').tobytes())
         f.write(self.get_mus().astype(endian+'f8').tobytes())
         f.write(self.get_mud().astype(endian+'f8').tobytes())
+        f.write(self.get_c0().astype(endian+'f8').tobytes())
+        f.write(self.get_trup().astype(endian+'f8').tobytes())
+        f.write(self.get_tc().astype(endian+'f8').tobytes())
 
         f.close()
 

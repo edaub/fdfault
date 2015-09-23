@@ -1,11 +1,11 @@
 [fdfault.problem]
 test1d
 data/
-400
+500
 0
 0
 0.3
-20
+50
 4
 
 [fdfault.domain]
@@ -58,29 +58,29 @@ y
 none
 
 [fdfault.friction]
-4
+2
 constant 0. 0. 0. 0. 0. -120. 70. 0.
 boxcar 0. 20. 1.5 0. 0. 0. 11.6 0.
-boxcar 0. 0. 5. 0. 0. 0. 0. 0.
-boxcar 0. 40. 5. 0. 0. 0. 0. 0.
 none
 
 [fdfault.slipweak]
-1
-constant 0. 0. 0. 0. 0. 0.4 0.677 0.525
+3
+constant 0. 0. 0. 0. 0. 0.4 0.677 0.525 0. 0. 0.
+boxcar 0. 2.5 2.5 0. 0. 0. 10000. 0. 0. 0. 0.
+boxcar 0. 37.5 2.5 0. 0. 0. 10000. 0. 0. 0. 0.
 none
 
 [fdfault.outputlist]
-v
-vx
-0 400 1
-50 350 1
+u
+U
+0 500 1
+250 250 1
 201 201 1
 0 0 1
 sxy
 sxy
-0 400 1
-50 350 1
+0 500 1
+250 250 1
 201 201 1
 0 0 1
 

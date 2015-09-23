@@ -29,6 +29,9 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
     double* dctmp;
     double* mustmp;
     double* mudtmp;
+    double* c0tmp;
+    double* truptmp;
+    double* tctmp;
     
     stringstream ss;
     
@@ -65,6 +68,9 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
             dctmp = new double [nperts];
             mustmp = new double [nperts];
             mudtmp = new double [nperts];
+            c0tmp = new double [nperts];
+            truptmp = new double [nperts];
+            tctmp = new double [nperts];
             for (int i=0; i<nperts; i++) {
                 paramfile >> ptype[i];
                 paramfile >> t0[i];
@@ -75,6 +81,9 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
                 paramfile >> dctmp[i];
                 paramfile >> mustmp[i];
                 paramfile >> mudtmp[i];
+                paramfile >> c0tmp[i];
+                paramfile >> truptmp[i];
+                paramfile >> tctmp[i];
             }
             paramfile >> swparamfile;
         }
@@ -124,7 +133,7 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
         perts = new swparam* [nperts];
         
         for (int i=0; i<nperts; i++) {
-            perts[i] = new swparam(ptype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, dctmp[i], mustmp[i], mudtmp[i]);
+            perts[i] = new swparam(ptype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, dctmp[i], mustmp[i], mudtmp[i], c0tmp[i], truptmp[i], tctmp[i]);
         }
         
     }
@@ -138,6 +147,9 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
     delete[] dctmp;
     delete[] mustmp;
     delete[] mudtmp;
+    delete[] c0tmp;
+    delete[] truptmp;
+    delete[] tctmp;
     
     // if needed, read parameters from file
     
@@ -165,19 +177,66 @@ slipweak::~slipweak() {
         delete[] dc;
         delete[] mus;
         delete[] mud;
+        delete[] c0;
+        delete[] trup;
+        delete[] tc;
     }
     
+}
+
+boundchar slipweak::solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t) {
+    // solves slip weakening law for slip velocity and strength (must override standard version because of cohesion)
+    
+    double c0t = 0.;
+    
+    for (int k=0; k<nperts; k++) {
+        c0t += perts[k]->get_c0(i, j, t);
+    }
+    
+    const int index = i*n_loc[1]+j;
+    
+    if (param_file) {
+        c0t += c0[index];
+    }
+    
+    boundchar b;
+    
+    if (snc < 0.) {
+        // compressive normal stress
+        
+        double mu = calc_mu(phi, eta, snc, i, j, t);
+        
+        if (c0t+mu*fabs(snc) > phi) {
+            // locked
+            b.v = 0.;
+            b.s = phi;
+        } else {
+            // slipping
+            b.s = c0t+mu*fabs(snc);
+            b.v = (phi-b.s)/eta;
+            
+        }
+        
+    } else {
+        // tensile normal stress, no shear strength
+        b.s = 0.;
+        b.v = phi/eta;
+    }
+    
+    return b;
 }
 
 double slipweak::calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const {
     // calculates friciton coefficient for index i,j
     
-    double mu, dct = 0., mudt = 0., must = 0.;
+    double mu, f1, f2, dct = 0., mudt = 0., must = 0., trupt = 0., tct = 0.;
     
     for (int k=0; k<nperts; k++) {
         dct += perts[k]->get_dc(i, j, t);
         must += perts[k]->get_mus(i, j, t);
         mudt += perts[k]->get_mud(i, j, t);
+        trupt += perts[k]->get_trup(i, j, t);
+        tct += perts[k]->get_tc(i, j, t);
     }
     
     const int index = i*n_loc[1]+j;
@@ -186,12 +245,34 @@ double slipweak::calc_mu(const double phi, const double eta, const double snc, c
         dct += dc[index];
         must += mus[index];
         mudt += mud[index];
+        trupt += trup[index];
+        tct += tc[index];
     }
     
-    if (u[index] >= dct) {
-        mu = mudt;
+    // slip weakening
+    
+    if (dct == 0. || u[index] >= dct) {
+        f1 = 1.;
     } else {
-        mu = mudt+(1.-u[index]/dct)*(must-mudt);
+        f1 = u[index]/dct;
+    }
+    
+    // time weakening
+    
+    if (trupt <= 0. || t < trupt) {
+        f2 = 0.;
+    } else if (t >= trupt && t < trupt+tct) {
+        f2 = (t-trupt)/tct;
+    } else {
+        f2 = 1.;
+    }
+    
+    // actual friction law based on max of two weakening types
+    
+    if (f1 >= f2) {
+        mu = must+(mudt-must)*f1;
+    } else {
+        mu = must+(mudt-must)*f2;
     }
     
     return mu;
@@ -208,6 +289,9 @@ void slipweak::read_params(const string paramfile) {
         dc = new double [n_loc[0]*n_loc[1]];
         mus = new double [n_loc[0]*n_loc[1]];
         mud = new double [n_loc[0]*n_loc[1]];
+        c0 = new double [n_loc[0]*n_loc[1]];
+        trup = new double [n_loc[0]*n_loc[1]];
+        tc = new double [n_loc[0]*n_loc[1]];
         
     }
     
@@ -269,6 +353,9 @@ void slipweak::read_params(const string paramfile) {
         MPI_File_read(infile, dc, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         MPI_File_read(infile, mus, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         MPI_File_read(infile, mud, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, c0, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, trup, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, tc, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         
         // close file
         
