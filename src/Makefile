@@ -1,19 +1,17 @@
 CC=mpic++
 CFLAGS=-c -O3
-IFLAGS=
-LFLAGS=
 EFLAGS=-O3
 EXEC=../fdfault
 
 fdfault : block.o boundary.o cartesian.o coord.o domain.o fd.o fields.o friction.o front.o frontlist.o interface.o load.o main.o material.o outputlist.o outputunit.o pert.o problem.o rk.o slipweak.o swparam.o stz.o stzparam.o surface.o utilities.o
-	$(CC) $(EFLAGS) $(LFLAGS) $(IFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
+	$(CC) $(EFLAGS) -o $(EXEC) block.o boundary.o cartesian.o coord.o domain.o \
 		fd.o fields.o friction.o front.o frontlist.o interface.o load.o main.o material.o \
 		outputlist.o outputunit.o pert.o problem.o rk.o slipweak.o swparam.o stz.o stzparam.o surface.o utilities.o
 
 block.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fd.hpp material.hpp surface.hpp block.cpp
 	$(CC) $(CFLAGS) block.cpp
 
-boundary.o : boundary.hpp cartesian.hpp coord.hpp fd.hpp fields.hpp material.hpp surface.hpp boundary.cpp
+boundary.o : boundary.hpp cartesian.hpp coord.hpp fd.hpp fields.hpp material.hpp boundary.cpp
 	$(CC) $(CFLAGS) boundary.cpp
 
 cartesian.o : cartesian.hpp coord.hpp cartesian.cpp
@@ -40,7 +38,7 @@ front.o : cartesian.hpp domain.hpp fields.hpp front.hpp interface.hpp utilities.
 frontlist.o : domain.hpp front.hpp frontlist.hpp frontlist.cpp
 	$(CC) $(CFLAGS) frontlist.cpp
 
-interface.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fields.hpp interface.hpp surface.hpp interface.cpp
+interface.o : block.hpp boundary.hpp cartesian.hpp coord.hpp fields.hpp interface.hpp interface.cpp
 	$(CC) $(CFLAGS) interface.cpp
 
 load.o : load.hpp pert.hpp load.cpp
