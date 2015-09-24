@@ -167,10 +167,10 @@ class block(object):
         assert type(loc) is int and (loc >= 0 and loc < 2*self.ndim), "location out of range"
         if self.ndim == 3:
             assert type(surf) is surface
-            if loc%2 == 0:
+            if loc == 0 or loc == 1:
                 assert surf.get_direction() == 'x', "surface direction does not match location"
                 assert surf.get_n1() == self.nx[1] and surf.get_n2() == self.nx[2], "number of grid points does not match"
-            elif loc%2 == 1:
+            elif loc == 2 or loc == 3:
                 assert surf.get_direction() == 'y', "surface direction does not match location"
                 assert surf.get_n1() == self.nx[0] and surf.get_n2() == self.nx[2], "number of grid points does not match"
             else:
@@ -178,7 +178,7 @@ class block(object):
                 assert surf.get_n1() == self.nx[0] and surf.get_n2() == self.nx[1], "number of grid points does not match"
         else:
             assert type(surf) is curve
-            if loc%2 == 0:
+            if loc == 0 or loc == 1:
                 assert surf.get_direction() == 'x', "surface direction does not match location"
                 assert surf.get_n1() == self.nx[1], "number of grid points does not match"
             else:

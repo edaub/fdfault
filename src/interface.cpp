@@ -10,7 +10,6 @@
 #include "coord.hpp"
 #include "fields.hpp"
 #include "interface.hpp"
-#include "surface.hpp"
 #include <mpi.h>
 
 using namespace std;
@@ -20,7 +19,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     // constructor
     
     int index1[3], index2[3];
-    string direction_in, surffile;
+    string direction_in;
     
     stringstream ss;
     
@@ -47,7 +46,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             for (int i=0; i<3; i++) {
                 paramfile >> index2[i];
             }
-            paramfile >> surffile;
         }
     } else {
         cerr << "Error opening input file in interface.cpp\n";
@@ -329,7 +327,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         for (int j=mlb[0]; j<prb[0]; j++) {
             for (int k=mlb[1]; k<prb[1]; k++) {
                 for (int l=mlb[2]; l<prb[2]; l++) {
-                    assert(fabs(f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l]-f.x[i*nxd[0]+(j+delta[0])*nxd[1]+(k+delta[1])*nxd[2]+l+delta[2]]) < 1.e-14);
+                    assert(fabs(f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l]-f.x[i*nxd[0]+(j+delta[0])*nxd[1]+(k+delta[1])*nxd[2]+l+delta[2]]) < 1.e-15);
                 }
             }
         }
@@ -378,14 +376,6 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         }
     }
     
-    surface* surf;
-    
-    if (surffile == "none") {
-        surf = new surface(ndim,c,direction,1., x, l, true);
-    } else {
-        surf = new surface(ndim,c,direction,1.,surffile,true);
-    }
-    
     // allocate memory for arrays for normal vectors and grid spacing
     
     double dx1[3], dx2[3];
@@ -395,9 +385,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
         dx2[i] = b2->get_dx(i);
     }
     
-    allocate_normals(dx1,dx2,f,*surf,fd);
-    
-    delete surf;
+    allocate_normals(dx1,dx2,f,fd);
 
 }
 
@@ -410,7 +398,7 @@ interface::~interface() {
     
 }
 
-void interface::allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const surface& surf, const fd_type& fd) {
+void interface::allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];
@@ -422,16 +410,6 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
     for (int i=0; i<ndim; i++) {
         for (int j=0; j<n_loc[0]; j++) {
             nx[i][j] = new double [n_loc[1]];
-        }
-    }
-    
-    // assign normal vectors from surface
-    
-    for (int i=0; i<ndim; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                nx[i][j][k] = surf.get_nx(i,j,k);
-            }
         }
     }
     
@@ -453,7 +431,7 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
         }
     }
 	
-    // get grid spacings
+    // set grid spacings and compute normal vectors
     
     for (int i=0; i<n_loc[0]; i++) {
         for (int j=0; j<n_loc[1]; j++) {
@@ -462,18 +440,33 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
                 if (direction == 0) {
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+                        nx[k][i][j] = f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]];
                     }
-                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[0];
+                    dl1[i][j] = sqrt(dl1[i][j]);
+                    for (int k=0; k<ndim; k++) {
+                        nx[k][i][j] /= dl1[i][j];
+                    }
+                    dl1[i][j] /= fd.get_h0()*dx1[0];
                 } else if (direction == 1) {
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
+                        nx[k][i][j] = f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]];
                     }
-                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[1];
+                    dl1[i][j] = sqrt(dl1[i][j]);
+                    for (int k=0; k<ndim; k++) {
+                        nx[k][i][j] /= dl1[i][j];
+                    }
+                    dl1[i][j] /= fd.get_h0()*dx1[1];
                 } else { // direction == 2
                     for (int k=0; k<ndim; k++) {
                         dl1[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
+                        nx[k][i][j] = f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]];
                     }
-                    dl1[i][j] = sqrt(dl1[i][j])/fd.get_h0()/dx1[2];
+                    dl1[i][j] = sqrt(dl1[i][j]);
+                    for (int k=0; k<ndim; k++) {
+                        nx[k][i][j] /= dl1[i][j];
+                    }
+                    dl1[i][j] /= fd.get_h0()*dx1[2];
                 }
             }
             if (data2) {
@@ -481,18 +474,45 @@ void interface::allocate_normals(const double dx1[3], const double dx2[3], const
                 if (direction == 0) {
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+                        if (!data1) {
+                            nx[k][i][j] = f.metric[0*ndim*nxd[0]+k*nxd[0]+(mlb[0]+1)*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]];
+                        }
                     }
-                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[0];
+                    dl2[i][j] = sqrt(dl2[i][j]);
+                    if (!data1) {
+                        for (int k=0; k<ndim; k++) {
+                            nx[k][i][j] /= dl2[i][j];
+                        }
+                    }
+                    dl2[i][j] /= fd.get_h0()*dx2[0];
                 } else if (direction == 1) {
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]],2);
+                        if (!data1) {
+                            nx[k][i][j] = f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1]+1)*nxd[2]+j+mlb[2]];
+                        }
                     }
-                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[1];
+                    dl2[i][j] = sqrt(dl2[i][j]);
+                    if (!data1) {
+                        for (int k=0; k<ndim; k++) {
+                            nx[k][i][j] /= dl2[i][j];
+                        }
+                    }
+                    dl2[i][j] /= fd.get_h0()*dx2[1];
                 } else { // direction == 2
                     for (int k=0; k<ndim; k++) {
                         dl2[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1],2);
+                        if (!data1) {
+                            nx[k][i][j] = f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]+1];
+                        }
                     }
-                    dl2[i][j] = sqrt(dl2[i][j])/fd.get_h0()/dx2[2];
+                    dl2[i][j] = sqrt(dl2[i][j]);
+                    if (!data1) {
+                        for (int k=0; k<ndim; k++) {
+                            nx[k][i][j] /= dl2[i][j];
+                        }
+                    }
+                    dl2[i][j] /= fd.get_h0()*dx2[2];
                 }
             }
         }

@@ -13,7 +13,7 @@
 using namespace std;
 
 boundary::boundary(const int ndim_in, const int mode_in, const string material_in, const int location_in, const std::string boundtype_in,
-                   const coord c, const double dx[3], const surface& surf, fields& f, material& m, const cartesian& cart, const fd_type& fd) {
+                   const coord c, const double dx[3], fields& f, material& m, const cartesian& cart, const fd_type& fd) {
     // constructor
     
     assert(ndim_in == 2 || ndim_in == 3);
@@ -152,7 +152,7 @@ boundary::boundary(const int ndim_in, const int mode_in, const string material_i
     
     // allocate memory for arrays for normal vectors and grid spacing
     
-    allocate_normals(dx,f,surf,fd);
+    allocate_normals(dx,f,fd);
 
 }
 
@@ -164,7 +164,7 @@ boundary::~boundary() {
     deallocate_normals();
 }
 
-void boundary::allocate_normals(const double dx[3], fields& f, const surface& surf, const fd_type& fd) {
+void boundary::allocate_normals(const double dx[3], fields& f, const fd_type& fd) {
     // allocate memory and assign normal vectors and grid spacing
     
     nx = new double** [ndim];
@@ -179,16 +179,6 @@ void boundary::allocate_normals(const double dx[3], fields& f, const surface& su
         }
     }
     
-    // assign normal vectors from surface
-    
-    for (int i=0; i<ndim; i++) {
-        for (int j=0; j<n_loc[0]; j++) {
-            for (int k=0; k<n_loc[1]; k++) {
-                nx[i][j][k] = surf.get_nx(i,j,k);
-            }
-        }
-    }
-    
     // allocate memory for grid spacing
     
     dl = new double* [n_loc[0]];
@@ -197,7 +187,7 @@ void boundary::allocate_normals(const double dx[3], fields& f, const surface& su
         dl[i] = new double [n_loc[1]];
     }
     
-    // get grid spacings
+    // get grid spacings and calculate normal vectors
     
     for (int i=0; i<n_loc[0]; i++) {
         for (int j=0; j<n_loc[1]; j++) {
@@ -205,18 +195,38 @@ void boundary::allocate_normals(const double dx[3], fields& f, const surface& su
             if (location == 0 || location == 1) {
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]],2);
+                    nx[k][i][j] = f.metric[0*ndim*nxd[0]+k*nxd[0]+mlb[0]*nxd[1]+(i+mlb[1])*nxd[2]+j+mlb[2]];
                 }
-                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[0];
+                dl[i][j] = sqrt(dl[i][j]);
+                for (int k=0; k<ndim; k++) {
+                    nx[k][i][j] /= dl[i][j];
+                }
+                dl[i][j] /= fd.get_h0()*dx[0];
             } else if (location == 2 || location == 3) {
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]],2);
+                    nx[k][i][j] = f.metric[1*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(mlb[1])*nxd[2]+j+mlb[2]];
                 }
-                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[1];
+                dl[i][j] = sqrt(dl[i][j]);
+                for (int k=0; k<ndim; k++) {
+                    nx[k][i][j] /= dl[i][j];
+                }
+                dl[i][j] /= fd.get_h0()*dx[1];
             } else { // location == 4 or location == 5
                 for (int k=0; k<ndim; k++) {
                     dl[i][j] += pow(f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]],2);
+                    nx[k][i][j] = f.metric[2*ndim*nxd[0]+k*nxd[0]+(i+mlb[0])*nxd[1]+(j+mlb[1])*nxd[2]+mlb[2]];
                 }
-                dl[i][j] = sqrt(dl[i][j])/fd.get_h0()/dx[2];
+                dl[i][j] = sqrt(dl[i][j]);
+                for (int k=0; k<ndim; k++) {
+                    nx[k][i][j] /= dl[i][j];
+                }
+                dl[i][j] /= fd.get_h0()*dx[2];
+            }
+            if (location%2 == 0) {
+                for (int k=0; k<ndim; k++) {
+                    nx[k][i][j] = -nx[k][i][j];
+                }
             }
         }
     }

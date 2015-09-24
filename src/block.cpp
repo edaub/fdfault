@@ -197,9 +197,9 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
     
     for (int i=0; i<nbound; i++) {
         if (boundfile[i] == "none") {
-            surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),x[i],l[i],false);
+            surf[i] = new surface(ndim,c,i/2,x[i],l[i]);
         } else {
-            surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),boundfile[i],false);
+            surf[i] = new surface(ndim,c,i/2,boundfile[i]);
         }
     }
 
@@ -231,29 +231,11 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
 
     // allocate boundaries
     
-    // create local surfaces to create boundaries
-    
-    surf = new surface* [nbound];
-    
-    for (int i=0; i<nbound; i++) {
-        if (boundfile[i] == "none") {
-            surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),x[i],l[i],true);
-        } else {
-            surf[i] = new surface(ndim,c,i/2,pow(-1.,i+1),boundfile[i],true);
-        }
-    }
-    
     bound = new boundary* [nbound];
 
     for (int i=0; i<nbound; i++) {
-        bound[i] = new boundary(ndim, mode, material_in, i, boundtype[i], c, dx, *(surf[i]), f, mat, cart, fd);
+        bound[i] = new boundary(ndim, mode, material_in, i, boundtype[i], c, dx, f, mat, cart, fd);
     }
-    
-    for (int i=0; i<nbound; i++) {
-        delete surf[i];
-    }
-    
-    delete[] surf;
 
 }
 

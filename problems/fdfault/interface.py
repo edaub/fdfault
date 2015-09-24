@@ -34,7 +34,6 @@ class interface(object):
         self.bm = (int(bm[0]), int(bm[1]), int(bm[2]))
         self.bp = (int(bp[0]), int(bp[1]), int(bp[2]))
         self.direction = direction
-        self.surf = None
 
     def get_direction(self):
         "Returns interface orientation"
@@ -60,22 +59,6 @@ class interface(object):
     def get_bp(self):
         "Returns block on positive side"
         return self.bp
-
-    def get_surface(self):
-        "Returns interface surface"
-        return self.surf
-
-    def set_surface(self, surf):
-        "Sets interface surface"
-        if self.ndim == 3:
-            assert type(surf) is surface, "interface surface must be of type surface"
-        else:
-            assert type(surf) is curve, "interface for 2D problem must be curve"
-        self.surf = surf
-
-    def delete_surface(self):
-        "Removes interface surface"
-        self.surf = None
 
     def get_nloads(self):
         "Returns number of load perturbations"
@@ -139,16 +122,11 @@ class interface(object):
         f.write(self.direction+"\n")
         f.write(str(self.bm[0])+" "+str(self.bm[1])+" "+str(self.bm[2])+"\n")
         f.write(str(self.bp[0])+" "+str(self.bp[1])+" "+str(self.bp[2])+"\n")
-        if self.surf is None:
-            f.write("none\n")
-        else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+".surf\n")
-            self.surf.write(probname+"_interface"+str(self.index)+".surf",endian)
         f.write("\n")
     
     def __str__(self):
         return ('Interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf))
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp))
 
 class friction(interface):
     def __init__(self, ndim, index, direction, bm, bp):

@@ -583,21 +583,6 @@ class domain(object):
         assert index >= 0 and index < self.nifaces, "Index out of range"
         return self.interfaces[index].get_bp()
 
-    def get_iface_surf(self,index):
-        "Returns interface surface for given index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        return self.iterfaces[index].get_surf()
-
-    def set_iface_surf(self, index, surf):
-        "Sets interface surface for given index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        self.interfaces[index].set_surface(surf)
-
-    def delete_iface_surf(self, index):
-        "Deletes interface surface for given index"
-        assert index >= 0 and index < self.nifaces, "Index out of range"
-        self.interfaces[index].delete_surface()
-
     def write_input(self, f, probname, endian = '='):
         "Writes domain information to input file"
 
@@ -678,11 +663,6 @@ class domain(object):
             coordsp = iface.get_bp()
             loc -= 1
             s2 = self.blocks[coordsp[0]][coordsp[1]][coordsp[2]].get_surf(loc)
-            s3 = iface.get_surface()
-            if (not s1 is None) and (not s3 is None):
-                assert s1 == s3, "interface surface must match surface of blocks"
-            if (not s2 is None) and (not s3 is None):
-                assert s2 == s3, "interface surface must match surface of blocks"
     
     def __str__(self):
         blockstring = ""

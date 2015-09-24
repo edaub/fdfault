@@ -256,18 +256,6 @@ class problem(object):
         "Sets iftype of interface index"
         self.d.set_iftype(index, iftype)
 
-    def get_iface_surf(self,index):
-        "Returns interface surface for given index"
-        return self.d.get_iface_surf(index)
-
-    def set_iface_surf(self, index, surf):
-        "Sets interface surface for given index"
-        self.d.set_iface_surf(index,surf)
-
-    def delete_iface_surf(self, index):
-        "Deletes interface surface for given index"
-        self.d.delete_surface(index)
-
     def get_nloads(self, index):
         "Returns number of loads on given interface"
         return self.d.get_nloads(index)

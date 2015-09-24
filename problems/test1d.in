@@ -55,7 +55,6 @@ none
 y
 0 0 0
 0 1 0
-none
 
 [fdfault.friction]
 2
@@ -71,16 +70,16 @@ boxcar 0. 37.5 2.5 0. 0. 0. 10000. 0. 0. 0. 0.
 none
 
 [fdfault.outputlist]
-u
-U
-0 500 1
-250 250 1
+vfault
+V
+0 500 10
+0 400 1
 201 201 1
 0 0 1
+sxyfault
 sxy
-sxy
-0 500 1
-250 250 1
+0 500 10
+0 400 1
 201 201 1
 0 0 1
 

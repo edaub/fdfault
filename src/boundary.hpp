@@ -25,7 +25,7 @@ class boundary
 {
 public:
     boundary(const int ndim_in, const int mode_in, const std::string material_in, const int location_in, const std::string boundtype_in,
-             const coord c, const double dx[3], const surface& surf, fields& f, material& m, const cartesian& cart, const fd_type& fd);
+             const coord c, const double dx[3], fields& f, material& m, const cartesian& cart, const fd_type& fd);
     ~boundary();
     virtual void apply_bcs(const double dt, fields& f);
 private:
@@ -48,7 +48,7 @@ private:
     double*** nx;
     double** dl;
     double r;
-    void allocate_normals(const double dx[3], fields& f, const surface& surf, const fd_type& fd);
+    void allocate_normals(const double dx[3], fields& f, const fd_type& fd);
     void deallocate_normals();
     boundchar calc_hat(const boundchar b, const double z);
 };
