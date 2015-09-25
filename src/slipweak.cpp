@@ -218,9 +218,15 @@ boundchar slipweak::solve_fs(const double phi, const double eta, const double sn
         }
         
     } else {
-        // tensile normal stress, no shear strength
-        b.s = 0.;
-        b.v = phi/eta;
+        // tensile normal stress
+        if (phi > c0t) {
+            // slipping
+            b.s = c0t;
+            b.v = (phi-b.s)/eta;
+        } else {
+            b.v = 0.;
+            b.s = phi;
+        }
     }
     
     return b;
