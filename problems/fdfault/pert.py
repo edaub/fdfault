@@ -420,9 +420,9 @@ class swparamfile(object):
         self.dc = np.array(dc)
         self.mus = np.array(mus)
         self.mud = np.array(mud)
-        self.dc = np.array(c0)
-        self.mus = np.array(trup)
-        self.mud = np.array(tc)
+        self.c0 = np.array(c0)
+        self.trup = np.array(trup)
+        self.tc = np.array(tc)
         assert (n1, n2) == self.dc.shape, "dc must have shape (n1, n2)"
         assert (n1, n2) == self.mus.shape, "mus must have shape (n1, n2)"
         assert (n1, n2) == self.mud.shape, "mud must have shape (n1, n2)"
