@@ -35,10 +35,10 @@ pert::pert(const std::string type_in, const double t0_in, const double x0_in, co
     
     // calculate parameters
     
-    a = (double)(xm_loc[0]-xm[0])/(double)n[0]*l[0]+x[0];
-    b = l[0]/(double)n[0];
-    c = (double)(xm_loc[1]-xm[1])/(double)n[1]*l[1]+x[1];
-    d = l[1]/(double)n[1];
+    a = (double)(xm_loc[0]-xm[0])/(double)(n[0]-1)*l[0]+x[0];
+    b = l[0]/(double)(n[0]-1);
+    c = (double)(xm_loc[1]-xm[1])/(double)(n[1]-1)*l[1]+x[1];
+    d = l[1]/(double)(n[1]-1);
     
 }
 
