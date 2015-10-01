@@ -1,0 +1,144 @@
+\documentclass[12pt]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{tikz}
+
+\title{fdfault Elastodynamic Rupture Code}
+\author{Eric G. Daub \\
+Center for Earthquake Research and Information \\
+ {\tt egdaub@memphis.edu}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{Description}
+
+{\tt fdfault} is a finite difference code for numerical simulation of elastodynamic fracture and friction problems in 2 and 3 dimensions, principally those arising in study of dynamic earthquake rupture. The code solves the elastic or elastic-plastic wave equation in the bulk material, coupled to frictional failure on the fault and external boundary conditions.
+
+\section{Governing Equations}
+
+The code solves the elastodynamic wave equation in 2 or 3 dimensions, with either an elastic or viscoplastic bulk material. For a 3D continuum, momentum balance requires that
+\begin{eqnarray}
+\rho\frac{\partial v_x}{\partial t} &=& \frac{\partial \sigma_{xx}}{\partial x}+\frac{\partial \sigma_{xy}}{\partial y}+\frac{\partial \sigma_{xz}}{\partial z} \\
+\rho\frac{\partial v_y}{\partial t} &=& \frac{\partial \sigma_{xy}}{\partial x}+\frac{\partial \sigma_{yy}}{\partial y}+\frac{\partial \sigma_{yz}}{\partial z} \\
+\rho\frac{\partial v_z}{\partial t} &=& \frac{\partial \sigma_{xz}}{\partial x}+\frac{\partial \sigma_{yz}}{\partial y}+\frac{\partial \sigma_{zz}}{\partial z},
+\end{eqnarray}
+where $\rho$ is density. Additionally, a constitutive law relates the stresses to the deformations. For a homogeneous, isotropic elastic-plastic material, these take the form
+\begin{equation}
+\frac{\partial \sigma_{ij}}{\partial t} = L_{ijkl}\left(\dot{\epsilon}_{kl}-\dot{\epsilon}^{pl}_{kl}\right)
+\end{equation}
+where the elastic tensor is given by Hooke's Law for a homogeneous isotropic material
+\begin{equation}
+L_{ijkl}\dot{\epsilon}_{kl}=\lambda\delta_{ij}\frac{\partial v_k}{\partial x_k}+G\left(\frac{\partial v_i}{\partial x_j}+\frac{\partial v_j}{\partial x_i}\right).
+\end{equation}
+The elastic tensor includes two material parameters: $\lambda$ is the first Lam\'{e} parameter and $G$ is the shear modulus. Summation over repeated indices is implied. For an elastic material, $\dot{\epsilon}^{pl}_{ij}=0$, while for a viscoplastic material the plastic strains are determined by the Drucker-Prager viscoplastic flow rule described below. For 2D problems, the code can handle either in-plane ($v_x$, $v_y$, $\sigma_{xx}$, $\sigma_{xy}$, $\sigma_{yy}$ are nonzero) or anti-plane ($v_z$, $\sigma_{xz}$, $\sigma_{yz}$ are nonzero) problems, where all variables are functions of $x$ and $y$.
+
+For Drucker-Prager Viscoplasticity, plastic flow occurs when stresses exceed the yield function $F(\sigma_{ij})$:
+\begin{equation}
+F(\sigma_{ij}) = \bar{\tau}-c+\mu\sigma_{kk}/3,
+\end{equation}
+where $\bar{\tau}=\sqrt{s_{ij}s_{ij}/2}$ is the second invariant of the deviatoric stress tensor $s_{ij}=\sigma_{ij}-(\sigma_{kk}/3)\delta_{ij}$, $c$ is related to the cohesion, and $\mu$ is related to the internal coefficient of friction. For viscoplasticity, flow is allowed to exceed the yield criterion according to
+\begin{equation}
+F(\sigma_{ij})=\Lambda\eta,
+\end{equation}
+where $\Lambda=\sqrt{2\dot{e}^{pl}_{ij}\dot{e}^{pl}_{ij}}$ is the equivalent plastic strain rate from the deviatoric plastic strain rate $\dot{e}^{pl}_{ij}=\dot{\epsilon}^{pl}_{ij}-(\dot{\epsilon}^{pl}_{kk}/3)\delta_{ij}$ and $\eta$ is a viscoplastic ``viscosity'' defining the time scale over which stresses can exceed the yield stress. If stresses are accumulated at a rate faster than the relaxation time of the viscoplastic material, the material behaves elastically, and the stress then decays towards the yield surface if no further stresses are applied.
+
+The components of plastic flow are determined by
+\begin{equation}
+\dot{\epsilon}^{pl}_{ij}=\Lambda P_{ij}\left(\sigma_{ij}\right),
+\end{equation}
+with $P_{ij}(\sigma_{ij})=s_{ij}/(2\bar{\sigma})+(\beta/3)\delta_{ij}$, where the $\beta$ parameter determines the ratio of volumetric to plastic strain. Thus, viscoplastic materials are determined by $\rho$, $\lambda$, $G$, $c$, $\mu$, $\beta$, and $\eta$, while elastic materials require specification of $\rho$, $\lambda$, and $G$. Rate independent plasticity arises in the limit that $\eta \rightarrow 0$, though the equations become increasingly stiff in this limit and plastic strain can exhibit localization that is not resolved by the spatial grid in many problems.
+
+The code can handle variable material properties, though the properties must be piecewise constant in an arbitrary number of blocks. The blocks must form a regular grid with conforming edges, though the block boundaries can have complex boundaries, so this does not limit the ability of the code to handle complex earth structures. Blocks are coupled together through interfaces, which can either be locked or frictional. Locked interfaces require continuity of velocity and forces, while frictional interfaces allow for relative slip across the interface according to several possible friction laws:
+
+\begin{itemize}
+\item {\bf Frictionless interfaces} do not support shear stresses, so any stress applied to such interfaces result in shear slip.
+\item {\bf Kinematic forcing} Allows for a forced rupture following a prescribed set of rupture times.
+\item {\bf Slip weakening interfaces} follow a slip-dependent friction law, where the friction coefficient has static and dynamic values and transitions between the two according to a function that decreases linearly with slip. Slip weakening laws also allow for cohesion. Slip weakening can also be combined with kinematic forcing to nucleate a rupture.
+\item {\bf Shear Transformation Zone (STZ) Theory interfaces} have a frictional strength that depends on the slip rate and a dynamic state variable representing the configurational disorder in the fault gouge.
+\end{itemize}
+
+In addition to these base friction laws, a future version of the code will allow you to specify arbitrary slip- or rate- and state-dependent friction laws through the Python module, which automatically generates the required source code for new friction laws.
+
+External boundaries (i.e. boundaries not between two blocks) can have absorbing, free surface (traction-free), or rigid (velocity-free) boundary conditions.
+
+\section{Numerical Details}
+
+The code solves the above equations numerically using finite differences. The outer boundaries of each block is described by a series of 6 surfaces (4 curves in 2D), and each block is transformed from physical space to the unit cube (unit square in 2D). The governing equations are transformed as well, and the code solves the resulting problem on a structured grid using high order finite differences. The grid is generated using standard transfinite interpolation, and the required metric derivatives for solving the governing equations and applying boundary conditions are automatically calculated using finite differences. Grids between neighboring blocks must be conforming, though no other continuity condition is required across block interfaces. Boundary conditions at external boundaries and interfaces are applied in locally rotated normal/tangential coordinate systems.
+
+The specific finite difference operators used exhibit a summation-by-parts property that mimics integration by parts. This allows for estimates of the energy dissipation rate of the numerical scheme. Boundary conditions are imposed weakly using the Simultaneous Approximation Term approach, and this combined with the summation by parts difference operators allows for a provably stable numerical scheme that matches the energy dissipation rate of the continuous problem. More details on the method can be found in the following papers:
+
+The code allows for central finite difference operators that are globally second, third, fourth, fifth, or sixth order accurate. Time integration is performed with a low memory Runge-Kutta method, with first, second, third, or fourth order accuracy in time.
+
+The finite difference method is only applied to the elastic part of the problem. The plasticity equations are handled through an operator splitting procedure, where the elastic problem is solved first and then used as initial conditions for the plasticity problem. This is done using an implicit backward Euler method.
+
+\section{Installation}
+
+{\tt fdfault} requires a C++ compiler and an MPI distribution, though you can run the code on a single processor if you want. The code has mostly been tested with the GNU compiler and Open MPI. Parallelization is achieved through domain decomposition, with interprocessor communication occuring after each Runge-Kutta stage to populate ghost cells with the appropriate values. Python with Numpy is required if you want to use the Python module for setting up problems and generating the input files, with support for either Python 2 or 3. The code also includes Python (requires Numpy) and MATLAB scripts for loading simulation data.
+
+To install from a source tarball, unpacking the tarball and compiling the code simply requires
+
+\vspace{0.1in}
+\noindent{\tt \$ tar -xzvf fdfault-v1.0.tar.gz\\
+\$ cd fdfault/src\\
+\$ make}
+
+\vspace{0.1in}
+\noindent If you are using a different compiler, you will need to change the appropriate shell variables in the Makefile for your configuration.
+
+Alternatively, you can get the source code from the git repository:
+
+\vspace{0.1in}
+\noindent{\tt \$ git clone fdfault.git\\
+\$ cd fdfault/src\\
+\$ make}
+
+\vspace{0.1in}
+If using the git repository, you need to build the documentation yourself. This requires a \LaTeX\ distribution with a few standard packages, most notablly TikZ. To create the documentation:
+
+\vspace{0.1in}
+\noindent{\tt\$ cd fdfault/docs\\
+\$ make}
+
+\vspace{0.1in}
+\noindent If you prefer a PDF of the documentation, it is available at \\
+{\tt http://www.ceri.memphis.edu/people/egdaub/codes.html}.
+
+\section{Setting Up Problems}
+
+Problems are set up using text input files. The files have to follow specific formatting requirements because of how the parameters are read from the file. While it is fairly straightforward to create input files yourself for simple problems, the Python module allows for much more flexible creation of problems. If you intend to use the code to solve complex problems, becoming familiar with input using Python is highly recommended.
+
+\subsection{Text Input Files}
+
+Text input files contain multiple sections. With one exception, the order of the sections is not important~-- the file is read multiple times by various parts of the code, and each time the file is read the code starts from the beginning and scans through to find the appropriate section. Each section is designated by a text string {\tt [fdfault.<name>]}, where {\tt <name>} refers to which part of the code will be reading this section. If the code expects to find a certain section and it reaches the end of the text file without finding it, the code will abort.
+
+At minimum, the following sections are required to fully specify a problem:
+
+\vspace{0.1in}
+\noindent{\tt [fdfault.problem]
+
+\noindent[fdfault.domain]
+
+\noindent[fdfault.fields]
+
+\noindent[fdfault.block000]
+
+\noindent[fdfault.outputlist]
+
+\noindent[fdfault.frontlist]}
+
+\vspace{0.1in}
+In addition to these sections, optional sections describe additional blocks and any interfaces.
+
+\subsection{Python Scripts}
+
+\subsection{Included Example Problems}
+
+\section{Analysis with Python or MATLAB}
+
+\end{document}  
