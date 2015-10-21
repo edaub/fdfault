@@ -62,7 +62,7 @@ private:
     void calc_df_mode2(const double dt, fields& f, const fd_type& fd);
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
-    void calc_df_szz(const double dt, fields&f);
+    void calc_df_szz(const double dt, fields&f, const fd_type& fd);
     plastp plastic_flow(const double dt, const plastp s_in) const;
     double calc_tau(const plastp s) const;
     double calc_sigma(const plastp s) const;
@@ -78,6 +78,7 @@ private:
     double mms_sxx_mode2(const double t, const double x, const double y) const;
     double mms_sxy_mode2(const double t, const double x, const double y) const;
     double mms_syy_mode2(const double t, const double x, const double y) const;
+    double mms_szz_mode2(const double t, const double x, const double y) const;
     double mms_vx_3d(const double t, const double x, const double y, const double z) const;
     double mms_vy_3d(const double t, const double x, const double y, const double z) const;
     double mms_vz_3d(const double t, const double x, const double y, const double z) const;

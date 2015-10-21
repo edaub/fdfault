@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <cmath>
@@ -14,7 +15,7 @@
 #include "surface.hpp"
 #include <mpi.h>
 
-const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 2.5*pi, k3 = 3.*pi, k4 = 1.75*pi;
+const double pi = 3.14159265358979323846, freq = 2., k1 = 2.*pi, k2 = 2.5*pi, k3 = 3.*pi;
 
 using namespace std;
 
@@ -122,7 +123,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
         mat.set_c(c_in);
     }
     
-    if (coords[0] == 0) {
+    if (coords[2] == 0) {
         xfact = 1.;
     } else {
         xfact = -1.;
@@ -385,7 +386,7 @@ void block::calc_df(const double dt, fields& f, const fd_type& fd) {
                 case 2:
                     calc_df_mode2(dt,f,fd);
                     if (is_plastic) {
-                        calc_df_szz(dt,f);
+                        calc_df_szz(dt,f,fd);
                     }
                     break;
                 case 3:
@@ -1105,7 +1106,7 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     
 }
 
-void block::calc_df_szz(const double dt, fields& f) {
+void block::calc_df_szz(const double dt, fields& f, const fd_type& fd) {
     // calculates change in szz for a mode 2 plastic problem
     
     double nu = 0.5*mat.get_lambda()/(mat.get_lambda()+mat.get_g());
@@ -1114,9 +1115,95 @@ void block::calc_df_szz(const double dt, fields& f) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index = i*nxd[1]+j;
-            f.df[5*nxd[0]+index] += nu*(f.df[2*nxd[0]+index]+f.df[4*nxd[0]+index]);
+            f.df[5*nxd[0]+index] = nu*(f.df[2*nxd[0]+index]+f.df[4*nxd[0]+index]);
         }
     }
+    
+    // x derivatives
+    
+/*    int index1, index2, index3;
+    double lambda = dt*mat.get_lambda()/dx[0];
+    
+    for (int i=mlb[0]; i<mc[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = i-mlb[0]+1;
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (mlb[0]+n)*nxd[1]+j;
+                f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*(lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[index1]*f.f[index2]);
+            }
+        }
+    }
+    
+    for (int i=mc[0]; i<mrb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            for (int n=0; n<2*fd.sbporder-1; n++) {
+                index2 = index1+(-fd.sbporder+1+n)*nxd[1];
+                f.df[5*nxd[0]+index1] += fd.fdcoeff[0][n]*(lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                           lambda*f.metric[index1]*f.f[index2]);
+            }
+        }
+    }
+    
+    for (int i=mrb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[0]-i;
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = (prb[0]-1-n)*nxd[1]+j;
+                f.df[5*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(lambda*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[index1]*f.f[index2]);
+            }
+        }
+    }
+    
+    // y derivatives
+    
+    lambda *= dx[0]/dx[1];
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<mc[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = j-mlb[1]+1;
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = i*nxd[1]+mlb[1]+n;
+                f.df[5*nxd[0]+index1] += fd.fdcoeff[index3][n]*(lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+            }
+        }
+    }
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mc[1]; j<mrb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            for (int n=0; n<2*fd.sbporder-1; n++) {
+                index2 = index1-fd.sbporder+1+n;
+                f.df[5*nxd[0]+index1] += fd.fdcoeff[0][n]*(lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                           lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+            }
+        }
+    }
+    
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mrb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[1]-j;
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = i*nxd[1]+(prb[1]-1-n);
+                f.df[5*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(lambda*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
+                                                                lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+            }
+        }
+    }
+ 
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mlb[1]; j<prb[1]; j++) {
+            index = i*nxd[1]+j;
+            cout << f.df[5*nxd[0]+index] << " " << nu*(f.df[2*nxd[0]+index]+f.df[4*nxd[0]+index]) << "\n";
+        }
+    }*/
 
 }
 
@@ -1225,6 +1312,8 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
 
 void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a 3d problem
+    
+    
     
     // x derivatives
     
@@ -1631,6 +1720,9 @@ void block::calc_mms_mode2(const double dt, const double t, fields& f) {
             f.df[2*nxd[0]+index1] += dt*mms_sxx_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
             f.df[3*nxd[0]+index1] += dt*mms_sxy_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
             f.df[4*nxd[0]+index1] += dt*mms_syy_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            if (is_plastic) {
+                f.df[5*nxd[0]+index1] += dt*mms_szz_mode2(t, f.x[0*nxd[0]+index1], f.x[1*nxd[0]+index1]);
+            }
         }
     }
     
@@ -1663,118 +1755,134 @@ void block::calc_mms_3d(const double dt, const double t, fields& f) {
 double block::mms_vz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 velocity
     
-    return xfact*mat.get_rho()/mat.get_zs()*freq*cos(freq*t)*cos(k1*x)*cos(k1*y)+xfact*k2*sin(freq*t)*cos(k2*fabs(x-1.))*cos(k1*y)+xfact*k2*sin(freq*t)*cos(k1*x)*sin(k2*y);
+    return mat.get_rho()/mat.get_zs()*freq*cos(freq*t)*xfact*cos(k1*x)*cos(k1*y)+sin(freq*t)*k2*xfact*cos(k2*fabs(x-1.))*cos(k1*y)+sin(freq*t)*xfact*cos(k1*x)*k3*sin(k3*y);
     
 }
 
 double block::mms_sxz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 sxz
     
-    return freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k1*y)+xfact*mat.get_g()/mat.get_zs()*k1*sin(freq*t)*sin(k1*x)*cos(k1*y);
+    return freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k1*y)+mat.get_g()/mat.get_zs()*sin(freq*t)*xfact*k1*sin(k1*x)*cos(k1*y);
     
 }
 
 double block::mms_syz_mode3(const double t, const double x, const double y) const {
     // mms source function for mode 3 syz
     
-    return xfact*freq*cos(freq*t)*cos(k1*x)*cos(k2*y)+xfact*mat.get_g()/mat.get_zs()*k1*sin(freq*t)*cos(k1*x)*sin(k1*y);
+    return freq*cos(freq*t)*xfact*cos(k1*x)*cos(k3*y)+mat.get_g()/mat.get_zs()*sin(freq*t)*xfact*cos(k1*x)*k1*sin(k1*y);
     
 }
 
 double block::mms_vx_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 vx
     
-    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k1*y)+k2*sin(freq*t)*sin(k2*x)*cos(k1*y)+mat.get_zs()/mat.get_zp()*k2*sin(freq*t)*sin(k2*fabs(x-1.))*sin(k2*y);
+    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k1*y)+sin(freq*t)*k2*sin(k2*x)*cos(k1*y)+mat.get_zs()/mat.get_zp()*sin(freq*t)*sin(k2*fabs(x-1.))*k3*sin(k3*y);
     
 }
 
 double block::mms_vy_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 vy
     
-    return xfact*mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k1*x)*cos(k2*y)+xfact*mat.get_zs()/mat.get_zp()*k2*sin(freq*t)*cos(k2*fabs(x-1.))*cos(k2*y)+xfact*k2*sin(freq*t)*cos(k1*x)*sin(k2*y);
+    return mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*xfact*cos(k1*x)*cos(k3*y)+mat.get_zs()/mat.get_zp()*sin(freq*t)*xfact*k2*cos(k2*fabs(x-1.))*cos(k3*y)+sin(freq*t)*xfact*cos(k1*x)*k1*sin(k1*y);
     
 }
 
 double block::mms_sxx_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 sxx
     
-    return freq*cos(freq*t)*cos(k2*x)*cos(k1*y)+xfact*(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k2*sin(freq*t)*cos(k2*fabs(x-1.))*cos(k1*y)+xfact*mat.get_lambda()/mat.get_zp()*k2*sin(freq*t)*cos(k1*x)*sin(k2*y);
+    return freq*cos(freq*t)*cos(k2*x)*cos(k1*y)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*sin(freq*t)*k2*xfact*cos(k2*fabs(x-1.))*cos(k1*y)+(mat.get_lambda())/mat.get_zp()*sin(freq*t)*xfact*cos(k1*x)*k3*sin(k3*y);
     
 }
 
 double block::mms_sxy_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 sxy
     
-    return mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k2*y)+mat.get_g()/mat.get_zp()*sin(freq*t)*(k1*sin(k2*fabs(x-1.))*sin(k1*y)+xfact*k1*sin(k1*x)*cos(k2*y));
+    return mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*sin(k2*fabs(x-1.))*cos(k3*y)+mat.get_g()/mat.get_zp()*sin(freq*t)*xfact*k1*sin(k1*x)*cos(k3*y)+mat.get_g()/mat.get_zp()*sin(freq*t)*sin(k2*fabs(x-1.))*k1*sin(k1*y);
     
 }
 
 double block::mms_syy_mode2(const double t, const double x, const double y) const {
     // mms source function for mode 2 syy
     
-    return xfact*freq*cos(freq*t)*cos(k1*x)*cos(k2*y)+xfact*(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*k2*sin(freq*t)*cos(k1*x)*sin(k2*y)+mat.get_lambda()/mat.get_zp()*xfact*k2*sin(freq*t)*cos(k2*fabs(x-1.))*cos(k1*y);
+    return freq*cos(freq*t)*xfact*cos(k1*x)*cos(k1*y)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*k2*xfact*cos(k2*fabs(x-1.))*cos(k1*y)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*sin(freq*t)*xfact*cos(k1*x)*k3*sin(k3*y);
+    
+}
+
+double block::mms_szz_mode2(const double t, const double x, const double y) const {
+    // mms source function for mode 2 szz
+    
+    return mat.get_lambda()/mat.get_zp()*sin(freq*t)*k2*xfact*cos(k2*fabs(x-1.))*cos(k1*y)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*xfact*cos(k1*x)*k3*sin(k3*y);
     
 }
 
 double block::mms_vx_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d vx
     
-    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
+    return (mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k1*x)*cos(k3*y)*xfact*cos(k1*z)+sin(freq*t)*k3*sin(k3*x)*cos(k3*y)*xfact*cos(k1*z)
+            +mat.get_zs()/mat.get_zp()*sin(freq*t)*cos(k1*x)*k1*sin(k1*y)*xfact*cos(k1*z)+mat.get_zs()/mat.get_zp()*sin(freq*t)*cos(k1*x)*cos(k3*y)*xfact*k2*cos(k2*fabs(z-1.)));
     
 }
 
 double block::mms_vy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d vy
     
-    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
+    return (mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k1*y)*xfact*cos(k1*z)+mat.get_zs()/mat.get_zp()*sin(freq*t)*k1*sin(k1*x)*cos(k1*y)*xfact*cos(k1*z)
+            +sin(freq*t)*cos(k3*x)*k3*sin(k3*y)*xfact*cos(k1*z)+mat.get_zs()/mat.get_zp()*sin(freq*t)*cos(k3*x)*cos(k1*y)*xfact*k2*cos(k2*fabs(z-1.)));
     
 }
 
 double block::mms_vz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d velocity
     
-    return mat.get_rho()*freq*cos(freq*t)*cos(k1*z)-sin(freq*t)*k1*cos(k1*z);
+    return (mat.get_rho()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k3*y)*sin(k2*fabs(z-1.))+mat.get_zs()/mat.get_zp()*sin(freq*t)*k1*sin(k1*x)*cos(k3*y)*sin(k2*fabs(z-1.))
+            +mat.get_zs()/mat.get_zp()*sin(freq*t)*cos(k3*x)*k1*sin(k1*y)*sin(k2*fabs(z-1.))+sin(freq*t)*cos(k3*x)*cos(k3*y)*k2*sin(k2*z));
     
 }
 
 double block::mms_sxx_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxx
     
-    return 0.;
+    return (freq*cos(freq*t)*cos(k3*x)*cos(k3*y)*xfact*cos(k1*z)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*sin(freq*t)*k1*sin(k1*x)*cos(k3*y)*xfact*cos(k1*z)
+            +mat.get_lambda()/mat.get_zp()*sin(freq*t)*cos(k3*x)*k1*sin(k1*y)*xfact*cos(k1*z)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*cos(k3*x)*cos(k3*y)*xfact*k2*cos(k2*fabs(z-1.)));
     
 }
 
 double block::mms_sxy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxy
     
-    return 0.;
+    return (mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*cos(k1*x)*cos(k1*y)*xfact*cos(k1*z)+mat.get_g()/mat.get_zp()*sin(freq*t)*cos(k1*x)*k3*sin(k3*y)*xfact*cos(k1*z)
+            +mat.get_g()/mat.get_zp()*sin(freq*t)*k3*sin(k3*x)*cos(k1*y)*xfact*cos(k1*z));
     
 }
 
 double block::mms_sxz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d sxz
     
-    return freq*cos(freq*t)*sin(k1*z)+mat.get_g()*sin(freq*t)*k1*sin(k1*z);
+    return (mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*cos(k1*x)*cos(k3*y)*sin(k2*fabs(z-1.))+mat.get_g()/mat.get_zp()*sin(freq*t)*cos(k1*x)*cos(k3*y)*xfact*k1*sin(k1*z)
+            +mat.get_g()/mat.get_zp()*sin(freq*t)*k3*sin(k3*x)*cos(k3*y)*sin(k2*fabs(z-1.)));
     
 }
 
 double block::mms_syy_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d syy
     
-    return 0.;
+    return (freq*cos(freq*t)*cos(k3*x)*cos(k3*y)*xfact*cos(k1*z)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*k1*sin(k1*x)*cos(k3*y)*xfact*cos(k1*z)
+            +(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*sin(freq*t)*cos(k3*x)*k1*sin(k1*y)*xfact*cos(k1*z)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*cos(k3*x)*cos(k3*y)*xfact*k2*cos(k2*fabs(z-1.)));
 
 }
 
 double block::mms_syz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d syz
     
-    return freq*cos(freq*t)*sin(k1*z)+mat.get_g()*sin(freq*t)*k1*sin(k1*z);
+    return (mat.get_zs()/mat.get_zp()*freq*cos(freq*t)*cos(k3*x)*cos(k1*y)*sin(k2*fabs(z-1.))+mat.get_g()/mat.get_zp()*sin(freq*t)*cos(k3*x)*cos(k1*y)*xfact*k1*sin(k1*z)
+            +mat.get_g()/mat.get_zp()*sin(freq*t)*cos(k3*x)*k3*sin(k3*y)*sin(k2*fabs(z-1.)));
     
 }
 
 double block::mms_szz_3d(const double t, const double x, const double y, const double z) const {
     // mms source function for 3d szz
     
-    return freq*cos(freq*t)*sin(k1*z)+(mat.get_lambda()+2.*mat.get_g())*sin(freq*t)*k1*sin(k1*z);
+    return (freq*cos(freq*t)*cos(k3*x)*cos(k3*y)*cos(k2*z)+mat.get_lambda()/mat.get_zp()*sin(freq*t)*k1*sin(k1*x)*cos(k3*y)*xfact*cos(k1*z)
+            +mat.get_lambda()/mat.get_zp()*sin(freq*t)*cos(k3*x)*k1*sin(k1*y)*xfact*cos(k1*z)+(mat.get_lambda()+2.*mat.get_g())/mat.get_zp()*sin(freq*t)*cos(k3*x)*cos(k3*y)*xfact*k2*cos(k2*fabs(z-1.)));
     
 }
