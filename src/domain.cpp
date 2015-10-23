@@ -136,6 +136,12 @@ domain::domain(const char* filename) {
     
     allocate_interfaces(filename, iftype);
     
+    // set interface variables to match boundary conditions
+    
+    for (int i=0; i<nifaces; i++) {
+        interfaces[i]->apply_bcs(0., 0., *f, true);
+    }
+    
     for (int i=0; i<3; i++) {
         delete[] nx_block[i];
         delete[] xm_block[i];
