@@ -127,7 +127,7 @@ void problem::solve() {
     int id, nstages;
     time_t rawtime;
     struct tm* timeinfo;
-	
+    
 	// get process id
     
     MPI_Comm_rank(MPI_COMM_WORLD, &id);

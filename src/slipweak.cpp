@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <cmath>
 #include "block.hpp"
 #include "cartesian.hpp"
@@ -214,7 +215,6 @@ boundchar slipweak::solve_fs(const double phi, const double eta, const double sn
             // slipping
             b.s = c0t+mu*fabs(snc);
             b.v = (phi-b.s)/eta;
-            
         }
         
     } else {

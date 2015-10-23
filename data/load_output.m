@@ -111,6 +111,26 @@ function output = load_output(probname, name, datadir)
         f = fopen([ datadir probname '_' name '_Uz.dat'], 'rb');
         output.Uz = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
         fclose(f);
+    elseif strcmp(field,'Sx')
+        f = fopen([ datadir probname '_' name '_Sx.dat'], 'rb');
+        output.Sx = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
+    elseif strcmp(field,'Sy')
+        f = fopen([ datadir probname '_' name '_Sy.dat'], 'rb');
+        output.Sy = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
+    elseif strcmp(field,'Sz')
+        f = fopen([ datadir probname '_' name '_Sz.dat'], 'rb');
+        output.Sz = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
+    elseif strcmp(field,'S')
+        f = fopen([ datadir probname '_' name '_S.dat'], 'rb');
+        output.S = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
+    elseif strcmp(field,'Sn')
+        f = fopen([ datadir probname '_' name '_Sn.dat'], 'rb');
+        output.Sn = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));
+        fclose(f);
     elseif strcmp(field,'state')
         f = fopen([ datadir probname '_' name '_state.dat'], 'rb');
         output.state = squeeze(reshape(fread(f,nt*nx*ny*nz,'float64',endian),[nz ny nx nt]));

@@ -67,6 +67,9 @@ protected:
     double* v;
     double* ux;
     double* vx;
+    double* sx;
+    double* s;
+    double* sn;
     double* state;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const fd_type& fd);
     void deallocate_normals();

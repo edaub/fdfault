@@ -91,6 +91,16 @@ class output(object):
             self.Uy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Uy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
         elif self.field == 'Uz':
             self.Uz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Uz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'Sx':
+            self.Sx = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sx.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'Sy':
+            self.Sy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'Sz':
+            self.Sz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'S':
+            self.S = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_S.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+        elif self.field == 'Sn':
+            self.Sn = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sn.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
         elif self.field == 'state':
             self.state = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_state.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
 

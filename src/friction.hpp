@@ -30,7 +30,7 @@ protected:
     int nperts;
     int nloads;
     load** loads;
-    double* sn;
+    double* s1;
     double* s2;
     double* s3;
     void read_load(const std::string loadfile);

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <string>
 #include <string.h>
 #include <cmath>
@@ -29,10 +30,13 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
         ux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
         dux = new double [(ndim-1)*n_loc[0]*n_loc[1]];
         vx = new double [(ndim-1)*n_loc[0]*n_loc[1]];
+        sx = new double [(ndim-1)*n_loc[0]*n_loc[1]];
     
         u = new double [n_loc[0]*n_loc[1]];
         du = new double [n_loc[0]*n_loc[1]];
         v = new double [n_loc[0]*n_loc[1]];
+        s = new double [n_loc[0]*n_loc[1]];
+        sn = new double [n_loc[0]*n_loc[1]];
         
         // initialize slip, change in slip, and slip velocity
         
@@ -40,12 +44,15 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
             ux[i] = 0.;
             dux[i] = 0.;
             vx[i] = 0.;
+            sx[i] = 0.;
         }
         
         for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
             u[i] = 0.;
             du[i] = 0.;
             v[i] = 0.;
+            s[i] = 0.;
+            sn[i] = 0.;
         }
         
     }
@@ -58,9 +65,9 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     double* y0;
     double* dx;
     double* dy;
-    double* sn;
-    double* s2;
-    double* s3;
+    double* sl1;
+    double* sl2;
+    double* sl3;
     
     stringstream ss;
     
@@ -95,9 +102,9 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
             y0 = new double [nloads];
             dx = new double [nloads];
             dy = new double [nloads];
-            sn = new double [nloads];
-            s2 = new double [nloads];
-            s3 = new double [nloads];
+            sl1 = new double [nloads];
+            sl2 = new double [nloads];
+            sl3 = new double [nloads];
             for (int i=0; i<nloads; i++) {
                 paramfile >> ltype[i];
                 paramfile >> t0[i];
@@ -105,9 +112,9 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
                 paramfile >> dx[i];
                 paramfile >> y0[i];
                 paramfile >> dy[i];
-                paramfile >> sn[i];
-                paramfile >> s2[i];
-                paramfile >> s3[i];
+                paramfile >> sl1[i];
+                paramfile >> sl2[i];
+                paramfile >> sl3[i];
             }
             paramfile >> loadfile;
         }
@@ -159,7 +166,7 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
         loads = new load* [nloads];
         
         for (int i=0; i<nloads; i++) {
-            loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, sn[i], s2[i], s3[i]);
+            loads[i] = new load(ltype[i], t0[i], x0[i], dx[i], y0[i] , dy[i], n, xm_2d, xm_loc2d, x_2d, l_2d, sl1[i], sl2[i], sl3[i]);
         }
         
     }
@@ -170,9 +177,9 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
     delete[] y0;
     delete[] dx;
     delete[] dy;
-    delete[] sn;
-    delete[] s2;
-    delete[] s3;
+    delete[] sl1;
+    delete[] sl2;
+    delete[] sl3;
     
     // if needed, read load data from file
     
@@ -193,10 +200,13 @@ friction::~friction() {
     delete[] ux;
     delete[] dux;
     delete[] vx;
+    delete[] sx;
     
     delete[] u;
     delete[] du;
     delete[] v;
+    delete[] s;
+    delete[] sn;
     
     for (int i=0; i<nloads; i++) {
         delete loads[i];
@@ -205,7 +215,7 @@ friction::~friction() {
     delete[] loads;
     
     if (load_file) {
-        delete[] sn;
+        delete[] s1;
         delete[] s2;
         delete[] s3;
     }
@@ -259,7 +269,7 @@ iffields friction::solve_friction(iffields iffin, double snc, const double z1, c
     // add boundary loads
     
     if (load_file) {
-        snc += sn[index];
+        snc += s1[index];
         iffin.s12 += s2[index];
         iffin.s22 += s2[index];
         iffin.s13 += s3[index];
@@ -289,47 +299,6 @@ iffields friction::solve_friction(iffields iffin, double snc, const double z1, c
         v2 = 0.;
         v3 = 0.;
         
-        // re-solve for locked fault characteristics
-        
-        if (load_file) {
-            iffin.s12 -= s2[index];
-            iffin.s22 -= s2[index];
-            iffin.s13 -= s3[index];
-            iffin.s23 -= s3[index];
-        }
-        
-        for (int k=0; k<nloads; k++) {
-            iffin.s12 -= loads[k]->get_s2(i,j,t);
-            iffin.s22 -= loads[k]->get_s2(i,j,t);
-            iffin.s13 -= loads[k]->get_s3(i,j,t);
-            iffin.s23 -= loads[k]->get_s3(i,j,t);
-        }
-        
-        ifchar ifcs1, ifcs2, ifchats1, ifchats2;
-        
-        ifcs1.v1 = iffin.v12;
-        ifcs1.v2 = iffin.v22;
-        ifcs1.s1 = iffin.s12;
-        ifcs1.s2 = iffin.s22;
-        
-        ifchats1 = solve_locked(ifcs1,zs1,zs2);
-        
-        ifcs2.v1 = iffin.v13;
-        ifcs2.v2 = iffin.v23;
-        ifcs2.s1 = iffin.s13;
-        ifcs2.s2 = iffin.s23;
-        
-        ifchats2 = solve_locked(ifcs2,zs1,zs2);
-        
-        iffout.v12 = ifchats1.v1;
-        iffout.v22 = ifchats1.v2;
-        iffout.s12 = ifchats1.s1;
-        iffout.s22 = ifchats1.s2;
-        iffout.v13 = ifchats2.v1;
-        iffout.v23 = ifchats2.v2;
-        iffout.s13 = ifchats2.s1;
-        iffout.s23 = ifchats2.s2;
-        
     } else {
         
         // fault slips
@@ -337,50 +306,57 @@ iffields friction::solve_friction(iffields iffin, double snc, const double z1, c
         v2 = b.v*phi2/(eta*b.v+b.s);
         v3 = b.v*phi3/(eta*b.v+b.s);
         
-        // solve for characteristics assuming fault is slipping
-    
-        iffout.s12 = phi2-eta*v2;
-        iffout.s22 = iffout.s12;
-        iffout.s13 = phi3-eta*v3;
-        iffout.s23 = iffout.s13;
-        iffout.v12 = (iffout.s12-iffin.s12)/z1+iffin.v12;
-        iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
-        iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
-        iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
-        
-        // subtract boundary loads
-        
-        if (load_file) {
-            iffout.s12 -= s2[index];
-            iffout.s22 -= s2[index];
-            iffout.s13 -= s3[index];
-            iffout.s23 -= s3[index];
-        }
-        
-        for (int k=0; k<nloads; k++) {
-            iffout.s12 -= loads[k]->get_s2(i,j,t);
-            iffout.s22 -= loads[k]->get_s2(i,j,t);
-            iffout.s13 -= loads[k]->get_s3(i,j,t);
-            iffout.s23 -= loads[k]->get_s3(i,j,t);
-        }
     }
+    
+    // solve for characteristics
+    
+    iffout.s12 = phi2-eta*v2;
+    iffout.s22 = iffout.s12;
+    iffout.s13 = phi3-eta*v3;
+    iffout.s23 = iffout.s13;
+    iffout.v12 = (iffout.s12-iffin.s12)/z1+iffin.v12;
+    iffout.v22 = (-iffout.s22+iffin.s22)/z2+iffin.v22;
+    iffout.v13 = (iffout.s13-iffin.s13)/z1+iffin.v13;
+    iffout.v23 = (-iffout.s23+iffin.s23)/z2+iffin.v23;
     
     // set interface variables to hat variables
     
     v[index] = b.v;
+    s[index] = b.s;
+    sn[index] = snc;
     switch (ndim) {
         case 3:
             vx[0*n_loc[0]*n_loc[1]+index] = v2;
             vx[1*n_loc[0]*n_loc[1]+index] = v3;
+            sx[0*n_loc[0]*n_loc[1]+index] = iffout.s12;
+            sx[1*n_loc[0]*n_loc[1]+index] = iffout.s13;
             break;
         case 2:
             switch (mode) {
                 case 2:
-                    vx[0*n_loc[0]*n_loc[1]+index] = v2;
+                    vx[index] = v2;
+                    sx[index] = iffout.s12;
                     break;
                 case 3:
-                    vx[0*n_loc[0]*n_loc[1]+index] = v3;
+                    vx[index] = v3;
+                    sx[index] = iffout.s13;
             }
+    }
+    
+    // subtract boundary loads before returning field values
+    
+    if (load_file) {
+        iffout.s12 -= s2[index];
+        iffout.s22 -= s2[index];
+        iffout.s13 -= s3[index];
+        iffout.s23 -= s3[index];
+    }
+    
+    for (int k=0; k<nloads; k++) {
+        iffout.s12 -= loads[k]->get_s2(i,j,t);
+        iffout.s22 -= loads[k]->get_s2(i,j,t);
+        iffout.s13 -= loads[k]->get_s3(i,j,t);
+        iffout.s23 -= loads[k]->get_s3(i,j,t);
     }
     
     return iffout;
