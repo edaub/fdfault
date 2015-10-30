@@ -23,23 +23,23 @@ class fields(object):
 
     def get_stress(self):
         "Returns uniform intial stress values"
-        return self.s0[:]
+        return list(self.s0)
 
     def set_stress(self, s):
         "Sets uniform intial stress"
         assert len(s) == 6, "Initial stress must hav 6 components"
         for sc in s:
             assert (type(sc) is float or type(sc) is int), "Initial stress must be a number"
-        self.s0 = s[:]
+        self.s0 = list(s)
 
     def get_het_stress(self):
         "returns hetergeneous initial stress"
-        return self.s[:]
+        return np.array(self.s)
 
     def set_het_stress(self, s):
         """
         sets heterogeneous initial stress
-        note: no grid information here, so number of grid points checked at domain level
+        note: no grid information here, so number of grid points already checked at domain level
         """
         if self.ndim == 3:
             assert(s.shape[0] == 6), "for 3D problems, heterogeneous stress must have 6 components"
@@ -48,7 +48,7 @@ class fields(object):
                 assert(s.shape[0] == 3), "for mode 2 problems, heterogeneous stress must have 3 components"
             else:
                 assert(s.shape[0] == 2), "for mode 3 problems, heterogeneous stress must have 2 components"
-        self.s = s[:]
+        self.s = np.array(s)
 
     def write_input(self,f, probname, endian = '='):
         "Writes field information to input file"
