@@ -542,7 +542,7 @@ void friction::read_load(const string loadfile, const bool data_proc) {
         
         // read data
         
-        MPI_File_read(infile, sn, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, s1, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         MPI_File_read(infile, s2, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         MPI_File_read(infile, s3, n_loc[0]*n_loc[1], MPI_DOUBLE, MPI_STATUS_IGNORE);
         
