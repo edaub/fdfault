@@ -158,7 +158,24 @@ slipweak::slipweak(const char* filename, const int ndim_in, const int mode_in, c
         param_file = false;
     } else {
         param_file = true;
-        read_params(swparamfile);
+        
+        // allocate memory for parameters
+        
+        if (!no_data) {
+            
+            dc = new double [n_loc[0]*n_loc[1]];
+            mus = new double [n_loc[0]*n_loc[1]];
+            mud = new double [n_loc[0]*n_loc[1]];
+            c0 = new double [n_loc[0]*n_loc[1]];
+            trup = new double [n_loc[0]*n_loc[1]];
+            tc = new double [n_loc[0]*n_loc[1]];
+            
+        }
+        
+        // read parameters for each potential side of process (if both sides in process, may be read twice)
+        
+        read_params(swparamfile, !data1);
+        read_params(swparamfile, !data2);
     }
 
 }
@@ -285,31 +302,18 @@ double slipweak::calc_mu(const double phi, const double eta, const double snc, c
     
 }
 
-void slipweak::read_params(const string paramfile) {
+void slipweak::read_params(const string paramfile, const bool data_proc) {
     // reads load data from input file
-    
-    // allocate memory for loads
-    
-    if (!no_data) {
-        
-        dc = new double [n_loc[0]*n_loc[1]];
-        mus = new double [n_loc[0]*n_loc[1]];
-        mud = new double [n_loc[0]*n_loc[1]];
-        c0 = new double [n_loc[0]*n_loc[1]];
-        trup = new double [n_loc[0]*n_loc[1]];
-        tc = new double [n_loc[0]*n_loc[1]];
-        
-    }
     
     // create communicator
     
     MPI_Comm comm;
     
-    comm = create_comm(no_data);
+    comm = create_comm(data_proc);
     
     // create MPI subarray for reading distributed array
     
-    if (!no_data) {
+    if (!data_proc) {
         
         int starts[2];
         

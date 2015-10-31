@@ -187,7 +187,21 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
         load_file = false;
     } else {
         load_file = true;
-        read_load(loadfile);
+        
+        // allocate memory for loads
+        
+        if (!no_data) {
+            
+            s1 = new double [n_loc[0]*n_loc[1]];
+            s2 = new double [n_loc[0]*n_loc[1]];
+            s3 = new double [n_loc[0]*n_loc[1]];
+            
+        }
+        
+        // read load for each potential side of interface (may be read twice if both sides in process)
+        
+        read_load(loadfile, !data1);
+        read_load(loadfile, !data2);
     }
     
 }
@@ -470,50 +484,18 @@ void friction::update(const double B) {
     
 }
 
-void friction::write_fields() {
-    // writes interface fields
-    
-    int id;
-    
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    
-    stringstream ss;
-    ss << id;
-    
-    fstream myFile;
-    myFile.open (("data/i"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-    
-    myFile.write((char*) ux, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);
-    myFile.write((char*) vx, sizeof(double)*(ndim-1)*n_loc[0]*n_loc[1]);
-    myFile.write((char*) u, sizeof(double)*n_loc[0]*n_loc[1]);
-    myFile.write((char*) v, sizeof(double)*n_loc[0]*n_loc[1]);
-    
-    myFile.close();
-
-}
-
-void friction::read_load(const string loadfile) {
+void friction::read_load(const string loadfile, const bool data_proc) {
     // reads load data from input file
-    
-    // allocate memory for loads
-    
-    if (!no_data) {
-    
-        sn = new double [n_loc[0]*n_loc[1]];
-        s2 = new double [n_loc[0]*n_loc[1]];
-        s3 = new double [n_loc[0]*n_loc[1]];
-    
-    }
     
     // create communicator
     
     MPI_Comm comm;
     
-    comm = create_comm(no_data);
+    comm = create_comm(data_proc);
     
     // create MPI subarray for reading distributed array
     
-    if (!no_data) {
+    if (!data_proc) {
     
         int starts[2];
         
@@ -574,18 +556,18 @@ void friction::read_load(const string loadfile) {
     
 }
 
-void friction::read_state(const string statefile) {
+void friction::read_state(const string statefile, const bool data_proc) {
     // reads state data from input file
     
     // create communicator
     
     MPI_Comm comm;
     
-    comm = create_comm(no_data);
+    comm = create_comm(data_proc);
     
     // create MPI subarray for reading distributed array
     
-    if (!no_data) {
+    if (!data_proc) {
         
         int starts[2];
         
@@ -644,7 +626,7 @@ void friction::read_state(const string statefile) {
     
 }
 
-void friction::read_params(const string filename) {
+void friction::read_params(const string filename, const bool data_proc) {
     // reads friction parameters from file
     
 }

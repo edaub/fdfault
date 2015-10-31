@@ -168,10 +168,11 @@ stz::stz(const char* filename, const int ndim_in, const int mode_in, const strin
             dstatedt[i] = 0.;
         }
         
-        // if needed, read state from file
+        // if needed, read state from file for process on each side (may be read twice)
         
         if (statefile != "none") {
-            read_state(statefile);
+            read_state(statefile, !data1);
+            read_state(statefile, !data2);
         }
         
         // initialize state
@@ -204,7 +205,27 @@ stz::stz(const char* filename, const int ndim_in, const int mode_in, const strin
         param_file = false;
     } else {
         param_file = true;
-        read_params(stzparamfile);
+        
+        // allocate memory for parameters
+        
+        if (!no_data) {
+            
+            v0 = new double [n_loc[0]*n_loc[1]];
+            f0 = new double [n_loc[0]*n_loc[1]];
+            a = new double [n_loc[0]*n_loc[1]];
+            muy = new double [n_loc[0]*n_loc[1]];
+            c0 = new double [n_loc[0]*n_loc[1]];
+            R = new double [n_loc[0]*n_loc[1]];
+            beta = new double [n_loc[0]*n_loc[1]];
+            chiw = new double [n_loc[0]*n_loc[1]];
+            v1 = new double [n_loc[0]*n_loc[1]];
+            
+        }
+        
+        // read parameters on for processes on both sides (if both sides in process, may be read twice)
+        
+        read_params(stzparamfile, !data1);
+        read_params(stzparamfile, !data2);
     }
 
 }
@@ -333,34 +354,18 @@ double stz::chihat(const double vt, const double chiwt, const double v1t) const 
     
 }
 
-void stz::read_params(const string paramfile) {
+void stz::read_params(const string paramfile, const bool data_proc) {
     // reads parameter data from input file
-    
-    // allocate memory for parameters
-    
-    if (!no_data) {
-        
-        v0 = new double [n_loc[0]*n_loc[1]];
-        f0 = new double [n_loc[0]*n_loc[1]];
-        a = new double [n_loc[0]*n_loc[1]];
-        muy = new double [n_loc[0]*n_loc[1]];
-        c0 = new double [n_loc[0]*n_loc[1]];
-        R = new double [n_loc[0]*n_loc[1]];
-        beta = new double [n_loc[0]*n_loc[1]];
-        chiw = new double [n_loc[0]*n_loc[1]];
-        v1 = new double [n_loc[0]*n_loc[1]];
-        
-    }
     
     // create communicator
     
     MPI_Comm comm;
     
-    comm = create_comm(no_data);
+    comm = create_comm(data_proc);
     
     // create MPI subarray for reading distributed array
     
-    if (!no_data) {
+    if (!data_proc) {
         
         int starts[2];
         

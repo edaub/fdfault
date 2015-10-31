@@ -21,7 +21,7 @@ protected:
     double* c0;
     double* trup;
     double* tc;
-    virtual void read_params(const std::string paramfile);
+    virtual void read_params(const std::string paramfile, const bool data_proc);
     virtual boundchar solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t);
     virtual double calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const;
 };

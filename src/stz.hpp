@@ -23,7 +23,7 @@ protected:
     double* beta;
     double* chiw;
     double* v1;
-    virtual void read_params(const std::string paramfile);
+    virtual void read_params(const std::string paramfile, const bool data_proc);
     virtual double calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const;
     virtual double calc_dstatedt(const double vhat, const double shat, const int i, const int j, const double t) const;
     double chihat(const double vt, const double chiwt, const double v1t) const;
