@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cmath>
 #include <cassert>
+#include <string.h>
 #include "block.hpp"
 #include "cartesian.hpp"
 #include "fd.hpp"

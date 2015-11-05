@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <string>
+#include <string.h>
 #include <sstream>
 #include "cartesian.hpp"
 #include "coord.hpp"

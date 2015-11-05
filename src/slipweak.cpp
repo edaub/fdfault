@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <string.h>
 #include "block.hpp"
 #include "cartesian.hpp"
 #include "fd.hpp"
