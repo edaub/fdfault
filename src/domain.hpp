@@ -24,7 +24,6 @@ public:
     int get_nifaces() const;
     double get_min_dx() const;
     void do_rk_stage(const double dt, const int stage, const double t, rk_type& rk);
-    void write_fields() const;
     void free_exchange();
     void set_stress();
     void remove_stress();

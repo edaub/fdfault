@@ -907,6 +907,7 @@ void block::set_grid(surface** surf, fields& f, const cartesian& cart, const fd_
                                               xp[2][0][i-mlb[0]][j-mlb[1]][k-mlb[2]]*
                                               (xp[0][1][i-mlb[0]][j-mlb[1]][k-mlb[2]]*xp[1][2][i-mlb[0]][j-mlb[1]][k-mlb[2]]-
                                                xp[0][2][i-mlb[0]][j-mlb[1]][k-mlb[2]]*xp[1][1][i-mlb[0]][j-mlb[1]][k-mlb[2]]));
+                assert(f.jac[i*nxd[1]+j*nxd[2]+k] > 0.);  // jacobian must be positive, otherwise grid is not smooth enough
                 for (int l=0; l<ndim; l++) {
                     for (int m=0; m<ndim; m++) {
                         f.metric[l*ndim*nxd[0]+m*nxd[0]+i*nxd[1]+j*nxd[2]+k] = ((xp[(m+1)%3][(l+1)%3][i-mlb[0]][j-mlb[1]][k-mlb[2]]*

@@ -288,47 +288,6 @@ void fields::update(const double B) {
     
 }
 
-void fields::write_fields() const {
-
-	int id;
-	
-	MPI_Comm_rank(MPI_COMM_WORLD, &id);
-	
-	stringstream ss;
-	ss << id;
-	
-	fstream myFile;
-    myFile.open (("data/f"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-	
-	myFile.write((char*) f, sizeof(double)*ndataf);
-	
-	myFile.close();
-    
-    myFile.open (("data/df"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-    
-    myFile.write((char*) df, sizeof(double)*ndataf);
-    
-    myFile.close();
-    
-    myFile.open (("data/x"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-    
-    myFile.write((char*) x, sizeof(double)*ndatax);
-    
-    myFile.close();
-    
-    myFile.open (("data/metric"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-    
-    myFile.write((char*) metric, sizeof(double)*ndatametric);
-    
-    myFile.close();
-    
-    myFile.open (("data/jac"+ss.str()+".dat").c_str(), ios::out | ios::binary);
-    
-    myFile.write((char*) jac, sizeof(double)*ndatajac);
-    
-    myFile.close();
-}
-
 void fields::exchange_grid() {
     
     MPI_Status status;

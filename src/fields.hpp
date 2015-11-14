@@ -23,7 +23,6 @@ public:
     void remove_stress();
 	void exchange_neighbors();
     void exchange_grid();
-	void write_fields() const;
     void free_exchange();
 private:
 	int ndim;

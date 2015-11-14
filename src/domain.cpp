@@ -304,13 +304,6 @@ void domain::do_rk_stage(const double dt, const int stage, const double t, rk_ty
 
 }
 
-void domain::write_fields() const {
-    f->write_fields();
-    for (int i=0; i<nifaces; i++) {
-        interfaces[i]->write_fields();
-    }
-}
-
 void domain::free_exchange() {
     // frees MPI datatypes for ghost cell exchange
     f->free_exchange();
