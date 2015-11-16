@@ -426,7 +426,7 @@ class problem(object):
                 print("yp greater than ny in output "+self.outputlist[i].get_name())
             if self.outputlist[i].get_zp() > self.d.get_nx()[2]-1:
                 print("zp greater than nz in output "+self.outputlist[i].get_name())
-            if (self.nt > 0 and self.outputlist[i].get_tp() > self.nt-1):
+            if (self.nt > 0 and self.outputlist[i].get_tp() > self.nt):
                 print("tp greater than nt in output "+self.outputlist[i].get_name())
             field = self.outputlist[i].get_field()
             
