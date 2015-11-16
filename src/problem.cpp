@@ -69,6 +69,18 @@ problem::problem(const char* filename) {
     
     front = new frontlist(filename, name, datadir, *d);
     
+    // write initial output data (uses absolute stress values)
+    
+    d->set_stress();
+    
+    out->write_list(0, dt, *d);
+    
+    d->remove_stress();
+    
+    // set initial values of rupture front
+    
+    front->set_front(0., *d);
+    
 }
 
 problem::~problem() {
@@ -147,7 +159,7 @@ void problem::solve() {
         
         d->set_stress();
         
-        out->write_list(i, dt, *d);
+        out->write_list(i+1, dt, *d);
 
         d->remove_stress();
         

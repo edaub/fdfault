@@ -255,8 +255,8 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
     } else {
         tm = tm_in;
     }
-    if (tp_in > nt-1) {
-        tp = nt-1;
+    if (tp_in > nt) {
+        tp = nt;
     } else {
         tp = tp_in;
     }
@@ -735,7 +735,7 @@ void outputunit::write_unit(const int tstep, const double dt, const domain& d) c
     // write time data if master and limits are not identical
     
     if (master && tp > tm) {
-        double t = (double)(tstep+1)*dt;
+        double t = (double)(tstep)*dt;
         tfile->write((char*) &t, sizeof(double));
     }
     
