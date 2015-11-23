@@ -66,12 +66,12 @@ double pert::xyfunc(const int i, const int j) const {
             xyval = 1.;
             break;
         case 1:
-            if (dx < 1.e-14) {
+            if (dx < 1.e-15) {
                 xval = 0.;
             } else {
                 xval = pow((x(i)-x0)/dx,2);
             }
-            if (dy < 1.e-14) {
+            if (dy < 1.e-15) {
                 yval = 0.;
             } else {
                 yval = pow((y(j)-y0)/dy,2);
@@ -79,12 +79,12 @@ double pert::xyfunc(const int i, const int j) const {
             xyval = exp(-xval-yval);
             break;
         case 2:
-            if (dx < 1.e-14) {
+            if (dx < 1.e-15) {
                 xval = 0.;
             } else {
                 xval = pow((x(i)-x0)/dx,2);
             }
-            if (dy < 1.e-14) {
+            if (dy < 1.e-15) {
                 yval = 0.;
             } else {
                 yval = pow((y(j)-y0)/dy,2);
@@ -94,12 +94,12 @@ double pert::xyfunc(const int i, const int j) const {
             }
             break;
         case 3:
-            if (dx < 1.e-14) {
+            if (dx < 1.e-15) {
                 xval = 1;
             } else {
                 xval = x(i)/dx+x0;
             }
-            if (dy < 1.e-14) {
+            if (dy < 1.e-15) {
                 yval = 1;
             } else {
                 yval = y(j)/dy+y0;
@@ -107,19 +107,23 @@ double pert::xyfunc(const int i, const int j) const {
             xyval = xval*yval;
             break;
         case 4:
-            if (dx < 1.e-14) {
+            if (dx < 1.e-15) {
                 xval = 1.;
             } else {
-                if (fabs(x(i)-x0) <= dx) {
+                if (fabs(fabs(x(i)-x0)-dx) < 1.e-15) {
+                    xval = 0.5;
+                } else if (fabs(x(i)-x0) < dx) {
                     xval = 1.;
                 } else {
                     xval = 0.;
                 }
             }
-            if (dy < 1.e-14) {
+            if (dy < 1.e-15) {
                 yval = 1.;
             } else {
-                if (fabs(y(j)-y0) <= dy) {
+                if (fabs(fabs(y(i)-y0)-dy) < 1.e-15) {
+                    yval = 0.5;
+                } else if (fabs(y(i)-y0) < dy) {
                     yval = 1.;
                 } else {
                     yval = 0.;
