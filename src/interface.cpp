@@ -808,7 +808,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                     f.df[3*nxd[0]+index2] -= cp2*h2*b2.s12;
                                     f.df[4*nxd[0]+index2] -= cp2*h2*b2.s22;
                                     if (is_plastic) {
-                                        f.df[5*nxd[0]+index2] -= cp1*h1*b2.s33;
+                                        f.df[5*nxd[0]+index2] -= cp2*h2*b2.s33;
                                     }
                                 }
                         }
