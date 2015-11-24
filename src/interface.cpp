@@ -56,6 +56,9 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     assert(ndim_in == 2 || ndim_in == 3);
     assert(mode_in == 2 || mode_in == 3);
     assert(direction_in == "x" || direction_in == "y" || (ndim_in == 3 && direction_in == "z"));
+    assert(((direction_in == "x") && (index1[0]+1 == index2[0]) && (index1[1] == index2[1]) && (index1[2] == index2[2])) ||
+            ((direction_in == "y") && (index1[0] == index2[0]) && (index1[1]+1 == index2[1]) && (index1[2] == index2[2])) ||
+           ((direction_in == "z") && (index1[0] == index2[0]) && (index1[1] == index2[1]) && (index1[2]+1 == index2[2])));
     
     ndim = ndim_in;
     mode = mode_in;
