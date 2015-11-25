@@ -59,19 +59,19 @@ double pert::tfunc(const double t) const {
 double pert::xyfunc(const int i, const int j) const {
     // calculates spatial dependence of perturbation
 
-    double xyval = 0., xval, yval;
+    double xyval = 0., xval, yval, epsilon = 1.e-14;
     
     switch (type) {
         case 0:
             xyval = 1.;
             break;
         case 1:
-            if (dx < 1.e-15) {
+            if (dx < epsilon) {
                 xval = 0.;
             } else {
                 xval = pow((x(i)-x0)/dx,2);
             }
-            if (dy < 1.e-15) {
+            if (dy < epsilon) {
                 yval = 0.;
             } else {
                 yval = pow((y(j)-y0)/dy,2);
@@ -79,12 +79,12 @@ double pert::xyfunc(const int i, const int j) const {
             xyval = exp(-xval-yval);
             break;
         case 2:
-            if (dx < 1.e-15) {
+            if (dx < epsilon) {
                 xval = 0.;
             } else {
                 xval = pow((x(i)-x0)/dx,2);
             }
-            if (dy < 1.e-15) {
+            if (dy < epsilon) {
                 yval = 0.;
             } else {
                 yval = pow((y(j)-y0)/dy,2);
@@ -94,12 +94,12 @@ double pert::xyfunc(const int i, const int j) const {
             }
             break;
         case 3:
-            if (dx < 1.e-15) {
+            if (dx < epsilon) {
                 xval = 1;
             } else {
                 xval = x(i)/dx+x0;
             }
-            if (dy < 1.e-15) {
+            if (dy < epsilon) {
                 yval = 1;
             } else {
                 yval = y(j)/dy+y0;
@@ -107,10 +107,10 @@ double pert::xyfunc(const int i, const int j) const {
             xyval = xval*yval;
             break;
         case 4:
-            if (dx < 1.e-15) {
+            if (dx < epsilon) {
                 xval = 1.;
             } else {
-                if (fabs(fabs(x(i)-x0)-dx) < 1.e-15) {
+                if (fabs(fabs(x(i)-x0)-dx) < epsilon) {
                     xval = 0.5;
                 } else if (fabs(x(i)-x0) < dx) {
                     xval = 1.;
@@ -118,12 +118,12 @@ double pert::xyfunc(const int i, const int j) const {
                     xval = 0.;
                 }
             }
-            if (dy < 1.e-15) {
+            if (dy < epsilon) {
                 yval = 1.;
             } else {
-                if (fabs(fabs(y(i)-y0)-dy) < 1.e-15) {
+                if (fabs(fabs(y(j)-y0)-dy) < epsilon) {
                     yval = 0.5;
-                } else if (fabs(y(i)-y0) < dy) {
+                } else if (fabs(y(j)-y0) < dy) {
                     yval = 1.;
                 } else {
                     yval = 0.;
@@ -131,7 +131,7 @@ double pert::xyfunc(const int i, const int j) const {
             }
             xyval = xval*yval;
     }
-    
+
     return xyval;
 }
 
