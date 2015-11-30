@@ -114,6 +114,11 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
                 paramfile >> sl1[i];
                 paramfile >> sl2[i];
                 paramfile >> sl3[i];
+                if (ndim == 2 && mode == 2) {
+                    sl3[i] = 0.;
+                } else if (ndim == 2 && mode == 3) {
+                    sl2[i] = 0.;
+                }
             }
             paramfile >> loadfile;
         }
