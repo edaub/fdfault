@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+import numpy as np
 
 class fields(object):
     "Class representing fields in a dynamic rupture problem"
