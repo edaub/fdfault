@@ -46,7 +46,10 @@ class fields(object):
             assert(s.shape[0] == 6), "for 3D problems, heterogeneous stress must have 6 components"
         else:
             if self.mode == 2:
-                assert(s.shape[0] == 3), "for mode 2 problems, heterogeneous stress must have 3 components"
+                if self.material == "plastic":
+                    assert(s.shape[0] == 4), "for mode 2 plastic problems, heterogeneous stress must have 4 components"
+                else:
+                    assert(s.shape[0] == 3), "for mode 3 elastic problems, heterogeneous stress must have 3 components"
             else:
                 assert(s.shape[0] == 2), "for mode 3 problems, heterogeneous stress must have 2 components"
         self.s = np.array(s)

@@ -378,6 +378,25 @@ class domain(object):
         
     def __set_block_coords(self):
         "Adjust corners of each block to match neighbors"
+
+        # first set all edge blocks to line up with lower left corner
+
+        xm000 = self.blocks[0][0][0].get_xm()
+        cum = xm000[0]
+        for i in range(1,self.nblocks[0]):
+            cum += self.blocks[i-1][0][0].get_lx()[0]
+            self.blocks[i][0][0].set_xm((cum, xm000[1], xm000[2]))
+        cum = xm000[1]
+        for j in range(1,self.nblocks[1]):
+            cum += self.blocks[0][j-1][0].get_lx()[1]
+            self.blocks[0][j][0].set_xm((xm000[0], cum, xm000[2]))
+        cum = xm000[2]
+        for k in range(1, self.nblocks[2]):
+            cum += self.blocks[0][0][k-1].get_lx()[2]
+            self.blocks[0][0][k].set_xm((xm000[0], xm000[1], cum))
+        
+        # set remaining blocks to match up with edge blocks
+
         for i in range(self.nblocks[0]):
             for j in range(self.nblocks[1]):
                 for k in range(self.nblocks[2]):
@@ -398,7 +417,7 @@ class domain(object):
                     else:
                         x = self.blocks[i][j][k-1].get_xm()[2]
                         l = self.blocks[i][j][k-1].get_lx()[2]
-                        x2 = x+l
+                        x2 = x+l                  
                     self.blocks[i][j][k].set_xm((x0,x1,x2))
 
     def get_stress(self):
