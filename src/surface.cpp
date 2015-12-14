@@ -139,6 +139,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 	// 3 means edge where first index is n1-1
 	
 	int edge1index, edge2index;
+    double epsilon = 1.e-14;
 	
 	if (edge1%2 == 1) {
 		// fixed first index for this surface
@@ -159,7 +160,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 			} else {
                 for (int i=0; i<ndim; i++) {
                     for (int j=0; j<n[1]; j++) {
-                        if (x[i*n[0]*n[1]+edge1index*n[1]+j] != othersurf.get_x(i,edge2index,j)) {
+                        if (fabs(x[i*n[0]*n[1]+edge1index*n[1]+j]-othersurf.get_x(i,edge2index,j)) > epsilon) {
                             return false;
                         }
                     }
@@ -178,7 +179,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 			} else {
                 for (int i=0; i<ndim; i++) {
                     for (int j=0; j<n[1]; i++) {
-                        if (x[i*n[0]*n[1]+edge1index*n[1]+j] != othersurf.get_x(i,j,edge2index)) {
+                        if (fabs(x[i*n[0]*n[1]+edge1index*n[1]+j]-othersurf.get_x(i,j,edge2index)) > epsilon) {
                             return false;
                         }
                     }
@@ -205,7 +206,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 			} else {
                 for (int i=0; i<ndim; i++) {
                     for (int j=0; j<n[0]; j++) {
-                        if (x[i*n[0]*n[1]+j*n[1]+edge1index] != othersurf.get_x(i,edge2index,j)) {
+                        if (fabs(x[i*n[0]*n[1]+j*n[1]+edge1index]-othersurf.get_x(i,edge2index,j)) > epsilon) {
                             return false;
                         }
 					}
@@ -224,7 +225,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 			} else {
                 for (int i=0; i<ndim; i++) {
                     for (int j=0; j<n[0]; j++) {
-                        if (x[i*n[0]*n[1]+j*n[1]+edge1index] != othersurf.get_x(i,j,edge2index)) {
+                        if (fabs(x[i*n[0]*n[1]+j*n[1]+edge1index]-othersurf.get_x(i,j,edge2index)) > epsilon) {
                             return false;
                         }
 					}
