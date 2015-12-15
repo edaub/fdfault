@@ -131,6 +131,10 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
                     index[1] = 4;
             }
     }
+
+    // initialize MPI datatypes for exchanging with neighbors
+    
+    init_exchange(cart);
     
     // if problem heterogeneous, read load data from file
     
@@ -140,10 +144,6 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
         heterogeneous = true;
         read_load(loadfile);
     }
-	
-	// initialize MPI datatypes for exchanging with neighbors
-	
-	init_exchange(cart);
 	
 }
 
@@ -509,6 +509,53 @@ void fields::read_load(const string loadfile) {
     // deallocate temporary array
     
     delete[] s_temp;
+
+    // exhange data with neighbors to fill in ghost cells
+    
+    MPI_Status status;
+    
+    MPI_Datatype gridslicep[3];
+    MPI_Datatype gridslicem[3];
+    
+    // set up strided arrays for sending x data
+    
+    MPI_Type_vector(ns,c.get_xp_ghost(0)*c.get_nx_tot(1)*c.get_nx_tot(2),c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2),
+                    MPI_DOUBLE,&gridslicep[0]);
+    MPI_Type_commit(&gridslicep[0]);
+    
+    MPI_Type_vector(ns,c.get_xm_ghost(0)*c.get_nx_tot(1)*c.get_nx_tot(2),c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2),
+                    MPI_DOUBLE,&gridslicem[0]);
+    MPI_Type_commit(&gridslicem[0]);
+    
+    MPI_Type_vector(ns*c.get_nx_tot(0),c.get_xp_ghost(1)*c.get_nx_tot(2),c.get_nx_tot(1)*c.get_nx_tot(2),MPI_DOUBLE,&gridslicep[1]);
+    MPI_Type_commit(&gridslicep[1]);
+    
+    MPI_Type_vector(ns*c.get_nx_tot(0),c.get_xm_ghost(1)*c.get_nx_tot(2),c.get_nx_tot(1)*c.get_nx_tot(2),MPI_DOUBLE,&gridslicem[1]);
+    MPI_Type_commit(&gridslicem[1]);
+    
+    MPI_Type_vector(ns*c.get_nx_tot(0)*c.get_nx_tot(1),c.get_xp_ghost(2),c.get_nx_tot(2),MPI_DOUBLE,&gridslicep[2]);
+    MPI_Type_commit(&gridslicep[2]);
+    
+    MPI_Type_vector(ns*c.get_nx_tot(0)*c.get_nx_tot(1),c.get_xm_ghost(2),c.get_nx_tot(2),MPI_DOUBLE,&gridslicem[2]);
+    MPI_Type_commit(&gridslicem[2]);
+    
+    // exchange stress data
+    
+    for (int i=0; i<ndim; i++) {
+        MPI_Sendrecv(&s[shiftp_source_index[i]], 1, gridslicep[i], shiftp_dest[i], 2*i,
+                     &s[shiftp_dest_index[i]], 1, gridslicem[i], shiftp_source[i], 2*i, comm, &status);
+        MPI_Sendrecv(&s[shiftm_source_index[i]], 1, gridslicem[i], shiftm_dest[i], 2*i+1,
+                     &s[shiftm_dest_index[i]], 1, gridslicep[i], shiftm_source[i], 2*i+1, comm, &status);
+    }
+    
+    // free strided arrays
+    
+    MPI_Type_free(&gridslicem[0]);
+    MPI_Type_free(&gridslicem[1]);
+    MPI_Type_free(&gridslicem[2]);
+    MPI_Type_free(&gridslicep[0]);
+    MPI_Type_free(&gridslicep[1]);
+    MPI_Type_free(&gridslicep[2]);
     
 }
 	
