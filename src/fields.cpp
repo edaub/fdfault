@@ -485,7 +485,7 @@ void fields::read_load(const string loadfile) {
     // read data
     
     for (int i=0; i<ns; i++) {
-        MPI_File_read(infile, &s_temp[i*nxyz], nx_loc[0]*nx_loc[1]*nx_loc[2], MPI_DOUBLE, MPI_STATUS_IGNORE);
+        MPI_File_read(infile, &s_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]], nx_loc[0]*nx_loc[1]*nx_loc[2], MPI_DOUBLE, MPI_STATUS_IGNORE);
     }
     
     // copy to appropriate place in s array (avoid ghost cells)
