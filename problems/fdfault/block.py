@@ -208,8 +208,150 @@ class block(object):
         assert type(mat) is material
         self.m = mat
 
+    def get_x(self, coord):
+        """
+        Returns spatial location given coordinates (grid generated on the fly from bounding surfaces)
+        uses same transfinite interpolation method as main code
+        coord must be of an appropriate length (2 or 3 for 2d problems, 3 for 3d)
+        returns numpy array of (x, y, z) 
+        """
+
+        if self.ndim == 2:
+            assert (len(coord) == 2 or len(coord) == 3), "Coordinates must have length 2 or 3"
+            coord = (coord[0], coord[1])
+        else:
+            assert len(coord) == 3, "Coordinates must have length 3"
+        for i in range(self.ndim):
+            assert (coord[i] >= 0 and coord[i] < self.nx[i]), "Coordinate value out of range"
+
+        # make temporary surfaces and check that edges match
+
+        tmpsurfs = self.make_tempsurfs()
+        self.checksurfs(tmpsurfs)
+
+        p = float(coord[0])/float(self.nx[0]-1)
+        q = float(coord[1])/float(self.nx[1]-1)
+        x = np.zeros(3)
+        if self.ndim == 2:
+            x[0] = ((1.-p)*tmpsurfs[0].get_x(coord[1])+p*tmpsurfs[1].get_x(coord[1])+
+                        (1.-q)*tmpsurfs[2].get_x(coord[0])+q*tmpsurfs[3].get_x(coord[0])-
+                        (1.-p)*(1.-q)*tmpsurfs[0].get_x(0)-(1.-q)*p*tmpsurfs[1].get_x(0)-
+                        q*(1.-p)*tmpsurfs[0].get_x(-1)-q*p*tmpsurfs[1].get_x(-1))
+            x[1] = ((1.-p)*tmpsurfs[0].get_y(coord[1])+p*tmpsurfs[1].get_y(coord[1])+
+                            (1.-q)*tmpsurfs[2].get_y(coord[0])+q*tmpsurfs[3].get_y(coord[0])-
+                            (1.-p)*(1.-q)*tmpsurfs[0].get_y(0)-(1.-q)*p*tmpsurfs[1].get_y(0)-
+                            q*(1.-p)*tmpsurfs[0].get_y(-1)-q*p*tmpsurfs[1].get_y(-1))
+        else:
+            r = float(coord[2])/float(self.nx[2]-1)
+            x[0] = ((1.-p)*tmpsurfs[0].get_x((coord[1], coord[2]))+p*tmpsurfs[1].get_x((coord[1], coord[2]))+
+                    (1.-q)*tmpsurfs[2].get_x((coord[0], coord[2]))+q*tmpsurfs[3].get_x((coord[0], coord[2]))+
+                    (1.-r)*tmpsurfs[4].get_x((coord[0], coord[1]))+r*tmpsurfs[5].get_x((coord[0], coord[1])))
+            x[1] = ((1.-p)*tmpsurfs[0].get_y((coord[1], coord[2]))+p*tmpsurfs[1].get_y((coord[1], coord[2]))+
+                    (1.-q)*tmpsurfs[2].get_y((coord[0], coord[2]))+q*tmpsurfs[3].get_y((coord[0], coord[2]))+
+                    (1.-r)*tmpsurfs[4].get_y((coord[0], coord[1]))+r*tmpsurfs[5].get_y((coord[0], coord[1])))
+            x[2] = ((1.-p)*tmpsurfs[0].get_z((coord[1], coord[2]))+p*tmpsurfs[1].get_z((coord[1], coord[2]))+
+                    (1.-q)*tmpsurfs[2].get_z((coord[0], coord[2]))+q*tmpsurfs[3].get_z((coord[0], coord[2]))+
+                    (1.-r)*tmpsurfs[4].get_z((coord[0], coord[1]))+r*tmpsurfs[5].get_z((coord[0], coord[1])))
+            x[0] -= ((1.-q)*(1.-p)*tmpsurfs[0].get_x((0, coord[2]))+(1.-q)*p*tmpsurfs[1].get_x((0, coord[2]))+
+                     q*(1.-p)*tmpsurfs[0].get_x((-1,coord[2]))+q*p*tmpsurfs[1].get_x((-1,coord[2]))+
+                     (1.-p)*(1.-r)*tmpsurfs[0].get_x((coord[1], 0))+p*(1.-r)*tmpsurfs[1].get_x((coord[1], 0))+
+                     (1.-q)*(1.-r)*tmpsurfs[2].get_x((coord[0], 0))+q*(1.-r)*tmpsurfs[3].get_x((coord[0], 0))+
+                     (1.-p)*r*tmpsurfs[0].get_x((coord[1], -1))+p*r*tmpsurfs[1].get_x((coord[1],-1))+
+                     (1.-q)*r*tmpsurfs[2].get_x((coord[0], -1))+q*r*tmpsurfs[3].get_x((coord[0], -1)))
+            x[1] -= ((1.-q)*(1.-p)*tmpsurfs[0].get_y((0, coord[2]))+(1.-q)*p*tmpsurfs[1].get_y((0, coord[2]))+
+                     q*(1.-p)*tmpsurfs[0].get_y((-1,coord[2]))+q*p*tmpsurfs[1].get_y((-1,coord[2]))+
+                     (1.-p)*(1.-r)*tmpsurfs[0].get_y((coord[1], 0))+p*(1.-r)*tmpsurfs[1].get_y((coord[1], 0))+
+                     (1.-q)*(1.-r)*tmpsurfs[2].get_y((coord[0], 0))+q*(1.-r)*tmpsurfs[3].get_y((coord[0], 0))+
+                     (1.-p)*r*tmpsurfs[0].get_y((coord[1], -1))+p*r*tmpsurfs[1].get_y((coord[1],-1))+
+                     (1.-q)*r*tmpsurfs[2].get_y((coord[0], -1))+q*r*tmpsurfs[3].get_y((coord[0], -1)))
+            x[2] -= ((1.-q)*(1.-p)*tmpsurfs[0].get_z((0, coord[2]))+(1.-q)*p*tmpsurfs[1].get_z((0, coord[2]))+
+                     q*(1.-p)*tmpsurfs[0].get_z((-1,coord[2]))+q*p*tmpsurfs[1].get_z((-1,coord[2]))+
+                     (1.-p)*(1.-r)*tmpsurfs[0].get_z((coord[1], 0))+p*(1.-r)*tmpsurfs[1].get_z((coord[1], 0))+
+                     (1.-q)*(1.-r)*tmpsurfs[2].get_z((coord[0], 0))+q*(1.-r)*tmpsurfs[3].get_z((coord[0], 0))+
+                     (1.-p)*r*tmpsurfs[0].get_z((coord[1], -1))+p*r*tmpsurfs[1].get_z((coord[1],-1))+
+                     (1.-q)*r*tmpsurfs[2].get_z((coord[0], -1))+q*r*tmpsurfs[3].get_z((coord[0], -1)))
+            x[0] += ((1.-p)*(1.-q)*(1.-r)*tmpsurfs[0].get_x((0,0))+p*(1.-q)*(1.-r)*tmpsurfs[1].get_x((0,0))+
+                     (1.-p)*q*(1.-r)*tmpsurfs[0].get_x((-1,0))+(1.-p)*(1.-q)*r*tmpsurfs[0].get_x((0,-1))+
+                     p*q*(1.-r)*tmpsurfs[1].get_x((-1,0))+p*(1.-q)*r*tmpsurfs[1].get_x((0,-1))+
+                     (1.-p)*q*r*tmpsurfs[0].get_x((-1,-1))+p*q*r*tmpsurfs[1].get_x((-1,-1)))
+            x[1] += ((1.-p)*(1.-q)*(1.-r)*tmpsurfs[0].get_y((0,0))+p*(1.-q)*(1.-r)*tmpsurfs[1].get_y((0,0))+
+                     (1.-p)*q*(1.-r)*tmpsurfs[0].get_y((-1,0))+(1.-p)*(1.-q)*r*tmpsurfs[0].get_y((0,-1))+
+                     p*q*(1.-r)*tmpsurfs[1].get_y((-1,0))+p*(1.-q)*r*tmpsurfs[1].get_y((0,-1))+
+                     (1.-p)*q*r*tmpsurfs[0].get_y((-1,-1))+p*q*r*tmpsurfs[1].get_y((-1,-1)))
+            x[2] += ((1.-p)*(1.-q)*(1.-r)*tmpsurfs[0].get_z((0,0))+p*(1.-q)*(1.-r)*tmpsurfs[1].get_z((0,0))+
+                     (1.-p)*q*(1.-r)*tmpsurfs[0].get_x((-1,0))+(1.-p)*(1.-q)*r*tmpsurfs[0].get_z((0,-1))+
+                     p*q*(1.-r)*tmpsurfs[1].get_z((-1,0))+p*(1.-q)*r*tmpsurfs[1].get_z((0,-1))+
+                     (1.-p)*q*r*tmpsurfs[0].get_z((-1,-1))+p*q*r*tmpsurfs[1].get_z((-1,-1)))
+
+        return np.array(x)
+
+    def make_tempsurfs(self):
+        "create temporary surface list to check that edges match"
+
+        tmpsurf = []
+
+        if self.ndim == 2:
+            for i in range(4):
+                if self.surfs[i] is None:
+                    if i == 0:
+                        tmpsurf.append(curve(self.nx[1], 'x', np.ones(self.nx[1])*self.xm[0],
+                                             np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1])))
+                    elif i == 1:
+                        tmpsurf.append(curve(self.nx[1], 'x', np.ones(self.nx[1])*(self.xm[0]+self.lx[0]),
+                                             np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1])))
+                    elif i == 2:
+                        tmpsurf.append(curve(self.nx[0], 'y', np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),
+                                             np.ones(self.nx[0])*self.xm[1]))
+                    else:
+                        tmpsurf.append(curve(self.nx[0], 'y',np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),
+                                             np.ones(self.nx[0])*(self.xm[1]+self.lx[1])))
+                else:
+                    tmpsurf.append(self.surfs[i])
+
+        else:
+            for i in range(6):
+                if self.surfs[i] is None:
+                    if i == 0:
+                        tmpsurf.append(surface(self.nx[1], self.nx[2], 'x', np.ones((self.nx[1], self.nx[2]))*self.xm[0],
+                                               np.meshgrid(np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[0],
+                                               np.meshgrid(np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[1]))                                               
+                    elif i == 1:
+                        tmpsurf.append(surface(self.nx[1], self.nx[2], 'x', np.ones((self.nx[1], self.nx[2]))*(self.xm[0]+self.lx[0]),
+                                               np.meshgrid(np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[0],
+                                               np.meshgrid(np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[1])) 
+                    elif i == 2:
+                        tmpsurf.append(surface(self.nx[0], self.nx[2], 'y',
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[0],
+                                               np.ones((self.nx[0], self.nx[2]))*self.xm[1],
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[1]))
+                    elif i == 3:
+                        tmpsurf.append(surface(self.nx[0], self.nx[2], 'y',
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[0],
+                                               np.ones((self.nx[0], self.nx[2]))*(self.xm[1]+self.lx[1]),
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[2], self.xm[2]+self.lx[2], self.nx[2]), indexing='ij')[1]))
+                    elif i == 4:
+                        tmpsurf.append(surface(self.nx[0], self.nx[1], 'z',
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]), indexing='ij')[0],
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]), indexing='ij')[1],
+                                               np.ones((self.nx[0], self.nx[1]))*self.xm[2]))                                             
+                    else:
+                        tmpsurf.append(surface(self.nx[0], self.nx[1], 'z',
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]), indexing='ij')[0],
+                                               np.meshgrid(np.linspace(self.xm[0], self.xm[0]+self.lx[0], self.nx[0]),np.linspace(self.xm[1], self.xm[1]+self.lx[1], self.nx[1]), indexing='ij')[1],
+                                               np.ones((self.nx[0], self.nx[1]))*(self.xm[2]+self.lx[2])))
+                else:
+                    tmpsurf.append(self.surfs[i])
+            
+        return tmpsurf
+
     def check(self):
         "Checks for errors before writing input file"
+
+        tmpsurfs = self.make_tempsurfs()
+        self.checksurfs(tmpsurfs)
+
+    def checksurfs(self, tmpsurfs):
+        "checks that surface boundaries match"
 
         surf1 = [0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3]
         surf2 = [2, 3, 2, 3, 4, 5, 4, 5, 4, 5, 4, 5]
@@ -217,8 +359,7 @@ class block(object):
         edge2 = [1, 1, 3, 3, 1, 1, 3, 3, 0, 0, 2, 2]
 
         for i in range(2**(self.ndim-1)*self.ndim):
-            if ((not self.surfs[surf1[i]] is None) and (not self.surfs[surf2[i]] is None)):
-                assert self.surfs[surf1[i]].has_same_edge(edge1[i], edge2[i], self.surfs[surf2[i]]), "surface edges do not match"
+            assert tmpsurfs[surf1[i]].has_same_edge(edge1[i], edge2[i], tmpsurfs[surf2[i]]), "surface edges do not match"
 
     def write_input(self, f, probname, endian = '='):
         "writes block information to input file"

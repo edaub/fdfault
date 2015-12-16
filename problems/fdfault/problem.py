@@ -228,6 +228,22 @@ class problem(object):
         """
         self.d.delete_block_surf(coords, loc)
 
+    def get_x(self, coord):
+        """
+        Gets grid value for given spatial index
+        grid is generated on the fly, and is not stored
+        returns length 3 array of spatial location
+        """
+        return self.d.get_x(coord)
+
+    def find_nearest_point(self, point):
+        """
+        returns coordinates (length 3 of integers) or point that is closest to input point (length 3 of floats)
+        uses an iterative binary search algorithm (must iterate because coordinates are not independent
+        if point is outside of domain, returns closest point and gives a warning
+        """
+        return self.d.find_nearest_point(point)
+
     def get_stress(self):
         "Returns uniform intial stress values"
         return self.d.get_stress()

@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import numpy as np
+
 from .fields import fields
 from .block import block
 from .interface import interface, friction, slipweak, stz
@@ -420,6 +422,108 @@ class domain(object):
                         x2 = x+l                  
                     self.blocks[i][j][k].set_xm((x0,x1,x2))
 
+    def get_x(self, coord):
+        "returns spatial coordinates (length 3) of given coordinate index"
+
+        if self.ndim == 2:
+            assert (len(coord) == 2 or len(coord) == 3), "Coordinates must have length 2 or 3"
+            coord = (coord[0], coord[1], 0)
+        else:
+            assert len(coord) == 3, "Coordinates must have length 3"
+        for i in range(self.ndim):
+            assert (coord[i] >= 0 and coord[i] < self.nx[i]), "Coordinate value out of range"
+
+        # find appropriate block
+
+        blockcoords = [0, 0, 0]
+        localcoords = [0, 0, 0]
+
+        for i in range(3):
+            for j in range(self.nblocks[i]-1):
+                if (coord[i] >= self.xm_block[i][j] and coord[i] < self.xm_block[i][j+1]):
+                    blockcoords[i] = j
+                else:
+                    blockcoords[i] = self.nblocks[i]-1
+            localcoords[i] = coord[i]-self.xm_block[i][blockcoords[i]]
+
+        return self.blocks[blockcoords[0]][blockcoords[1]][blockcoords[2]].get_x(localcoords)
+
+    def find_nearest_point(self, point):
+        """
+        returns coordinates (length 3 of integers) or point that is closest to input point (length 3 of floats)
+        uses an iterative binary search algorithm (must iterate because coordinates are not independent
+        if point is outside of domain, returns closest point and gives a warning
+        """
+
+        if self.ndim == 2:
+            assert (len(point) == 2 or len(point) == 3), "Test point must have length 2 or 3"
+            point = (point[0], point[1], 0.)
+        else:
+            assert len(point) == 3, "Test point must have length 3"
+
+        def coord_dist(x, i):
+            return x[i]-point[i]
+
+        def binary_search_x(minx, maxx, i, j):
+            if (maxx == minx + 1 or maxx == minx): # base case
+                maxdist = np.abs(coord_dist(self.get_x((maxx, i, j)), 0))
+                mindist = np.abs(coord_dist(self.get_x((minx, i, j)), 0))
+                if maxdist > mindist:
+                    return minx
+                else:
+                    return maxx
+            else: # continue binary search recursively
+                newpt = (maxx+minx)//2
+                new_dist = coord_dist(self.get_x((newpt, i, j)), 0)
+                if new_dist < 0.:
+                    return binary_search_x(newpt, maxx, i, j)
+                else:
+                    return binary_search_x(minx, newpt, i, j)
+        
+        def binary_search_y(miny, maxy, i, j):
+            if (maxy == miny + 1 or maxy == miny): # base case
+                maxdist = np.abs(coord_dist(self.get_x((i, maxy, j)), 1))
+                mindist = np.abs(coord_dist(self.get_x((i, miny, j)), 1))
+                if maxdist > mindist:
+                    return miny
+                else:
+                    return maxy
+            else: # continue binary search recursively
+                newpt = (maxy+miny)//2
+                new_dist = coord_dist(self.get_x((i, newpt, j)), 1)
+                if new_dist < 0.:
+                    return binary_search_y(newpt, maxy, i, j)
+                else:
+                    return binary_search_y(miny, newpt, i, j)
+
+        def binary_search_z(minz, maxz, i, j):
+            if (maxz == minz + 1 or maxz == minz): # base case
+                maxdist = np.abs(coord_dist(self.get_x((i, j, maxz)), 2))
+                mindist = np.abs(coord_dist(self.get_x((i, j, minz)), 2))
+                if maxdist > mindist:
+                    return minz
+                else:
+                    return maxz
+            else: # continue binary search recursively
+                newpt = (maxz+minz)//2
+                new_dist = coord_dist(self.get_x((i, j, newpt)), 2)
+                if new_dist < 0.:
+                    return binary_search_z(newpt, maxz, i, j)
+                else:
+                    return binary_search_z(minz, newpt, i, j)
+
+        old_point = (0,0,0)
+        current_point = (self.nx[0]//2, self.nx[1]//2, self.nx[2]//2)
+
+        while not old_point == current_point:
+            old_point = current_point
+            x_coord = binary_search_x(0, self.nx[0]-1, current_point[1], current_point[2])
+            y_coord = binary_search_y(0, self.nx[1]-1, x_coord, current_point[2])
+            z_coord = binary_search_z(0, self.nx[2]-1, x_coord, y_coord)
+            current_point = (x_coord, y_coord, z_coord)
+        
+        return current_point
+                        
     def get_stress(self):
         "Returns uniform intial stress values"
         return self.f.get_stress()
