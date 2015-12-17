@@ -206,6 +206,18 @@ friction::friction(const char* filename, const int ndim_in, const int mode_in, c
         
         read_load(loadfile, !data1);
         read_load(loadfile, !data2);
+        
+        // if 2d problem, override unused traction components by setting to zero
+        
+        if (ndim == 2 && mode == 2) {
+            for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+                s3[i] = 0.;
+            }
+        } else if (ndim == 2 && mode == 3) {
+            for (int i=0; i<n_loc[0]*n_loc[1]; i++) {
+                s2[i] = 0.;
+            }
+        }
     }
     
 }
