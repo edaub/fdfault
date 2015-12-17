@@ -440,11 +440,10 @@ class domain(object):
         localcoords = [0, 0, 0]
 
         for i in range(3):
+            blockcoords[i] = self.nblocks[i]-1
             for j in range(self.nblocks[i]-1):
                 if (coord[i] >= self.xm_block[i][j] and coord[i] < self.xm_block[i][j+1]):
                     blockcoords[i] = j
-                else:
-                    blockcoords[i] = self.nblocks[i]-1
             localcoords[i] = coord[i]-self.xm_block[i][blockcoords[i]]
 
         return self.blocks[blockcoords[0]][blockcoords[1]][blockcoords[2]].get_x(localcoords)
