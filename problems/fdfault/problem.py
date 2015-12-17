@@ -236,13 +236,14 @@ class problem(object):
         """
         return self.d.get_x(coord)
 
-    def find_nearest_point(self, point):
+    def find_nearest_point(self, point, known = None, knownloc = None):
         """
-        returns coordinates (length 3 of integers) or point that is closest to input point (length 3 of floats)
-        uses an iterative binary search algorithm (must iterate because coordinates are not independent
-        if point is outside of domain, returns closest point and gives a warning
+        returns coordinates (length 3 of integers) of point that is closest to input point (length 3 of floats)
+        uses an iterative binary search algorithm (must iterate because coordinates are not independent)
+        if a specific coordinate is fixed a priori (i.e. you are looking for a location on an interface),
+        pass known = 'x' (or 'y' or 'z') and the coordinate as knownloc
         """
-        return self.d.find_nearest_point(point)
+        return self.d.find_nearest_point(point, known, knownloc)
 
     def get_stress(self):
         "Returns uniform intial stress values"

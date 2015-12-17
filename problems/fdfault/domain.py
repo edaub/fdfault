@@ -427,9 +427,10 @@ class domain(object):
 
         if self.ndim == 2:
             assert (len(coord) == 2 or len(coord) == 3), "Coordinates must have length 2 or 3"
-            coord = (coord[0], coord[1], 0)
+            coord = (int(coord[0]), int(coord[1]), 0)
         else:
             assert len(coord) == 3, "Coordinates must have length 3"
+            coord = (int(coord[0]), int(coord[1]), int(coord[2]))
         for i in range(self.ndim):
             assert (coord[i] >= 0 and coord[i] < self.nx[i]), "Coordinate value out of range"
 
@@ -448,18 +449,25 @@ class domain(object):
 
         return self.blocks[blockcoords[0]][blockcoords[1]][blockcoords[2]].get_x(localcoords)
 
-    def find_nearest_point(self, point):
+    def find_nearest_point(self, point, known=None, knownloc = None):
         """
-        returns coordinates (length 3 of integers) or point that is closest to input point (length 3 of floats)
-        uses an iterative binary search algorithm (must iterate because coordinates are not independent
-        if point is outside of domain, returns closest point and gives a warning
+        returns coordinates (length 3 of integers) of point that is closest to input point (length 3 of floats)
+        uses an iterative binary search algorithm (must iterate because coordinates are not independent)
+        if a specific coordinate is fixed a priori (i.e. you are looking for a location on an interface),
+        pass known = 'x' (or 'y' or 'z') and the coordinate as knownloc
         """
 
         if self.ndim == 2:
             assert (len(point) == 2 or len(point) == 3), "Test point must have length 2 or 3"
             point = (point[0], point[1], 0.)
+            if not known is None:
+                assert (known == 'x' or known == 'y'), "known coordinate must be x or y"
+                knownloc = int(knownloc)
         else:
             assert len(point) == 3, "Test point must have length 3"
+            if not known is None:
+                assert (known == 'x' or known == 'y' or known == 'z'), "known coordinate must be x, y, or z"
+                knownloc = int(knownloc)
 
         def coord_dist(x, i):
             return x[i]-point[i]
@@ -514,12 +522,30 @@ class domain(object):
 
         old_point = (0,0,0)
         current_point = (self.nx[0]//2, self.nx[1]//2, self.nx[2]//2)
+        if known == 'x':
+            old_point = (knownloc, 0, 0)
+            current_point = (knownloc, self.nx[1]//2, self.nx[2]//2)
+        elif known == 'y':
+            old_point = (0, knownloc, 0)
+            current_point = (self.nx[0]//2, knownloc, self.nx[2]//2)
+        elif known == 'z':
+            old_point = (0, 0, knownloc)
+            current_point = (self.nx[0]//2, self.nx[1]//2, knownloc)
 
         while not old_point == current_point:
             old_point = current_point
-            x_coord = binary_search_x(0, self.nx[0]-1, current_point[1], current_point[2])
-            y_coord = binary_search_y(0, self.nx[1]-1, x_coord, current_point[2])
-            z_coord = binary_search_z(0, self.nx[2]-1, x_coord, y_coord)
+            if known == 'x':
+                x_coord = current_point[0]
+            else:
+                x_coord = binary_search_x(0, self.nx[0]-1, current_point[1], current_point[2])
+            if known == 'y':
+                y_coord = current_point[1]
+            else:
+                y_coord = binary_search_y(0, self.nx[1]-1, x_coord, current_point[2])
+            if known == 'z':
+                z_coord = current_point[2]
+            else:
+                z_coord = binary_search_z(0, self.nx[2]-1, x_coord, y_coord)
             current_point = (x_coord, y_coord, z_coord)
         
         return current_point
