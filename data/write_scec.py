@@ -126,7 +126,7 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     for i in range(h_slip.nt):
         if normal:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
-                                                               h_shear_stress.Sx[i], v_slip[i], v_slip_rate.Vz[i],
+                                                               h_shear_stress.Sx[i], v_slip.Uz[i], v_slip_rate.Vz[i],
                                                                      v_shear_stress.Sz[i], n_stress.Sn[i]))
         else:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
