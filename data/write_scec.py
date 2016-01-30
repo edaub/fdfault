@@ -167,9 +167,9 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     for i in range(frt.nx):
         for j in range(frt.ny):
             if (frt.t[i,j] < 0.):
-                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.y[i,j]*1000., 1.e9))
+                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., 1.e9))
             else:
-                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.y[i,j]*1000., frt.t[i,j])) 
+                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., frt.t[i,j])) 
 
     f.close()
 
