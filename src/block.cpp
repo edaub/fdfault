@@ -966,6 +966,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = i-mlb[0]+1;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = (mlb[0]+n)*nxd[1]+j;
@@ -988,6 +994,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     for (int i=mc[0]; i<mrb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
                 index2 = index1+(-fd.sbporder+1+n)*nxd[1];
@@ -1011,6 +1023,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = prb[0]-i;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = (prb[0]-1-n)*nxd[1]+j;
@@ -1041,6 +1059,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<mc[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = j-mlb[1]+1;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = i*nxd[1]+mlb[1]+n;
@@ -1063,6 +1087,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mc[1]; j<mrb[1]; j++) {
             index1 = i*nxd[1]+j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
                 index2 = index1-fd.sbporder+1+n;
@@ -1086,6 +1116,12 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
         for (int j=mrb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = prb[1]-j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = i*nxd[1]+(prb[1]-1-n);
@@ -1116,6 +1152,9 @@ void block::calc_df_szz(const double dt, fields& f, const fd_type& fd) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index = i*nxd[1]+j;
+            if (f.hetmat) {
+                nu = 0.5*f.mat[nxd[0]+index]/(f.mat[nxd[0]+index]+f.mat[nxd[1]+index]);
+            }
             f.df[5*nxd[0]+index] = nu*(f.df[2*nxd[0]+index]+f.df[4*nxd[0]+index]);
         }
     }
@@ -1220,6 +1259,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = i-mlb[0]+1;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = (mlb[0]+n)*nxd[1]+j;
@@ -1234,6 +1277,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     for (int i=mc[0]; i<mrb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
                 index2 = index1+(-fd.sbporder+1+n)*nxd[1];
@@ -1249,6 +1296,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = prb[0]-i;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[0];
+                g = dt*f.mat[nxd[0]+index1]/dx[0];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = (prb[0]-1-n)*nxd[1]+j;
@@ -1269,6 +1320,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<mc[1]; j++) {
             index1 = i*nxd[1]+j;
             index3 = j-mlb[1]+1;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<3*(fd.sbporder-1); n++) {
                 index2 = i*nxd[1]+mlb[1]+n;
@@ -1283,6 +1338,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mc[1]; j<mrb[1]; j++) {
             index1 = i*nxd[1]+j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
             invjac = invrho/f.jac[index1];
             for (int n=0; n<2*fd.sbporder-1; n++) {
                 index2 = index1-fd.sbporder+1+n;
@@ -1298,6 +1357,10 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
             for (int j=mrb[1]; j<prb[1]; j++) {
                 index1 = i*nxd[1]+j;
                 index3 = prb[1]-j;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[1];
+                    g = dt*f.mat[nxd[0]+index1]/dx[1];
+                }
                 invjac = invrho/f.jac[index1];
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
                     index2 = i*nxd[1]+(prb[1]-1-n);
@@ -1326,6 +1389,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[0];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = i-mlb[0]+1;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
@@ -1363,6 +1432,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[0];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = 0;
                 for (int n=0; n<2*fd.sbporder-1; n++) {
@@ -1400,6 +1475,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[0];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[0];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[0];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[0];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = prb[0]-i;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
@@ -1444,6 +1525,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<mc[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[1];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = j-mlb[1]+1;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
@@ -1481,6 +1568,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mc[1]; j<mrb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[1];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = 0;
                 for (int n=0; n<2*fd.sbporder-1; n++) {
@@ -1518,6 +1611,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mrb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[1];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[1];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[1];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[1];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = prb[1]-j;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
@@ -1562,6 +1661,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<mc[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[2];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[2];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[2];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[2];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = k-mlb[2]+1;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {
@@ -1599,6 +1704,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mc[2]; k<mrb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[2];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[2];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[2];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[2];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = 0;
                 for (int n=0; n<2*fd.sbporder-1; n++) {
@@ -1636,6 +1747,12 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mrb[2]; k<prb[2]; k++) {
                 index1 = i*nxd[1]+j*nxd[2]+k;
+                if (f.hetmat) {
+                    invrho = dt/f.mat[index1]/dx[2];
+                    g2lam = dt*(2.*f.mat[2*nxd[0]+index1]+f.mat[nxd[0]+index1])/dx[2];
+                    g = dt*f.mat[2*nxd[0]+index1]/dx[2];
+                    lambda = dt*f.mat[nxd[0]+index1]/dx[2];
+                }
                 invjac = invrho/f.jac[index1];
                 index3 = prb[2]-k;
                 for (int n=0; n<3*(fd.sbporder-1); n++) {

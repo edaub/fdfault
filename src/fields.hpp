@@ -28,9 +28,11 @@ private:
 	int ndim;
     int mode;
     std::string material;
-    bool heterogeneous;
+    bool hetstress;
+    bool hetmat;
     int nv;
     int ns;
+    int nmat;
     int nxyz;
     int index[6];
 	int nfields;
@@ -51,6 +53,7 @@ private:
 	coord c;
     double s0[6];
     double* s;
+    double* mat;
 	double* f;
 	double* df;
     double* x;
@@ -61,6 +64,7 @@ private:
 	MPI_Datatype slicem[3];
 	void init_exchange(const cartesian& cart);
     void read_load(const std::string loadfile);
+    void read_mat(const std::string matfile);
 };
 
 #endif

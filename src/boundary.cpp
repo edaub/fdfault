@@ -268,6 +268,10 @@ void boundary::apply_bcs(const double dt, fields& f) {
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
+                
+                // calculate index for indexing fields/change
+                
+                int index = i*nxd[1]+j*nxd[2]+k;
             
                 // find max dimension of normal vector for constructing tangent vectors
                 
@@ -290,6 +294,19 @@ void boundary::apply_bcs(const double dt, fields& f) {
                     }
                 }
                 
+                if (f.hetmat) {
+                    if (ndim == 2 && mode == 3) {
+                        cs = sqrt(f.mat[1*nxd[0]+index]/f.mat[index]);
+                        zs = f.mat[index]*cs;
+                    } else {
+                        cp = sqrt((f.mat[1*nxd[0]+index]+2.*f.mat[2*nxd[0]+index])/f.mat[index]);
+                        cs = sqrt(f.mat[2*nxd[0]+index]/f.mat[index]);
+                        zp = f.mat[index]*cp;
+                        zs = f.mat[index]*cs;
+                        gamma = 1.-2.*pow(cs/cp,2);
+                    }
+                }
+                
                 if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
                     t1[2] = 0.;
                     t1[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
@@ -306,10 +323,6 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 t2[0] = nn[1]*t1[2]-nn[2]*t1[1];
                 t2[1] = nn[2]*t1[0]-nn[0]*t1[2];
                 t2[2] = nn[0]*t1[1]-nn[1]*t1[0];
-                
-                // calculate index for indexing fields/change
-                
-                int index = i*nxd[1]+j*nxd[2]+k;
         
                 // rotate fields
 

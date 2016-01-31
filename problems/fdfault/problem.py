@@ -261,6 +261,14 @@ class problem(object):
         "Sets heterogeneous intial stress"
         self.d.set_het_stress(s)
 
+    def get_het_material(self):
+        "Returns heterogeneous material properties"
+        return self.d.get_het_stress()
+
+    def set_het_material(self,mat):
+        "Sets heterogeneous material properties"
+        self.d.set_het_material(mat)
+
     def get_nifaces(self):
         "Returns number of interfaces"
         return self.d.get_nifaces()

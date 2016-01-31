@@ -19,7 +19,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     
     // read from input file
     
-    string line, loadfile;
+    string line, loadfile, matfile;
     ifstream paramfile(filename, ios::in);
     if (paramfile.is_open()) {
         // scan to start of fields list
@@ -37,6 +37,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
                 paramfile >> s0[i];
             }
             paramfile >> loadfile;
+            paramfile >> matfile;
         }
     } else {
         cerr << "Error opening input file in fields.cpp\n";
@@ -50,10 +51,13 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     
     if (ndim == 3) {
         nfields = 9;
+        nmat = 3;
     } else if (mode == 2) {
         nfields = 5;
+        nmat = 3;
     } else {
         nfields = 3;
+        nmat = 2;
     }
     
 	if (material == "elastic") {
@@ -139,10 +143,17 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     // if problem heterogeneous, read load data from file
     
     if (loadfile == "none") {
-        heterogeneous = false;
+        hetstress = false;
     } else {
-        heterogeneous = true;
+        hetstress = true;
         read_load(loadfile);
+    }
+    
+    if (matfile == "none") {
+        hetmat = false;
+    } else {
+        hetmat = true;
+        read_mat(matfile);
     }
 	
 }
@@ -155,8 +166,12 @@ fields::~fields() {
     delete[] metric;
     delete[] jac;
     
-    if (heterogeneous) {
+    if (hetstress) {
         delete[] s;
+    }
+    
+    if (hetmat) {
+        delete[] mat;
     }
 	
 }
@@ -170,7 +185,7 @@ void fields::set_stress() {
         }
 	}
     
-    if (!heterogeneous) { return; }
+    if (!hetstress) { return; }
     
     for (int i=0; i<ns; i++) {
         for (int j=0; j<nxyz; j++) {
@@ -189,7 +204,7 @@ void fields::remove_stress() {
         }
     }
     
-    if (!heterogeneous) { return; }
+    if (!hetstress) { return; }
     
     for (int i=0; i<ns; i++) {
         for (int j=0; j<nxyz; j++) {
@@ -474,7 +489,7 @@ void fields::read_load(const string loadfile) {
     delete[] filename;
     
     if(rc != MPI_SUCCESS){
-        std::cerr << "Error opening file in fields.cpp\n";
+        std::cerr << "Error opening stress file in fields.cpp\n";
         MPI_Abort(MPI_COMM_WORLD, rc);
     }
     
@@ -546,6 +561,136 @@ void fields::read_load(const string loadfile) {
                      &s[shiftp_dest_index[i]], 1, gridslicem[i], shiftp_source[i], 2*i, comm, &status);
         MPI_Sendrecv(&s[shiftm_source_index[i]], 1, gridslicem[i], shiftm_dest[i], 2*i+1,
                      &s[shiftm_dest_index[i]], 1, gridslicep[i], shiftm_source[i], 2*i+1, comm, &status);
+    }
+    
+    // free strided arrays
+    
+    MPI_Type_free(&gridslicem[0]);
+    MPI_Type_free(&gridslicem[1]);
+    MPI_Type_free(&gridslicem[2]);
+    MPI_Type_free(&gridslicep[0]);
+    MPI_Type_free(&gridslicep[1]);
+    MPI_Type_free(&gridslicep[2]);
+    
+}
+
+void fields::read_mat(const string matfile) {
+    // read heterogeneous material data from file
+    
+    // allocate memory for stress
+    
+    mat = new double [nmat*nxyz];
+    
+    // allocate memory for array without ghost cells
+    
+    double* mat_temp;
+    
+    mat_temp = new double [nmat*c.get_nx_loc(0)*c.get_nx_loc(1)*c.get_nx_loc(2)];
+    
+    // create MPI subarray for reading distributed array
+    
+    int starts[3], nx[3], nx_loc[3];
+    
+    for (int i=0; i<3; i++) {
+        starts[i] = c.get_xm_loc(i);
+        nx[i] = c.get_nx(i);
+        nx_loc[i] = c.get_nx_loc(i);
+    }
+    
+    MPI_Datatype filearray;
+    
+    MPI_Type_create_subarray(3, nx, nx_loc, starts, MPI_ORDER_C, MPI_DOUBLE, &filearray);
+    
+    MPI_Type_commit(&filearray);
+    
+    // open file
+    
+    int rc;
+    char* filename;
+    char filetype[] = "native";
+    
+    filename = new char [matfile.size()+1];
+    strcpy(filename, matfile.c_str());
+    
+    MPI_File infile;
+    
+    rc = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &infile);
+    
+    delete[] filename;
+    
+    if(rc != MPI_SUCCESS){
+        std::cerr << "Error opening material file in fields.cpp\n";
+        MPI_Abort(MPI_COMM_WORLD, rc);
+    }
+    
+    // set view to beginning
+    
+    MPI_File_set_view(infile, (MPI_Offset)0, MPI_DOUBLE, filearray, filetype, MPI_INFO_NULL);
+    
+    // read data
+    
+    for (int i=0; i<nmat; i++) {
+        MPI_File_read(infile, &mat_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]], nx_loc[0]*nx_loc[1]*nx_loc[2], MPI_DOUBLE, MPI_STATUS_IGNORE);
+    }
+    
+    // copy to appropriate place in s array (avoid ghost cells)
+    
+    for (int i=0; i<nmat; i++) {
+        for (int j=0; j<nx_loc[0]; j++) {
+            for (int k=0; k<nx_loc[1]; k++) {
+                for (int l=0; l<nx_loc[2]; l++) {
+                    mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] = mat_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]+j*nx_loc[1]*nx_loc[2]+k*nx_loc[2]+l];
+                }
+            }
+        }
+    }
+    
+    // close file
+    
+    MPI_File_close(&infile);
+    
+    MPI_Type_free(&filearray);
+    
+    // deallocate temporary array
+    
+    delete[] mat_temp;
+    
+    // exhange data with neighbors to fill in ghost cells
+    
+    MPI_Status status;
+    
+    MPI_Datatype gridslicep[3];
+    MPI_Datatype gridslicem[3];
+    
+    // set up strided arrays for sending x data
+    
+    MPI_Type_vector(nmat,c.get_xp_ghost(0)*c.get_nx_tot(1)*c.get_nx_tot(2),c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2),
+                    MPI_DOUBLE,&gridslicep[0]);
+    MPI_Type_commit(&gridslicep[0]);
+    
+    MPI_Type_vector(nmat,c.get_xm_ghost(0)*c.get_nx_tot(1)*c.get_nx_tot(2),c.get_nx_tot(0)*c.get_nx_tot(1)*c.get_nx_tot(2),
+                    MPI_DOUBLE,&gridslicem[0]);
+    MPI_Type_commit(&gridslicem[0]);
+    
+    MPI_Type_vector(nmat*c.get_nx_tot(0),c.get_xp_ghost(1)*c.get_nx_tot(2),c.get_nx_tot(1)*c.get_nx_tot(2),MPI_DOUBLE,&gridslicep[1]);
+    MPI_Type_commit(&gridslicep[1]);
+    
+    MPI_Type_vector(nmat*c.get_nx_tot(0),c.get_xm_ghost(1)*c.get_nx_tot(2),c.get_nx_tot(1)*c.get_nx_tot(2),MPI_DOUBLE,&gridslicem[1]);
+    MPI_Type_commit(&gridslicem[1]);
+    
+    MPI_Type_vector(nmat*c.get_nx_tot(0)*c.get_nx_tot(1),c.get_xp_ghost(2),c.get_nx_tot(2),MPI_DOUBLE,&gridslicep[2]);
+    MPI_Type_commit(&gridslicep[2]);
+    
+    MPI_Type_vector(nmat*c.get_nx_tot(0)*c.get_nx_tot(1),c.get_xm_ghost(2),c.get_nx_tot(2),MPI_DOUBLE,&gridslicem[2]);
+    MPI_Type_commit(&gridslicem[2]);
+    
+    // exchange stress data
+    
+    for (int i=0; i<ndim; i++) {
+        MPI_Sendrecv(&mat[shiftp_source_index[i]], 1, gridslicep[i], shiftp_dest[i], 2*i,
+                     &mat[shiftp_dest_index[i]], 1, gridslicem[i], shiftp_source[i], 2*i, comm, &status);
+        MPI_Sendrecv(&mat[shiftm_source_index[i]], 1, gridslicem[i], shiftm_dest[i], 2*i+1,
+                     &mat[shiftm_dest_index[i]], 1, gridslicep[i], shiftm_source[i], 2*i+1, comm, &status);
     }
     
     // free strided arrays

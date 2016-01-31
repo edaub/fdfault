@@ -346,7 +346,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     cs2 = b2->get_cs();
     zp2 = b2->get_zp();
     zs2 = b2->get_zs();
-    gamma1 = 1.-2.*pow(cs1/cp2,2);
+    gamma1 = 1.-2.*pow(cs1/cp1,2);
     gamma2 = 1.-2.*pow(cs2/cp2,2);
     
     // create surface for interface
@@ -578,6 +578,11 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
                 
+                // calculate index
+                
+                index1 = i*nxd[1]+j*nxd[2]+k;
+                index2 = (i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2];
+                
                 // find max dimension of normal vector for constructing tangent vectors
                 
                 switch (direction) {
@@ -593,12 +598,36 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                         ii = i-mlb[0];
                         jj = j-mlb[1];
                 }
-                
+
                 if (data1) {
                     h1 = dt*dl1[ii][jj];
+                    if (f.hetmat) {
+                        if (ndim == 2 && mode == 3) {
+                            cs1 = sqrt(f.mat[nxd[0]+index1]/f.mat[index1]);
+                            zs1 = f.mat[index1]*cs1;
+                        } else {
+                            cp1 = sqrt((f.mat[nxd[0]+index1]+2.*f.mat[2*nxd[0]+index1])/f.mat[index1]);
+                            cs1 = sqrt(f.mat[2*nxd[0]+index1]/f.mat[index1]);
+                            zp1 = f.mat[index1]*cp1;
+                            zs1 = f.mat[index1]*cs1;
+                            gamma1 = 1.-2.*pow(cs1/cp1,2);
+                        }
+                    }
                 }
                 if (data2) {
                     h2 = dt*dl2[ii][jj];
+                    if (f.hetmat) {
+                        if (ndim == 2 && mode == 3) {
+                            cs2 = sqrt(f.mat[nxd[0]+index2]/f.mat[index2]);
+                            zs2 = f.mat[index2]*cs2;
+                        } else {
+                            cp2 = sqrt((f.mat[nxd[0]+index2]+2.*f.mat[2*nxd[0]+index2])/f.mat[index2]);
+                            cs2 = sqrt(f.mat[2*nxd[0]+index2]/f.mat[index2]);
+                            zp2 = f.mat[index2]*cp2;
+                            zs2 = f.mat[index2]*cs2;
+                            gamma2 = 1.-2.*pow(cs2/cp2,2);
+                        }
+                    }
                 }
 				
                 for (int l=0; l<ndim; l++) {
@@ -625,9 +654,6 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                 // rotate fields
                 
                 boundfields b1, b2, b_rot1, b_rot2, b_rots1, b_rots2;
-
-                index1 = i*nxd[1]+j*nxd[2]+k;
-                index2 = (i+delta[0])*nxd[1]+(j+delta[1])*nxd[2]+k+delta[2];
                 
                 switch (ndim) {
                     case 3:
@@ -649,7 +675,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                         b2.s22 = f.f[6*nxd[0]+index2]+f.s0[3];
                         b2.s23 = f.f[7*nxd[0]+index2]+f.s0[4];
                         b2.s33 = f.f[8*nxd[0]+index2]+f.s0[5];
-                        if (f.heterogeneous) {
+                        if (f.hetstress) {
                             b1.s11 += f.s[0*nxd[0]+index1];
                             b1.s12 += f.s[1*nxd[0]+index1];
                             b1.s13 += f.s[2*nxd[0]+index1];
@@ -685,7 +711,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                 b2.s22 = f.f[4*nxd[0]+index2]+f.s0[3];
                                 b2.s23 = 0.;
                                 b2.s33 = 0.;
-                                if (f.heterogeneous) {
+                                if (f.hetstress) {
                                     b1.s11 += f.s[0*nxd[0]+index1];
                                     b1.s12 += f.s[1*nxd[0]+index1];
                                     b1.s22 += f.s[2*nxd[0]+index1];
@@ -713,7 +739,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                                 b2.s22 = f.s0[3];
                                 b2.s23 = f.f[2*nxd[0]+index2]+f.s0[4];
                                 b2.s33 = 0.;
-                                if (f.heterogeneous) {
+                                if (f.hetstress) {
                                     b1.s13 += f.s[0*nxd[0]+index1];
                                     b1.s23 += f.s[1*nxd[0]+index1];
                                     b2.s13 += f.s[0*nxd[0]+index2];
@@ -734,7 +760,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                 
                 iffields iffhat;
                 
-                iffhat = solve_interface(b_rot1, b_rot2, ii, jj, t);
+                iffhat = solve_interface(b_rot1, b_rot2, zp1, zs1, zp2, zs2, ii, jj, t);
                 
                 // if not updating, skip remainder of loop
                 
@@ -909,7 +935,7 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
     
 }
 
-iffields interface::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t) {
+iffields interface::solve_interface(const boundfields b1, const boundfields b2, const double zp1, const double zs1, const double zp2, const double zs2, const int i, const int j, const double t) {
     // solves boundary condition for a locked interface
     
     ifchar ifcp, ifcs1, ifcs2, ifchatp, ifchats1, ifchats2;

@@ -252,7 +252,7 @@ friction::~friction() {
 
 }
 
-iffields friction::solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t) {
+iffields friction::solve_interface(const boundfields b1, const boundfields b2, const double zp1, const double zs1, const double zp2, const double zs2, const int i, const int j, const double t) {
     // solves boundary conditions for a frictionless interface
     
     ifchar ifcp, ifchatp;

@@ -569,6 +569,18 @@ class domain(object):
             assert (s.shape[1:] == self.nx[0:2]), "heterogeneous stress shape must match grid sizes"
         self.f.set_het_stress(s)
 
+    def get_het_material(self):
+        "Returns heterogeneous material properties"
+        return self.f.get_het_material()
+
+    def set_het_material(self,mat):
+        "Sets heterogeneous material properties"
+        if self.ndim == 3:
+            assert (mat.shape[1:] == self.nx), "heterogeneous material properties shape must match grid sizes"
+        else:
+            assert (mat.shape[1:] == self.nx[0:2]), "heterogeneous material properties shape must match grid sizes"
+        self.f.set_het_material(mat)
+
     def get_nifaces(self):
         "Returns number of interfaces"
         return self.nifaces

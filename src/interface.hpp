@@ -73,7 +73,7 @@ protected:
     double* state;
     void allocate_normals(const double dx1[3], const double dx2[3], const fields& f, const fd_type& fd);
     void deallocate_normals();
-    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const double zp1, const double zs1, const double zp2, const double zs2, const int i, const int j, const double t);
     ifchar solve_locked(const ifchar ifc, const double z1, const double z2);
 };
 

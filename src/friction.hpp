@@ -35,7 +35,7 @@ protected:
     void read_load(const std::string loadfile, const bool data_proc);
     void read_state(const std::string statefile, const bool data_proc);
     virtual void read_params(const std::string paramfile, const bool data_proc);
-    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const int i, const int j, const double t);
+    virtual iffields solve_interface(const boundfields b1, const boundfields b2, const double zp1, const double zs1, const double zp2, const double zs2, const int i, const int j, const double t);
     virtual iffields solve_friction(iffields iffin, double snc, const double z1, const double z2, const int i, const int j, const double t);
     virtual boundchar solve_fs(const double phi, const double eta, const double snc, const int i, const int j, const double t);
     virtual double calc_mu(const double phi, const double eta, const double snc, const int i, const int j, const double t) const;

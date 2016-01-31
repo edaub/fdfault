@@ -12,6 +12,7 @@ class fields(object):
         self.material = "elastic"
         self.s0 = [0., 0., 0., 0., 0., 0.]
         self.s = None
+        self.mat = None
         
     def get_material(self):
         "Returns material type"
@@ -54,6 +55,21 @@ class fields(object):
                 assert(s.shape[0] == 2), "for mode 3 problems, heterogeneous stress must have 2 components"
         self.s = np.array(s)
 
+    def get_het_material(self):
+        "returns hetergeneous material properties"
+        return np.array(self.mat)
+
+    def set_het_material(self, mat):
+        """
+        sets heterogeneous material properties
+        note: no grid information here, so number of grid points already checked at domain level
+        """
+        if self.ndim == 2 and self.mode == 3:
+            assert(mat.shape[0] == 2), "for mode 3 problems, heterogeneous material properties must have 2 components"
+        else:
+            assert(mat.shape[0] == 3), "for 3D or mode 2 problems, heterogeneous material properties must have 3 components"
+        self.mat = np.array(mat)
+
     def write_input(self,f, probname, endian = '='):
         "Writes field information to input file"
         f.write("[fdfault.fields]\n")
@@ -69,7 +85,15 @@ class fields(object):
             loadfile = open(probname+".load","wb")
             loadfile.write(self.s.astype(endian+'f8').tobytes())
             loadfile.close()
+        if self.mat is None:
+            f.write("none\n")
+        else:
+            f.write("problems/"+probname+".mat\n")
+            matfile = open(probname+".mat","wb")
+            matfile.write(self.mat.astype(endian+'f8').tobytes())
+            matfile.close()
         f.write("\n")
 
     def __str__(self):
-        return ("Fields:\nmaterial = "+str(self.material)+"\ns = "+str(self.s))
+        return ("Fields:\nmaterial = "+str(self.material)+"\ns0 = "
+                +str(self.s0)+"\ns = "+str(self.s)+"\nmat = "+str(self.mat))
