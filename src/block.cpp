@@ -349,17 +349,24 @@ double block::get_min_dx(fields& f) const {
     
     if (no_data) {return 0.;}
     
-    double dxtest, dxmax = 0.;
+    int index;
+    double cs, dxtest, dxmax = 0.;
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
             for (int k=mlb[2]; k<prb[2]; k++) {
+                index = i*nxd[1]+j*nxd[2]+k;
                 for (int l=0; l<ndim; l++) {
                     dxtest = 0.;
                     for (int m=0; m<ndim; m++) {
-                        dxtest += pow(f.metric[l*ndim*nxd[0]+m*nxd[0]+i*nxd[1]+j*nxd[2]+k],2);
+                        dxtest += pow(f.metric[l*ndim*nxd[0]+m*nxd[0]+index],2);
                     }
-                    dxtest = sqrt(dxtest)/dx[l];
+                    if (f.hetmat) {
+                        cs = sqrt(f.mat[2*nxd[0]+index]/f.mat[index]);
+                    } else {
+                        cs = mat.get_cs();
+                    }
+                    dxtest = cs*sqrt(dxtest)/dx[l];
                     if (dxtest > dxmax) {
                         dxmax = dxtest;
                     }
@@ -368,7 +375,7 @@ double block::get_min_dx(fields& f) const {
         }
     }
     
-    return 1./dxmax/mat.get_cs();
+    return 1./dxmax;
 
 }
 
