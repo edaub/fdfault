@@ -54,7 +54,7 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
 
     for i in range(h_vel.nt):
         f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_vel.t[i], h_disp[i], h_vel.vx[i],
-                                                               v_disp[i], v_vel.vz[i], n_disp[i], n_vel.vy[i]))
+                                                               depthsign*v_disp[i], depthsign*v_vel.vz[i], n_disp[i], n_vel.vy[i]))
 
     f.close()
 
