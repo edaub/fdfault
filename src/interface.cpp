@@ -143,9 +143,13 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
             break;
     }
     
-    // if this interface is contained in this process, proceed
+    // if this interface is contained in this process, proceed (but must set data1 and data2, as these must be defined to read friction and load parameters for frictional interfaces)
     
-    if (no_data) { return; }
+    if (no_data) {
+        data1 = false;
+        data2 = false;
+        return;
+    }
     
     switch (direction) {
         case 0:
