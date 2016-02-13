@@ -423,6 +423,7 @@ void block::calc_plastic(const double dt, fields& f) {
     
     plastp s_out, s_in;
     int index;
+    double k, g;
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -468,9 +469,17 @@ void block::calc_plastic(const double dt, fields& f) {
                         }
                 }
                 
+                if (f.hetmat) {
+                    k = f.mat[nxd[0]+index]+2./3.*f.mat[2*nxd[0]+index];
+                    g = f.mat[2*nxd[0]+index];
+                } else {
+                    k = mat.get_lambda()+2./3.*mat.get_g();
+                    g = mat.get_g();
+                }
+                
                 // solve plasticity equations
                 
-                s_out = plastic_flow(dt, s_in);
+                s_out = plastic_flow(dt, s_in, k, g);
                 
                 // adjust stress values
                 
@@ -508,7 +517,7 @@ void block::calc_plastic(const double dt, fields& f) {
     }
 }
 
-plastp block::plastic_flow(const double dt, const plastp s_in) const {
+plastp block::plastic_flow(const double dt, const plastp s_in, const double k, const double g) const {
     // solves for stresses and plastic strain
     
     // calculate shear and normal stresses
@@ -524,8 +533,6 @@ plastp block::plastic_flow(const double dt, const plastp s_in) const {
     
     double sd[6];
     
-    double k = mat.get_lambda()+2./3.*mat.get_g();
-    
     if (y <= 0.) {
         
         // no yielding, return existing stress and set lambda = 0
@@ -539,10 +546,10 @@ plastp block::plastic_flow(const double dt, const plastp s_in) const {
         
         // solve for lambda
         
-        if (tau*mat.get_mu()*mat.get_beta()*k > (mat.get_mu()*sigma-mat.get_c())*mat.get_g()) {
-            s_out.lambda = (tau+mat.get_mu()*sigma-mat.get_c())/(mat.get_eta()+dt*(mat.get_g()+mat.get_mu()*mat.get_beta()*k));
+        if (tau*mat.get_mu()*mat.get_beta()*k > (mat.get_mu()*sigma-mat.get_c())*g) {
+            s_out.lambda = (tau+mat.get_mu()*sigma-mat.get_c())/(mat.get_eta()+dt*(g+mat.get_mu()*mat.get_beta()*k));
         } else { // special case
-            s_out.lambda = tau/(mat.get_eta()+dt*mat.get_g());
+            s_out.lambda = tau/(mat.get_eta()+dt*g);
         }
         
         // update gammap
@@ -560,13 +567,13 @@ plastp block::plastic_flow(const double dt, const plastp s_in) const {
         
         // correct tau and sigma
         
-        tau -= dt*s_out.lambda*mat.get_g();
+        tau -= dt*s_out.lambda*g;
         sigma -= dt*s_out.lambda*mat.get_beta()*k;
         
         // correct deviatoric stress
         
         for (int i = 0; i<6; i++) {
-            sd[i] *= tau/(tau+dt*s_out.lambda*mat.get_g());
+            sd[i] *= tau/(tau+dt*s_out.lambda*g);
         }
         
         // set new stresses from deviatoric stress
