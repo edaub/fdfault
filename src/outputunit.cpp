@@ -25,10 +25,12 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         assert(d.is_plastic);
     }
     
-    // set input parameters
-    
     ndim = d.get_ndim();
     mode = d.get_mode();
+    
+    if (ndim == 2 && mode == 2 && field_in == "szz") {
+        assert(d.is_plastic);
+    }
     
     // set pointer to next unit to null pointer
     
