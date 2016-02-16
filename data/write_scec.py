@@ -245,12 +245,12 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
     for i in range(v_slip.nt):
         if normal:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
-                                                               0., v_slip.Uy[i], v_slip_rate.Vy[i],
-                                                                     v_shear_stress.Sy[i], n_stress.Sn[i]))
+                                                               0., depthsign*v_slip.Uy[i], depthsign*v_slip_rate.Vy[i],
+                                                                     depthsign*v_shear_stress.Sy[i], n_stress.Sn[i]))
         else:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
-                                                               0., v_slip.Uy[i], v_slip_rate.Vy[i],
-                                                                     v_shear_stress.Sy[i]))
+                                                               0., depthsign*v_slip.Uy[i], depthsign*v_slip_rate.Vy[i],
+                                                                     depthsign*v_shear_stress.Sy[i]))
 
     f.close()
 
