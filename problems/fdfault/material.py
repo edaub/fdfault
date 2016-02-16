@@ -14,7 +14,7 @@ class material(object):
         assert(g > 0.)
         assert(mu > 0.)
         assert(beta >= 0.)
-        assert(eta > 0.)
+        assert(eta >= 0.)
         assert(c >= 0.)
         self.mattype = mattype
         self.rho = rho

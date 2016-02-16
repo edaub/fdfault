@@ -64,7 +64,7 @@ void material::set_beta(const double newbeta) {
 void material::set_eta(const double neweta) {
     // sets plasticity viscosity
     
-    assert(neweta > 0.);
+    assert(neweta >= 0.);
     
     eta = neweta;
 }

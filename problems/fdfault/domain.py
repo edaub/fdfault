@@ -275,6 +275,7 @@ class domain(object):
         if coords is None:
             if self.f.get_material() != newmaterial.get_type():
                 print("Changing domain material type")
+                self.mattype = newmaterial.get_type()
                 self.f.set_material(newmaterial.get_type())
             for b1 in self.blocks:
                 for b2 in b1:
