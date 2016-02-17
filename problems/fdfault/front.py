@@ -41,7 +41,7 @@ class front(object):
         f.write(str(int(self.output))+"\n")
         if self.output:
             f.write(self.field+"\n")
-            f.write(str(self.value)+"\n")
+            f.write(repr(self.value)+"\n")
         
     def __str__(self):
         outstr = "Front: output = "+str(self.output)

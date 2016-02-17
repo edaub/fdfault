@@ -367,12 +367,12 @@ class block(object):
         self.m.write_input(f)
         outstring = ""
         for i in range(self.ndim):
-            outstring += str(self.xm[i])+" "
+            outstring += repr(self.xm[i])+" "
         outstring = outstring[0:-1]
         f.write(outstring+"\n")
         outstring = ""
         for i in range(self.ndim):
-            outstring += str(self.lx[i])+" "
+            outstring += repr(self.lx[i])+" "
         outstring = outstring[0:-1]
         f.write(outstring+"\n")
         for btype in self.bounds:

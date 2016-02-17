@@ -75,7 +75,7 @@ class fields(object):
         f.write("[fdfault.fields]\n")
         outstring = ""
         for sc in self.s0:
-            outstring += str(sc)+" "
+            outstring += repr(sc)+" "
         outstring = outstring[0:-1]
         f.write(outstring+"\n")
         if self.s is None:

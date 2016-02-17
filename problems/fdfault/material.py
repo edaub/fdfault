@@ -116,9 +116,10 @@ class material(object):
     def write_input(self,f):
         "Writes material properties to input file"
         if self.mattype == "elastic":
-            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+"\n")
+            f.write(repr(self.get_rho())+" "+repr(self.get_lam())+" "+repr(self.get_g())+"\n")
         else:
-            f.write(str(self.get_rho())+" "+str(self.get_lam())+" "+str(self.get_g())+" "+str(self.get_mu())+" "+str(self.get_c())+" "+str(self.get_beta())+" "+str(self.get_eta())+"\n")
+            f.write(repr(self.get_rho())+" "+repr(self.get_lam())+" "+repr(self.get_g())+" "+
+                    repr(self.get_mu())+" "+repr(self.get_c())+" "+repr(self.get_beta())+" "+repr(self.get_eta())+"\n")
 
     def __str__(self):
         'returns string representation'

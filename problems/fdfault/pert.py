@@ -73,8 +73,8 @@ class pert(object):
 
     def write_input(self, f):
         "Writes perturbation to input file"
-        f.write(self.loadtype+" "+str(self.t0)+" "+str(self.x0)+" "+str(self.dx)+" "+str(self.y0)+
-                " "+str(self.dy))
+        f.write(self.loadtype+" "+repr(self.t0)+" "+repr(self.x0)+" "+repr(self.dx)+" "+repr(self.y0)+
+                " "+repr(self.dy))
 
     def __str__(self):
         "Returns a string representation"
@@ -119,7 +119,7 @@ class load(pert):
     def write_input(self, f):
         "Writes loads to input file"
         pert.write_input(self, f)
-        f.write(" "+str(self.sn)+" "+str(self.s2)+" "+str(self.s3)+"\n")
+        f.write(" "+repr(self.sn)+" "+repr(self.s2)+" "+repr(self.s3)+"\n")
 
     def __str__(self):
         "Returns a string representation"
@@ -190,8 +190,8 @@ class swparam(pert):
     def write_input(self, f):
         "Writes loads to input file"
         pert.write_input(self, f)
-        f.write(" "+str(self.dc)+" "+str(self.mus)+" "+str(self.mud)+" "+str(self.c0)+" "+
-                str(self.trup)+" "+str(self.t0)+"\n")
+        f.write(" "+repr(self.dc)+" "+repr(self.mus)+" "+repr(self.mud)+" "+repr(self.c0)+" "+
+                repr(self.trup)+" "+repr(self.t0)+"\n")
 
     def __str__(self):
         "Returns a string representation"
@@ -292,8 +292,8 @@ class stzparam(pert):
     def write_input(self, f):
         "Writes loads to input file"
         pert.write_input(self, f)
-        f.write(" "+str(self.v0)+" "+str(self.f0)+" "+str(self.a)+" "+str(self.muy)+" "+str(self.c0)+" "+str(self.R)
-                +" "+str(self.beta)+" "+str(self.chiw)+" "+str(self.v1)+"\n")
+        f.write(" "+repr(self.v0)+" "+repr(self.f0)+" "+repr(self.a)+" "+repr(self.muy)+" "+repr(self.c0)+" "+repr(self.R)
+                +" "+repr(self.beta)+" "+repr(self.chiw)+" "+repr(self.v1)+"\n")
 
     def __str__(self):
         "Returns a string representation"
