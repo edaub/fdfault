@@ -7,7 +7,7 @@
 class cartesian
 { friend class fields;
 public:
-	cartesian(const int ndim_in, const int nx_in[3], const int nblocks[3], int** nx_block, int** xm_block, const int sbporder);
+	cartesian(const char* filename, const int ndim_in, const int nx_in[3], const int nblocks[3], int** nx_block, int** xm_block, const int sbporder);
 	int get_nproc(const int direction) const;
 	int get_coords(const int direction) const;
 	int get_nx(const int index) const;

@@ -122,6 +122,19 @@ class problem(object):
         "Sets rupture mode"
         self.d.set_mode(mode)
 
+    def get_nproc(self):
+        "Returns number of processes (in x, y, z directions). 0 means MPI will do the domain decomposition in that direction automatically"
+        return self.d.get_nproc()
+
+    def set_nproc(self, nproc):
+        """
+        Sets number of processes in domain decomposition manually
+        nproc must be a tuple/list of nonnegative integers
+        If the problem is 2D, the z direction will automatically be set to 1
+        Any number can be set to zero, in which case MPI will set the number of processes in that direction automatically
+        """
+        self.d.set_nproc(nproc)
+
     def get_nx(self):
         "Returns number of spatial grid points"
         return self.d.get_nx()

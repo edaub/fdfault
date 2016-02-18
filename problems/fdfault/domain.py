@@ -20,6 +20,7 @@ class domain(object):
         self.nifaces = 0
         self.iftype = []
         self.sbporder = 2
+        self.nproc = (0, 0, 0)
 
         self.f = fields(self.ndim, self.mode)
         self.blocks = ([[[block(self.ndim, self.mode, (self.nx_block[0][0], self.nx_block[1][0], self.nx_block[2][0]),
@@ -79,6 +80,24 @@ class domain(object):
         "Sets finite difference order, must be an integer between 2 and 4"
         assert sbporder == 2 or sbporder == 3 or sbporder == 4, "Finite difference order must be between 2 and 4"
         self.sbporder = int(sbporder)
+
+    def get_nproc(self):
+        "Returns number of processes (in x, y, z directions). 0 means MPI will do the domain decomposition in that direction automatically"
+        return self.nproc
+
+    def set_nproc(self, nproc):
+        """
+        Sets number of processes in domain decomposition manually
+        nproc must be a tuple/list of nonnegative integers
+        If the problem is 2D, the z direction will automatically be set to 1
+        Any number can be set to zero, in which case MPI will set the number of processes in that direction automatically
+        """
+        assert len(nproc) == 3, "number of processes must be length 3"
+        for i in range(3):
+            assert nproc[i] >= 0, "number of processes must be a nonnegative integer"
+        self.nproc = (int(nproc[0]), int(nproc[1]), int(nproc[2]))
+        if self.ndim == 2:
+            self.nproc[2] = 1
 
     def get_nx(self):
         "Returns number of grid points"
@@ -764,6 +783,12 @@ class domain(object):
         f.write(str(self.sbporder)+"\n")
         f.write(self.mattype+"\n")
         f.write("\n")
+
+        if not self.nproc == (0, 0, 0):
+            f.write("[fdfault.cartesian]\n")
+            f.write(str(self.nproc[0])+" "+str(self.nproc[1])+" "+str(self.nproc[2])+"\n")
+            f.write("\n")
+        
         self.f.write_input(f, probname, endian)
 
         for b1 in self.blocks:

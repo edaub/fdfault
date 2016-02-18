@@ -119,7 +119,7 @@ domain::domain(const char* filename) {
     
 	// set up cartesian type to hold domain decomposition information
 	
-	cart = new cartesian(ndim, nx, nblocks, nx_block, xm_block, sbporder);
+	cart = new cartesian(filename, ndim, nx, nblocks, nx_block, xm_block, sbporder);
     
     f = new fields(filename, ndim, mode, material, *cart);
 	
