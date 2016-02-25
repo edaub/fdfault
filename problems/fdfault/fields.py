@@ -30,9 +30,11 @@ class fields(object):
     def set_stress(self, s):
         "Sets uniform intial stress"
         assert len(s) == 6, "Initial stress must hav 6 components"
+        sfloat = []
         for sc in s:
-            assert (type(sc) is float or type(sc) is int), "Initial stress must be a number"
-        self.s0 = list(s)
+            assert (type(float(sc)) is float), "Initial stress components must be a number"
+            sfloat.append(float(sc))
+        self.s0 = list(sfloat)
 
     def get_het_stress(self):
         "returns hetergeneous initial stress"
