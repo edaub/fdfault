@@ -57,6 +57,8 @@ private:
 	boundary** bound;
     material mat;
     double xfact;
+    bool dissipation;
+    double cdiss;
     void calc_process_info(const cartesian& cart, const int sbporder);
     void set_grid(surface** surf, fields& f, const cartesian& cart, const fd_type& fd);
     void calc_df_mode2(const double dt, fields& f, const fd_type& fd);

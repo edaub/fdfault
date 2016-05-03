@@ -135,6 +135,17 @@ class problem(object):
         """
         self.d.set_nproc(nproc)
 
+    def get_cdiss(self):
+        "Returns dissipation coefficient"
+        return self.d.get_cdiss()
+
+    def set_cdiss(self, cdiss):
+        """
+        Sets dissipation coefficient
+        Must be nonnegative, if set to zero will not use artificial dissipation
+        """
+        self.d.set_cdiss(cdiss)
+
     def get_nx(self):
         "Returns number of spatial grid points"
         return self.d.get_nx()

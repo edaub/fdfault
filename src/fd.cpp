@@ -94,7 +94,7 @@ fd_type::fd_type(int order) {
             
             // version from fdmap code (unsure of source) with dissipation operator
             
-/*			fdcoeff[1][0] = -1.582533518939116; fdcoeff[1][1] = 2.033378678700676; fdcoeff[1][2] = -0.141512858744873; fdcoeff[1][3] = -0.450398306578272; fdcoeff[1][4] = 0.104488069284042; fdcoeff[1][5] = 0.036577936277544; fdcoeff[1][6] = 0.; fdcoeff[1][7] = 0.; fdcoeff[1][8] = 0.;
+			fdcoeff[1][0] = -1.582533518939116; fdcoeff[1][1] = 2.033378678700676; fdcoeff[1][2] = -0.141512858744873; fdcoeff[1][3] = -0.450398306578272; fdcoeff[1][4] = 0.104488069284042; fdcoeff[1][5] = 0.036577936277544; fdcoeff[1][6] = 0.; fdcoeff[1][7] = 0.; fdcoeff[1][8] = 0.;
 			fdcoeff[2][0] = -0.462059195631158; fdcoeff[2][1] = 0.; fdcoeff[2][2] = 0.287258622978251; fdcoeff[2][3] = 0.258816087376832; fdcoeff[2][4] = -0.069112065532624; fdcoeff[2][5] = -0.014903449191300; fdcoeff[2][6] = 0.; fdcoeff[2][7] = 0.; fdcoeff[2][8] = 0.;
 			fdcoeff[3][0] = 0.071247104721830; fdcoeff[3][1] = -0.636451095137907; fdcoeff[3][2] = 0.; fdcoeff[3][3] = 0.606235523609147; fdcoeff[3][4] = -0.022902190275815; fdcoeff[3][5] = -0.018129342917256; fdcoeff[3][6] = 0.; fdcoeff[3][7] = 0.; fdcoeff[3][8] = 0.;
 			fdcoeff[4][0] = 0.114713313798970; fdcoeff[4][1] = -0.290087484386815; fdcoeff[4][2] = -0.306681191361148; fdcoeff[4][3] = 0.; fdcoeff[4][4] = 0.520262285050482; fdcoeff[4][5] = -0.051642265516119; fdcoeff[4][6] = 0.013435342414630; fdcoeff[4][7] = 0.; fdcoeff[4][8] = 0.;
@@ -105,16 +105,16 @@ fd_type::fd_type(int order) {
 			disscoeff[3][0] = -0.159350793065290; disscoeff[3][1] = 0.557727775728513; disscoeff[3][2] = -0.743637034304685; disscoeff[3][3] = 0.478052379195869; disscoeff[3][4] = -0.159350793065290; disscoeff[3][5] = 0.026558465510882; disscoeff[3][6] = 0.; disscoeff[3][7] = 0.; disscoeff[3][8] = 0.;
 			disscoeff[4][0] = 0.026870684829259; disscoeff[4][1] = -0.120918081731666; disscoeff[4][2] = 0.241836163463333; disscoeff[4][3] = -0.282142190707221; disscoeff[4][4] = 0.201530136219444; disscoeff[4][5] = -0.080612054487778; disscoeff[4][6] = 0.013435342414630; disscoeff[4][7] = 0.; disscoeff[4][8] = 0.;
 			disscoeff[5][0] = 0.; disscoeff[5][1] = 0.018281071473911; disscoeff[5][2] = -0.109686428843468; disscoeff[5][3] = 0.274216072108671; disscoeff[5][4] = -0.365621429478228; disscoeff[5][5] = 0.274216072108671; disscoeff[5][6] = -0.109686428843468; disscoeff[5][7] = 0.018281071473911; disscoeff[5][8] = 0.;
-            disscoeff[6][0] = 0.; disscoeff[6][1] = 0.; disscoeff[6][2] = 0.016437980868017; disscoeff[6][3] = -0.098627885208100; disscoeff[6][4] = 0.246569713020251; disscoeff[6][5] = -0.328759617360334; disscoeff[6][6] = 0.246569713020251; disscoeff[6][7] = -0.098627885208100; disscoeff[6][8] = 0.016437980868017;*/
+            disscoeff[6][0] = 0.; disscoeff[6][1] = 0.; disscoeff[6][2] = 0.016437980868017; disscoeff[6][3] = -0.098627885208100; disscoeff[6][4] = 0.246569713020251; disscoeff[6][5] = -0.328759617360334; disscoeff[6][6] = 0.246569713020251; disscoeff[6][7] = -0.098627885208100; disscoeff[6][8] = 0.016437980868017;
             
             // minimum width version from Strand (1994)
             
-			fdcoeff[1][0] = -21600./13649.; fdcoeff[1][1] = 81763./40947.; fdcoeff[1][2] = 131./27298.; fdcoeff[1][3] = -9143./13649.; fdcoeff[1][4] = 20539./81894.; fdcoeff[1][5] = 0.; fdcoeff[1][6] = 0.; fdcoeff[1][7] = 0.; fdcoeff[1][8] = 0.;
+/*			fdcoeff[1][0] = -21600./13649.; fdcoeff[1][1] = 81763./40947.; fdcoeff[1][2] = 131./27298.; fdcoeff[1][3] = -9143./13649.; fdcoeff[1][4] = 20539./81894.; fdcoeff[1][5] = 0.; fdcoeff[1][6] = 0.; fdcoeff[1][7] = 0.; fdcoeff[1][8] = 0.;
             fdcoeff[2][0] = -81763./180195.; fdcoeff[2][1] = 0.; fdcoeff[2][2] = 7357./36039.; fdcoeff[2][3] = 30637./72078.; fdcoeff[2][4] = -2328./12013.; fdcoeff[2][5] = 6611./360390.; fdcoeff[2][6] = 0.; fdcoeff[2][7] = 0.; fdcoeff[2][8] = 0.;
             fdcoeff[3][0] = -131./54220.; fdcoeff[3][1] = -7357./16266.; fdcoeff[3][2] = 0.; fdcoeff[3][3] = 645./2711.; fdcoeff[3][4] = 11237./32532.; fdcoeff[3][5] = -3487./27110.; fdcoeff[3][6] = 0.; fdcoeff[3][7] = 0.; fdcoeff[3][8] = 0.;
             fdcoeff[4][0] = 9143./53590.; fdcoeff[4][1] = -30637./64308.; fdcoeff[4][2] = -645./5359.; fdcoeff[4][3] = 0.; fdcoeff[4][4] = 13733./32154.; fdcoeff[4][5] = -67./4660.; fdcoeff[4][6] = 72./5359.; fdcoeff[4][7] = 0.; fdcoeff[4][8] = 0.;
             fdcoeff[5][0] = -20539./236310.; fdcoeff[5][1] = 2328./7877.; fdcoeff[5][2] = -11237./47262.; fdcoeff[5][3] = -13733./23631.; fdcoeff[5][4] = 0.; fdcoeff[5][5] = 89387./118155.; fdcoeff[5][6] = -1296./7877.; fdcoeff[5][7] = 144./7877.; fdcoeff[5][8] = 0.;
-            fdcoeff[6][0] = 0.; fdcoeff[6][1] = -6611./262806.; fdcoeff[6][2] = 3487./43801.; fdcoeff[6][3] = 1541./87602.; fdcoeff[6][4] = -89387./131403.; fdcoeff[6][5] = 0.; fdcoeff[6][6] = 32400./43801.; fdcoeff[6][7] = -6480./43801.; fdcoeff[6][8] = 720./43801.;
+            fdcoeff[6][0] = 0.; fdcoeff[6][1] = -6611./262806.; fdcoeff[6][2] = 3487./43801.; fdcoeff[6][3] = 1541./87602.; fdcoeff[6][4] = -89387./131403.; fdcoeff[6][5] = 0.; fdcoeff[6][6] = 32400./43801.; fdcoeff[6][7] = -6480./43801.; fdcoeff[6][8] = 720./43801.;*/
             
 			// boundary norm
 			h0 = 13649./43200.;

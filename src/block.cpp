@@ -83,6 +83,27 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
                 paramfile >> boundfile[i];
             }
         }
+        // return to beginning to find operator list
+        paramfile.clear();
+        paramfile.seekg(0, ios::beg);
+        // scan to start of appropriate block list
+        while (getline(paramfile,line)) {
+            if (line == "[fdfault.operator]") {
+                break;
+            }
+        }
+        // if end of file, set cdiss = 0.
+        if (paramfile.eof()) {
+            cdiss = 0.;
+            dissipation = false;
+        } else {
+            // read block variables
+            paramfile >> cdiss;
+            dissipation = false;
+            if (cdiss > 0.) {
+                dissipation = true;
+            }
+        }
     } else {
         cerr << "Error opening input file in block.cpp\n";
         MPI_Abort(MPI_COMM_WORLD,-1);
@@ -1001,6 +1022,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                                   f.metric[nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                                 lambda*f.metric[index1]*f.f[index2]);
+                if (cdiss > 0.) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1029,6 +1057,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                              f.metric[nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                            lambda*f.metric[index1]*f.f[index2]);
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1058,6 +1093,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                                   f.metric[nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                                 lambda*f.metric[index1]*f.f[index2]);
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1094,6 +1136,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                              f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                                 lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1122,6 +1171,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                              f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] += fd.fdcoeff[0][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                            lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1151,6 +1207,13 @@ void block::calc_df_mode2(const double dt, fields& f, const fd_type& fd) {
                                                                   f.metric[(ndim+1)*nxd[0]+index1]*f.f[index2]);
                 f.df[4*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]+
                                                                 lambda*f.metric[ndim*nxd[0]+index1]*f.f[index2]);
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                    f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                    f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1284,6 +1347,11 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
                                                                              f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+index1] += g*f.metric[index1]*fd.fdcoeff[index3][n]*f.f[index2];
                 f.df[2*nxd[0]+index1] += g*f.metric[nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1302,6 +1370,11 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
                                                                              f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+index1] += g*f.metric[index1]*fd.fdcoeff[0][n]*f.f[index2];
                 f.df[2*nxd[0]+index1] += g*f.metric[nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1321,6 +1394,11 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
                                                                              f.metric[nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+index1] -= g*f.metric[index1]*fd.fdcoeff[index3][n]*f.f[index2];
                 f.df[2*nxd[0]+index1] -= g*f.metric[nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1345,6 +1423,11 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
                                                                             f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+i*nxd[1]+j] += g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
                 f.df[2*nxd[0]+i*nxd[1]+j] += g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1363,25 +1446,35 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
                                                                             f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+i*nxd[1]+j] += g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
                 f.df[2*nxd[0]+i*nxd[1]+j] += g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[0][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
     
-        for (int i=mlb[0]; i<prb[0]; i++) {
-            for (int j=mrb[1]; j<prb[1]; j++) {
-                index1 = i*nxd[1]+j;
-                index3 = prb[1]-j;
-                if (f.hetmat) {
-                    invrho = dt/f.mat[index1]/dx[1];
-                    g = dt*f.mat[nxd[0]+index1]/dx[1];
-                }
-                invjac = invrho/f.jac[index1];
-                for (int n=0; n<3*(fd.sbporder-1); n++) {
-                    index2 = i*nxd[1]+(prb[1]-1-n);
+    for (int i=mlb[0]; i<prb[0]; i++) {
+        for (int j=mrb[1]; j<prb[1]; j++) {
+            index1 = i*nxd[1]+j;
+            index3 = prb[1]-j;
+            if (f.hetmat) {
+                invrho = dt/f.mat[index1]/dx[1];
+                g = dt*f.mat[nxd[0]+index1]/dx[1];
+            }
+            invjac = invrho/f.jac[index1];
+            for (int n=0; n<3*(fd.sbporder-1); n++) {
+                index2 = i*nxd[1]+(prb[1]-1-n);
                 f.df[index1] -= invjac*fd.fdcoeff[index3][n]*f.jac[index2]*(f.metric[ndim*nxd[0]+index2]*f.f[nxd[0]+index2]+
                                                                             f.metric[(ndim+1)*nxd[0]+index2]*f.f[2*nxd[0]+index2]);
                 f.df[nxd[0]+i*nxd[1]+j] -= g*f.metric[ndim*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
                 f.df[2*nxd[0]+i*nxd[1]+j] -= g*f.metric[(ndim+1)*nxd[0]+index1]*fd.fdcoeff[index3][n]*f.f[index2];
+                if (dissipation) {
+                    f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                    f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                    f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                }
             }
         }
     }
@@ -1390,8 +1483,6 @@ void block::calc_df_mode3(const double dt, fields& f, const fd_type& fd) {
 
 void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
     // calculates df of a low storage time step for a 3d problem
-    
-    
     
     // x derivatives
     
@@ -1437,6 +1528,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[index1]*f.f[index2]+
                                                                             f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1480,6 +1582,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[index1]*f.f[index2]+
                                                                             f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1523,6 +1636,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[2*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[index1]*f.f[index2]+
                                                                             f.metric[nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1573,6 +1697,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1616,6 +1751,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1659,6 +1805,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1709,6 +1866,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1752,6 +1920,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] += fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[0][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }
@@ -1795,6 +1974,17 @@ void block::calc_df_3d(const double dt, fields& f, const fd_type& fd) {
                     f.df[8*nxd[0]+index1] -= fd.fdcoeff[index3][n]*(g2lam*f.metric[(2*ndim+2)*nxd[0]+index1]*f.f[2*nxd[0]+index2]+
                                                                     lambda*(f.metric[2*ndim*nxd[0]+index1]*f.f[index2]+
                                                                             f.metric[(2*ndim+1)*nxd[0]+index1]*f.f[nxd[0]+index2]));
+                    if (dissipation) {
+                        f.df[0*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[0*nxd[0]+index2])/f.jac[index1];
+                        f.df[1*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[1*nxd[0]+index2])/f.jac[index1];
+                        f.df[2*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[2*nxd[0]+index2])/f.jac[index1];
+                        f.df[3*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[3*nxd[0]+index2])/f.jac[index1];
+                        f.df[4*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[4*nxd[0]+index2])/f.jac[index1];
+                        f.df[5*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[5*nxd[0]+index2])/f.jac[index1];
+                        f.df[6*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[6*nxd[0]+index2])/f.jac[index1];
+                        f.df[7*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[7*nxd[0]+index2])/f.jac[index1];
+                        f.df[8*nxd[0]+index1] += cdiss*(fd.disscoeff[index3][n]*f.jac[index2]*f.f[8*nxd[0]+index2])/f.jac[index1];
+                    }
                 }
             }
         }

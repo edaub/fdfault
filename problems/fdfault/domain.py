@@ -21,6 +21,7 @@ class domain(object):
         self.iftype = []
         self.sbporder = 2
         self.nproc = (0, 0, 0)
+        self.cdiss = 0.
 
         self.f = fields(self.ndim, self.mode)
         self.blocks = ([[[block(self.ndim, self.mode, (self.nx_block[0][0], self.nx_block[1][0], self.nx_block[2][0]),
@@ -98,6 +99,18 @@ class domain(object):
         self.nproc = (int(nproc[0]), int(nproc[1]), int(nproc[2]))
         if self.ndim == 2:
             self.nproc[2] = 1
+
+    def get_cdiss(self):
+        "Returns dissipation coefficient"
+        return self.cdiss
+
+    def set_cdiss(self, cdiss):
+        """
+        Sets dissipation coefficient
+        Must be nonnegative, if set to zero will not use artificial dissipation
+        """
+        assert cdiss >= 0., "Dissipation coefficient must be nonnegative"
+        self.cdiss = float(cdiss)
 
     def get_nx(self):
         "Returns number of grid points"
@@ -787,6 +800,11 @@ class domain(object):
         if not self.nproc == (0, 0, 0):
             f.write("[fdfault.cartesian]\n")
             f.write(str(self.nproc[0])+" "+str(self.nproc[1])+" "+str(self.nproc[2])+"\n")
+            f.write("\n")
+
+        if not self.cdiss == 0.:
+            f.write("[fdfault.operator]\n")
+            f.write(str(self.cdiss)+"\n")
             f.write("\n")
         
         self.f.write_input(f, probname, endian)
