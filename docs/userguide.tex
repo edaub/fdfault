@@ -54,7 +54,9 @@ The components of plastic flow are determined by
 \end{equation}
 with $P_{ij}(\sigma_{ij})=s_{ij}/(2\bar{\sigma})+(\beta/3)\delta_{ij}$, where the $\beta$ parameter determines the ratio of volumetric to plastic strain. Thus, viscoplastic materials are determined by $\rho$, $\lambda$, $G$, $c$, $\mu$, $\beta$, and $\eta$, while elastic materials require specification of $\rho$, $\lambda$, and $G$. Rate independent plasticity arises in the limit that $\eta \rightarrow 0$, though the equations become increasingly stiff in this limit and plastic strain can exhibit localization that is not resolved by the spatial grid in many problems.
 
-The code can handle variable material properties, though the properties must be piecewise constant in an arbitrary number of blocks. The blocks must form a regular grid with conforming edges, though the block boundaries can have complex shapes, so this does not limit the ability of the code to handle complex earth structures. Blocks are coupled together through interfaces, which can either be locked or frictional. Locked interfaces require continuity of velocity and forces, while frictional interfaces allow for relative slip across the interface according to several possible friction laws:
+The code can handle variable material properties in two different ways. The first type is ``block-like'' structures, where the material properties are piecewise constant in an arbitrary number of blocks. Alternatively, one can specify the elastic properties in a point-by-point fashion (the plasticity material properties must be block-like even in the case of continuously varying elastic properties).
+
+Regardless of the method used, the domain is composed of a regular grid of blocks with conforming edges, though the block boundaries can have complex shapes, so this does not limit the ability of the code to handle complex earth structures.  Blocks are coupled together through interfaces, which can either be locked or frictional. Locked interfaces require continuity of velocity and forces across block edges, while frictional interfaces allow for relative slip across the interface according to several possible friction laws:
 
 \begin{itemize}
 \item {\bf Frictionless interfaces} do not support shear stresses, so any stress applied to such interfaces result in shear slip.
@@ -73,7 +75,7 @@ The code solves the above equations numerically using finite differences. The ou
 
 The specific finite difference operators used exhibit a summation-by-parts property that mimics the properties of integration by parts. This allows for estimates of the energy dissipation rate of the numerical scheme. Boundary conditions are imposed weakly using the Simultaneous Approximation Term approach, and this combined with the summation by parts difference operators allows for a provably stable numerical scheme that matches the energy dissipation rate of the continuous problem. More details on the method can be found in the following papers:
 
-The code allows for central finite difference operators that are globally second, third, fourth, fifth, or sixth order accurate. Time integration is performed with a low memory Runge-Kutta method, with either first, second, third, or fourth order accuracy in time.
+The code allows for central finite difference operators that are globally second, third, fourth, fifth, or sixth order accurate. Time integration is performed with a low memory Runge-Kutta method, with either first, second, third, or fourth order accuracy in time. Artificial dissipation can also be used for second, third, or fourth order finite difference operators, which will reduce the numerical artifact oscillations that can occur with large grid spacings.
 
 The finite difference method is only applied to the elastic part of the problem. The plasticity equations are handled through an operator splitting procedure, where the elastic problem is solved first and then used as initial conditions for the plasticity problem. This is done using an implicit backward Euler method.
 
@@ -134,7 +136,11 @@ Text input files contain multiple sections. With one exception, the order of the
 \noindent In addition to these sections, optional sections describe additional blocks and any interfaces. These include the following sections:
 
 \vspace{0.1in}
-\noindent{\tt [fdfault.interface0]
+\noindent{\tt [fdfault.cartesian]
+
+\noindent[fdfault.operator]
+
+\noindent [fdfault.interface0]
 
 \noindent[fdfault.friction]
 
@@ -188,16 +194,21 @@ The final two entries are fairly self explanatory, and determine the finite diff
 
 \subsubsection{Fields}
 
-The initial stress fields are set with the {\tt [fdfault.fields]} header. This section has two entries:
+The initial stress fields are set with the {\tt [fdfault.fields]} header. This section has three entries:
 
 \vspace{0.1in}
 Uniform initial stress tensor \\
-\indent Filename for spatially heterogeneous initial stress tensor
+\indent Filename for spatially heterogeneous initial stress tensor \\
+\indent Filename for spatially heterogeneous elastic properties
 
 \vspace{0.1in}
 \noindent The uniform initial stress tensor is a list of 6 numbers, and the order is $\sigma_{xx}$, $\sigma_{xy}$, $\sigma_{xz}$, $\sigma_{yy}$, $\sigma_{yz}$, $\sigma_{zz}$). Components not involved in a 2D problem are in some cases used in the problem, particularly for anti-plane (mode 3) problems, where the in-plane normal stress components determine the compressive normal stresses acting on the fault. Line breaks are ignored.
 
 If a heterogeneous stress tensor will be used, it is specified with a filename here. If no heterogeneous file is to be read, this entry should be {\tt none}. The file should contain a sequence of double precision binary floating point numbers (endianness should match the processor where the code will be run). Components are entered one at a time, with the number of entries matching the grid size using row major order (C order). For 2D mode 3 problems, the order is $\sigma_{xz}$, $\sigma_{yz}$. For 2D mode 2 problems, the order is $\sigma_{xx}$, $\sigma_{xy}$, $\sigma_{yy}$ (and for plasticity problems, $\sigma_{zz}$). For 3D problems, the order is the same as for the uniform stress tensor. Entering heterogeneous stresses is greatly simplified if you use the Python module.
+
+Similarly, if a heterogeneous elastic properties will be used, it is specified with a filename here. If no heterogeneous file is to be read, this entry should be {\tt none}. The format is the same as the stress tensor, but with three entries: density, first Lam\'{e} parameter, and shear modulus. Creation of these files is simplified with the Python module.
+
+Note: for large 3D problems, the arrays for a heterogeneous stress field or elastic property may be too large to be handles by the Python module (Numpy seems to be limited to arrays that are 2 or 4 GB, depending on the version of Python that you use). In that case, you may need to generate these files manually.
 
 \subsubsection{Block}
 
@@ -266,6 +277,35 @@ In the simulations, the values of {\tt x0 dx y0 dy} are only interpreted literal
 Finally, a trio of numbers set the vector surface traction applied to the interface. The first component is the normal traction, and the next two numbers are the two shear tractions. For 2D problems, the code sets the appropriate shear traction component to zero. For 3D problems, the exact meaning of the shear traction components are determined by the surface normal direction.
 
 After all of the surface traction perturbations, the code takes a filename of a file that adds additional tractions to the surface. The file contains a series of double precision floating point binary numbers of length $3\times n1 \times n2$, where $n1$ and $n2$ are the number of grid points along the interface. The first block of $n1\times n2$ is for the normal traction (in row major order), then the first shear traction component, and finally the second shear traction component. Endianness is assumed to match the computer where the simulation is being run.
+
+\subsubsection{Types of Frictional Interfaces}
+
+Frictional interfaces come in many different types, though their format for specifying input is largely the same. Frictionless interfaces require no additional specifications beyond the basics above. Slip-weakening and STZ interfaces require specification of the friction parameters. The basic format is analogous to those for setting the surface tractions described above:
+
+\vspace{0.1in}
+\indent Number of parameter perturbations \\
+\indent List of parameter perturbations \\
+\indent Parameter perturbation filename \\
+
+Each item in the list requires the same basic six parameters to describe the shape as for the load perturbations (type t0 x0 dx y0 dy), interpreted in the same way as described above. Following these six parameters comes a list of friction parameters, which differ depending on the friction law chosen. For slip weakening laws, there are six parameters:
+
+\vspace{0.1in}
+{\tt dc mus mud c0 tc trup}
+
+\vspace{0.1in}
+{\tt dc} is the slip weakening distance, {\tt mus} is the static friction coefficient, {\tt mud} is the dynamic friction coefficient, {\tt c0} is the frictional cohesion, {\tt tc} is the characteristic failure time, and {\tt trup} is the forced rupture time. The first four parameters are fairly standard, while the final two parameters are used to impose kinematic forcing on the rupture front: {\tt tc} is the time scale over which the friction weakens from static to dynamic, and {\tt trup} is the time at which this process initiates. If {\tt trup} is 0, then no kinematic forcing is used.
+
+For STZ friction laws, there are eight parameters.
+
+As with load perturbations, heterogeneous perturbations using an input file are also allowed. The format is the same as with load perturbations (C order double precision floats, with parameters given in the order listed above). The Python module can help with generating the appropriate files.
+
+\subsubsection{Cartesian}
+
+The code automatically handles domain decomposition into a Cartesian grid based on the dimensionality of the problem and the number of processors specified when running the executable. However, you may also specify the number of processes manually by including {\tt [fdfault.cartesian]} in the input file. This section must contain a list of three integers specifying the desired number of processes in each of the three spatial dimensions (if a 2D problem is run, the number of processes in the $z$ direction is automatically set to one). It is up to the user to ensure that the numbers set here match the total number of processes set when launching the executable.
+
+\subsubsection{Operator}
+
+Optionally, the code uses artificial dissipation to damp out spurious oscillations arising from the finite difference method. To use artificial dissipation, include a {\tt [fdfault.operator]} section with a single floating point number to designate the the artificial dissipation coefficient. Correct selection of the dissipation coefficient is up to the user, and too large a value can result in numerical instabilities.
 
 \subsubsection{Example}
 
