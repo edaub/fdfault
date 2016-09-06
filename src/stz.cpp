@@ -455,6 +455,8 @@ double calc_vpl(const double mu, double* params) {
     // calcualtes slip velocity
     
     double vpl, chi = params[3], v0 = params[4], f0 = params[5], a = params[6], muy = params[7];
+	
+	assert(chi > 0.);
     
     if (mu <= muy) {
         vpl = 0.;
