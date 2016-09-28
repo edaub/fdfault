@@ -7,7 +7,7 @@ of the problem class to specify and set up a problem (doing so will reduce the n
 errors encountered when writing the problem to an input file). This will generally make your life
 easier, and I highly recommend using the problem class to set up all of your rupture problems.
 
-The module contains the following classes:
+The module contains the following classes for setting up problems:
 
 fdfault.problem -- sets up a problem
 fdfault.domain -- contains domain information (number of blocks and interfaces, etc)
@@ -24,7 +24,7 @@ fdfault.output -- details for writing simulation data to file
 
 While the module contains all classes (and you can set up simulations yourself using them),
 mostly you will be using the wrappers provided through the problem class, plus the constructors
-for material, load, loadfile, swparam, and output. To create a problem, you must supply a name:
+for material, load, loadfile, friction parameters, and output. To create a problem, you must supply a name:
 
 >>> import fdfault
 >>> p = fdfault.problem("myproblem")
@@ -35,7 +35,7 @@ are ready to write the simulation to file, type
 >>> p.write_input()
 
 which writes the problem to the file "problems/myproblem.in". If you want to use a different filename,
-provide it as an argument in the call to write_input. Calling write_input will also write surfaces to file.
+provide it as an argument in the call to write_input. Calling write_input will also write surface data to file.
 
 Details on the methods are provided in the documentation for the individual classes.
 """
