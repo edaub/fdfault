@@ -361,8 +361,14 @@ class block(object):
         for i in range(2**(self.ndim-1)*self.ndim):
             assert tmpsurfs[surf1[i]].has_same_edge(edge1[i], edge2[i], tmpsurfs[surf2[i]]), "surface edges do not match"
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "writes block information to input file"
+
+        if directory == "":
+            inputfiledir = 'problems/'
+        else:
+            inputfiledir = directory
+        
         f.write("[fdfault.block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+"]\n")
         self.m.write_input(f)
         outstring = ""
@@ -382,8 +388,8 @@ class block(object):
             if s is None:
                 f.write("none\n")
             else:
-                f.write("problems/"+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf\n")
-                s.write(probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf", endian)
+                f.write(inputfiledir+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf\n")
+                s.write(directory+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf", endian)
             nsurfs += 1
         f.write("\n")
     

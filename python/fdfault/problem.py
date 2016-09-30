@@ -434,15 +434,21 @@ class problem(object):
         "Sets front threshhold value"
         self.frt.set_value(value)
     
-    def write_input(self, filename = None, endian = '='):
+    def write_input(self, filename = None, directory = "", endian = '='):
         "Writes problem to input file"
+
+        assert type(directory) is str, "Output directory must be a string"
 
         self.check()
 
+        if directory != "":
+            if directory[-1] != "/":
+                directory += "/"
+
         if (filename is None):
-            f = open(self.name+".in",'w')
+            f = open(directory+self.name+".in",'w')
         else:
-            f = open(filename+".in",'w')
+            f = open(directory+filename+".in",'w')
 
         f.write("[fdfault.problem]\n")
         f.write(str(self.name)+"\n")
@@ -454,7 +460,7 @@ class problem(object):
         f.write(str(self.ninfo)+"\n")
         f.write(str(self.rkorder)+"\n")
         f.write("\n")
-        self.d.write_input(f, self.name, endian)
+        self.d.write_input(f, self.name, directory, endian)
         f.write("[fdfault.outputlist]\n")
         for item in self.outputlist:
             item.write_input(f)

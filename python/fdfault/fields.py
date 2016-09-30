@@ -72,8 +72,14 @@ class fields(object):
             assert(mat.shape[0] == 3), "for 3D or mode 2 problems, heterogeneous material properties must have 3 components"
         self.mat = np.array(mat)
 
-    def write_input(self,f, probname, endian = '='):
+    def write_input(self,f, probname, directory, endian = '='):
         "Writes field information to input file"
+
+        if directory == "":
+            inputfiledir = 'problems/'
+        else:
+            inputfiledir = directory
+        
         f.write("[fdfault.fields]\n")
         outstring = ""
         for sc in self.s0:
@@ -83,15 +89,15 @@ class fields(object):
         if self.s is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+".load\n")
-            loadfile = open(probname+".load","wb")
+            f.write(inputfiledir+probname+".load\n")
+            loadfile = open(directory+probname+".load","wb")
             loadfile.write(self.s.astype(endian+'f8').tobytes())
             loadfile.close()
         if self.mat is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+".mat\n")
-            matfile = open(probname+".mat","wb")
+            f.write(inputfiledir+probname+".mat\n")
+            matfile = open(directory+probname+".mat","wb")
             matfile.write(self.mat.astype(endian+'f8').tobytes())
             matfile.close()
         f.write("\n")

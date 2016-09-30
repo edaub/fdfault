@@ -776,7 +776,7 @@ class domain(object):
         assert index >= 0 and index < self.nifaces, "Index out of range"
         return self.interfaces[index].get_bp()
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "Writes domain information to input file"
 
         f.write("[fdfault.domain]\n")
@@ -807,15 +807,15 @@ class domain(object):
             f.write(str(self.cdiss)+"\n")
             f.write("\n")
         
-        self.f.write_input(f, probname, endian)
+        self.f.write_input(f, probname, directory, endian)
 
         for b1 in self.blocks:
             for b2 in b1:
                 for b in b2:
-                    b.write_input(f, probname, endian)
+                    b.write_input(f, probname, directory, endian)
 
         for iface in self.interfaces:
-            iface.write_input(f, probname, endian)
+            iface.write_input(f, probname, directory, endian)
 
     def check(self):
         "Checks domain for errors"

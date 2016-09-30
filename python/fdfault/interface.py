@@ -116,7 +116,7 @@ class interface(object):
         "removes paramfile from slip weakening interface"
         raise NotImplementedError("Interfaces do not support parameter files")
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "Writes interface details to input file"
         f.write("[fdfault.interface"+str(self.index)+"]\n")
         f.write(self.direction+"\n")
@@ -173,9 +173,16 @@ class friction(interface):
         "removes loadfile from frictional interface"
         self.loadfile = None
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "Writes Interface to input file"
-        interface.write_input(self, f, probname, endian)
+
+        interface.write_input(self, f, probname, directory, endian)
+
+        if directory == "":
+            inputfiledir = 'problems/'
+        else:
+            inputfiledir = directory
+        
         f.write("[fdfault.friction]\n")
         f.write(str(self.nloads)+'\n')
 
@@ -185,8 +192,8 @@ class friction(interface):
         if self.loadfile is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+".load\n")
-            self.loadfile.write(probname+"_interface"+str(self.index)+".load",endian)
+            f.write(inputfiledir+probname+"_interface"+str(self.index)+".load\n")
+            self.loadfile.write(directory+probname+"_interface"+str(self.index)+".load",endian)
 
         f.write("\n")
         
@@ -241,9 +248,14 @@ class paramfric(friction):
         "removes paramfile from slip weakening interface"
         self.paramfile = None
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "Write parameters to input file"
-        friction.write_input(self, f, probname, endian)
+        friction.write_input(self, f, probname, directory, endian)
+
+        if directory == "":
+            inputfiledir = 'problems/'
+        else:
+            inputfiledir = directory
 
         f.write("[fdfault."+self.iftype+"]\n")
         f.write(str(self.nperts)+"\n")
@@ -253,8 +265,8 @@ class paramfric(friction):
         if self.paramfile is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
-            self.paramfile.write(probname+"_interface"+str(self.index)+"."+self.suffix,endian)
+            f.write(inputfiledir+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(directory+probname+"_interface"+str(self.index)+"."+self.suffix,endian)
 
         f.write("\n")
 
@@ -296,17 +308,22 @@ class statefric(paramfric):
         "deletes statefile"
         self.statefile = None
 
-    def write_input(self, f, probname, endian = '='):
+    def write_input(self, f, probname, directory, endian = '='):
         "Write parameters to input file"
         friction.write_input(self, f, probname, endian)
+
+        if directory == "":
+            inputfiledir = 'problems/'
+        else:
+            inputfiledir = directory
 
         f.write("[fdfault."+self.iftype+"]\n")
         f.write(str(self.state)+"\n")
         if self.statefile is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+".state\n")
-            self.statefile.write(probname+"_interface"+str(self.index)+".state", endian)
+            f.write(inputfiledir+probname+"_interface"+str(self.index)+".state\n")
+            self.statefile.write(directory+probname+"_interface"+str(self.index)+".state", endian)
         
         f.write(str(self.nperts)+"\n")
         for p in self.perts:
@@ -315,8 +332,8 @@ class statefric(paramfric):
         if self.paramfile is None:
             f.write("none\n")
         else:
-            f.write("problems/"+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
-            self.paramfile.write(probname+"_interface"+str(self.index)+"."+self.suffix,endian)
+            f.write(inputfiledir+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(directory+probname+"_interface"+str(self.index)+"."+self.suffix,endian)
 
         f.write("\n")
 
