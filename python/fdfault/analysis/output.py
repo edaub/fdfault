@@ -1,16 +1,17 @@
 import numpy as np
-from os.path import dirname, realpath
+from os import getcwd
+from os.path import join
 from sys import path
 
 class output(object):
     "class for output objects"
-    def __init__(self,problem,name,datadir = None):
+    def __init__(self, problem, name, datadir = None):
         "initializes output object with simulation information"
         
         self.name = name
         self.problem = problem
         if datadir is None:
-            self.datadir = dirname(realpath(__file__))+'/'
+            self.datadir = getcwd()
         else:
             self.datadir = datadir
 
@@ -45,64 +46,21 @@ class output(object):
         self.endian = self._temp.endian
         
         if (self.nt > 1):
-            self.t = np.fromfile(self.datadir+self.problem+'_'+self.name+'_t.dat',self.endian+'f8')
-        self.x = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_x.dat',self.endian+'f8').reshape(self.nx, self.ny, self.nz))
-        self.y = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_y.dat',self.endian+'f8').reshape(self.nx, self.ny, self.nz))
+            self.t = np.fromfile(join(self.datadir,self.problem+'_'+self.name+'_t.dat'), self.endian+'f8')
+        self.x = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_'+self.name+'_x.dat'), self.endian+'f8').reshape(self.nx, self.ny, self.nz))
+        self.y = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_'+self.name+'_y.dat'), self.endian+'f8').reshape(self.nx, self.ny, self.nz))
         try:
-            self.z = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_z.dat',self.endian+'f8').reshape(self.nx,self.ny,self.nz))
+            self.z = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_'+self.name+'_z.dat'), self.endian+'f8').reshape(self.nx, self.ny, self.nz))
         except:
             pass
-         
-        if self.field == 'vx':
-            self.vx = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_vx.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'vy':
-            self.vy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_vy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'vz':
-            self.vz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_vz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'sxx':
-            self.sxx = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_sxx.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'sxy':
-            self.sxy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_sxy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'sxz':
-            self.sxz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_sxz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'syy':
-            self.syy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_syy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'syz':
-            self.syz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_syz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'szz':
-            self.szz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_szz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'lambda':
-            self.lam = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_lambda.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'gammap':
-            self.gammap = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_gammap.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'V':
-            self.V = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_V.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'U':
-            self.U = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_U.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Vx':
-            self.Vx = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Vx.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Vy':
-            self.Vy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Vy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Vz':
-            self.Vz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Vz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Ux':
-            self.Ux = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Ux.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Uy':
-            self.Uy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Uy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Uz':
-            self.Uz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Uz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Sx':
-            self.Sx = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sx.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Sy':
-            self.Sy = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sy.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Sz':
-            self.Sz = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sz.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'S':
-            self.S = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_S.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'Sn':
-            self.Sn = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_Sn.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
-        elif self.field == 'state':
-            self.state = np.squeeze(np.fromfile(self.datadir+self.problem+'_'+self.name+'_state.dat',self.endian+'f8').reshape(self.nt,self.nx,self.ny,self.nz))
+
+        # store data in fielddata (makes it easier to write field agnostic analysis routines)
+
+        self.fielddata = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_'+self.name+'_'+self.field+'.dat'), self.endian+'f8').reshape(self.nt, self.nx, self.ny, self.nz))
+
+        # create shortcut for more informative attribute name
+
+        setattr(self, self.field, self.fielddata)
 
     def __str__(self):
         "returns string representation"

@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+from os.path import join
 import numpy as np
 
 class fields(object):
@@ -89,15 +90,15 @@ class fields(object):
         if self.s is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+".load\n")
-            loadfile = open(directory+probname+".load","wb")
+            f.write(join(inputfiledir, probname)+".load\n")
+            loadfile = open(join(directory, probname+".load"),"wb")
             loadfile.write(self.s.astype(endian+'f8').tobytes())
             loadfile.close()
         if self.mat is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+".mat\n")
-            matfile = open(directory+probname+".mat","wb")
+            f.write(join(inputfiledir, probname)+".mat\n")
+            matfile = open(join(directory, probname)+".mat","wb")
             matfile.write(self.mat.astype(endian+'f8').tobytes())
             matfile.close()
         f.write("\n")

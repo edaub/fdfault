@@ -6,9 +6,9 @@
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
-import fdfault
+from fdfault.analysis import output
 
-vybody = fdfault.output('hpctest','vybody')
+vybody = output('testprob', 'vybody')
 
 # load data structure containing information
 
@@ -26,6 +26,6 @@ print(vybody.vy)
 # plot velocity
 
 plt.figure()
-plt.pcolor(vybody.x, vybody.y, vybody.vy[4,:,:])
+plt.pcolor(vybody.x, vybody.y, vybody.vy[0,:,:])
 plt.colorbar()
 plt.show()

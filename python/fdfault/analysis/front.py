@@ -1,16 +1,17 @@
 import numpy as np
-from os.path import dirname, realpath
+from os import getcwd
+from os.path import join
 from sys import path
             
 class front(object):
     "class for rupture front objects"
-    def __init__(self,problem,iface,datadir = None):
+    def __init__(self, problem, iface, datadir = None):
         "initializes output object with simulation information"
         
         self.problem = problem
         self.iface = int(iface)
         if datadir is None:
-            self.datadir = dirname(realpath(__file__))+'/'
+            self.datadir = getcwd()
         else:
             self.datadir = datadir
 
@@ -38,14 +39,14 @@ class front(object):
         self.ny = self._temp.ny
         self.endian = self._temp.endian
         
-        self.x = np.squeeze(np.fromfile(self.datadir+self.problem+'_front_'+str(self.iface)+'_x.dat',self.endian+'f8').reshape(self.nx, self.ny))
-        self.y = np.squeeze(np.fromfile(self.datadir+self.problem+'_front_'+str(self.iface)+'_y.dat',self.endian+'f8').reshape(self.nx, self.ny))
+        self.x = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_front_'+str(self.iface)+'_x.dat'), self.endian+'f8').reshape(self.nx, self.ny))
+        self.y = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_front_'+str(self.iface)+'_y.dat'), self.endian+'f8').reshape(self.nx, self.ny))
         try:
-            self.z = np.squeeze(np.fromfile(self.datadir+self.problem+'_front_'+str(self.iface)+'_z.dat',self.endian+'f8').reshape(self.nx,self.ny))
+            self.z = np.squeeze(np.fromfile(join(self.datadir,self.problem+'_front_'+str(self.iface)+'_z.dat'), self.endian+'f8').reshape(self.nx,self.ny))
         except:
             pass
          
-        self.t = np.squeeze(np.fromfile(self.datadir+self.problem+'_front_'+str(self.iface)+'_t.dat',self.endian+'f8').reshape(self.nx,self.ny))
+        self.t = np.squeeze(np.fromfile(join(self.datadir, self.problem+'_front_'+str(self.iface)+'_t.dat'), self.endian+'f8').reshape(self.nx,self.ny))
 
     def __str__(self):
         "returns string representation"

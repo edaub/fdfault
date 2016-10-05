@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+from os.path import join
 
 from .domain import domain
 from .output import output
@@ -434,21 +435,20 @@ class problem(object):
         "Sets front threshhold value"
         self.frt.set_value(value)
     
-    def write_input(self, filename = None, directory = "", endian = '='):
+    def write_input(self, filename = None, directory = None, endian = '='):
         "Writes problem to input file"
 
-        assert type(directory) is str, "Output directory must be a string"
+        assert directory is None or type(directory) is str, "Output directory must be a string"
 
         self.check()
 
-        if directory != "":
-            if directory[-1] != "/":
-                directory += "/"
+        if directory is None:
+            directory = ""
 
         if (filename is None):
-            f = open(directory+self.name+".in",'w')
+            f = open(join(directory,self.name+".in"),'w')
         else:
-            f = open(directory+filename+".in",'w')
+            f = open(join(directory,filename+".in"),'w')
 
         f.write("[fdfault.problem]\n")
         f.write(str(self.name)+"\n")

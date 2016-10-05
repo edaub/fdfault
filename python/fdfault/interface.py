@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+from os.path import join
 
 from .pert import load, swparam, stzparam, loadfile, swparamfile, stzparamfile, statefile
 from .surface import surface, curve
@@ -192,8 +193,8 @@ class friction(interface):
         if self.loadfile is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+"_interface"+str(self.index)+".load\n")
-            self.loadfile.write(directory+probname+"_interface"+str(self.index)+".load",endian)
+            f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+".load\n")
+            self.loadfile.write(join(directory, probname+"_interface"+str(self.index)+".load"), endian)
 
         f.write("\n")
         
@@ -265,8 +266,8 @@ class paramfric(friction):
         if self.paramfile is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
-            self.paramfile.write(directory+probname+"_interface"+str(self.index)+"."+self.suffix,endian)
+            f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(join(directory, probname+"_interface"+str(self.index)+"."+self.suffix), endian)
 
         f.write("\n")
 
@@ -322,8 +323,8 @@ class statefric(paramfric):
         if self.statefile is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+"_interface"+str(self.index)+".state\n")
-            self.statefile.write(directory+probname+"_interface"+str(self.index)+".state", endian)
+            f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+".state\n")
+            self.statefile.write(join(directory, probname+"_interface"+str(self.index)+".state"), endian)
         
         f.write(str(self.nperts)+"\n")
         for p in self.perts:
@@ -332,8 +333,8 @@ class statefric(paramfric):
         if self.paramfile is None:
             f.write("none\n")
         else:
-            f.write(inputfiledir+probname+"_interface"+str(self.index)+"."+self.suffix+"\n")
-            self.paramfile.write(directory+probname+"_interface"+str(self.index)+"."+self.suffix,endian)
+            f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+"."+self.suffix+"\n")
+            self.paramfile.write(join(directory, probname+"_interface"+str(self.index)+"."+self.suffix), endian)
 
         f.write("\n")
 

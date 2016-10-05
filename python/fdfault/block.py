@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+from os.path import join
 from .surface import surface, curve
 from .material import material
 
@@ -388,8 +389,8 @@ class block(object):
             if s is None:
                 f.write("none\n")
             else:
-                f.write(inputfiledir+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf\n")
-                s.write(directory+probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf", endian)
+                f.write(join(inputfiledir, probname)+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf\n")
+                s.write(join(directory, probname+"_block"+str(self.coords[0])+str(self.coords[1])+str(self.coords[2])+str(nsurfs)+".surf"), endian)
             nsurfs += 1
         f.write("\n")
     
