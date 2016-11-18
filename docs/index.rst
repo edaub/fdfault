@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
+   installation
+   input/input
+   examples/examples
+   analysis/analysis
 
 
 Indices and tables

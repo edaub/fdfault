@@ -82,11 +82,13 @@ directory. Similarly, to make the analysis features available in the data direct
 This allows you to type "import fdfault" from within the data directory and have the 
 analysis tools at your disposal.
 
-If you downloaded the code via a gzipped tarball, the User's Guide should already be available in the docs directory. If you downloaded the code from the git repository, 
-you will need to build the User's Guide yourself (requires a LaTeX distribution).
+If you downloaded the code via a gzipped tarball, the User's Guide should already be 
+available in the docs/_build/html and docs/_build/latex directories for the HTML and
+PDF versions, respectively. If you downloaded the code from the git repository, 
+you will need to build the User's Guide yourself (requires Sphinx, with MathJax required for the HTML verions and a LaTeX distribution for the PDF version).
 
 > cd fdfault/docs/
-> make
+> make html && make latexpdf
 
 #########################################################################################
 
