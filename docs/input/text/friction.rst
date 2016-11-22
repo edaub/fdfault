@@ -42,20 +42,12 @@ After all of the surface traction perturbations, the code takes a filename of a 
 Additional Friction Parameter Specifications
 ==============================================
 
-There are several specific types of frictional interfaces:
+There are several specific types of frictional interfaces, two of which require additional parameters be specified:
 
 1. **Frictionless** interfaces do not support shear tractions. No additional parameters are required when specifying frictionless interfaces.
 
-2. **Slip-Weakening** interfaces require additional parameter specifications, described in the following pages.
+2. **Slip-Weakening** interfaces require additional parameter specifications
 
-3. **STZ** interfaces also require additional parameter specifications, described in the following pages.
+3. **STZ** interfaces also require additional parameter specifications
 
-The basic format for slip-weakening and STZ frictional interaces analogous to those for setting the surface tractions described above: ::
-
-    Number of parameter perturbations
-    List of parameter perturbations
-    Parameter perturbation filename
-
-Each item in the list requires the same basic six parameters to describe the shape as for the load perturbations (type t0 x0 dx y0 dy), interpreted in the same way as described above. Following these six parameters comes a list of friction parameters, which differ depending on the friction law chosen.
-
-As with load perturbations, heterogeneous perturbations using an input file are also allowed. The format is the same as with load perturbations (C order double precision floats, with parameters given in the order listed above). The Python module can help with generating the appropriate files.
+For more information on how to set slip-weakening and STZ parameter values, consult the following pages.
