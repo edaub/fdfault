@@ -62,9 +62,6 @@ To illustrate how to parameters in a text file, here is an example problem ``tes
     none
     none
 
-    [fdfault.operator]
-    0.
-
     [fdfault.interface0]
     y
     0 0 0
@@ -107,3 +104,4 @@ To illustrate how to parameters in a text file, here is an example problem ``tes
     [fdfault.frontlist]
     0
 
+This model is fairly simple, so use of a text input file rather than a python script is a reasonable choice. The following breaks down each section and explains the meaning of the input parameters.
