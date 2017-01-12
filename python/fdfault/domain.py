@@ -176,7 +176,7 @@ class domain(object):
                     for k in range(self.nblocks[2]-oldlen):
                         self.blocks[i][j].append(block(self.ndim, self.mode, (self.nx_block[0][i], self.nx_block[1][j], self.nx_block[2][oldlen+k]),
                              self.f.get_material()))
-                        self.blocks[i][j][oldlen+k].set_coords((i,j,k))
+                        self.blocks[i][j][oldlen+k].set_coords((i,j,oldlen+k))
 
         self.__set_block_coords()
 
