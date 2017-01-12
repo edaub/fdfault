@@ -15,6 +15,12 @@ Requirements
 
 The only external package required to use the Python module is NumPy, which uses numerical arrays to hold parameter values and writes them to file in binary format. The code supports both Python 2 and Python 3 and has been tested on both versions of Python.
 
+================
+Overview
+================
+
+.. automodule:: fdfault
+
 ====================
 Main Classes
 ====================
@@ -25,6 +31,13 @@ The Python module is set up as a collection of classes. Most of them operate und
    :maxdepth: 2
 
    problem
+   material
+   surface
+   friction
+   slipweak
+   stz
+   output
+   
    
 =====================
 Additional Classes
@@ -35,4 +48,8 @@ The classes below are not normally accessed by the user. Instead, use the interf
 .. toctree::
    :maxdepth: 2
 
+   block
    domain
+   fields
+   front
+   interface
