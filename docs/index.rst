@@ -9,7 +9,7 @@ Welcome to the user manual for ``fdfault``
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
    installation
