@@ -4,21 +4,6 @@
 Input Using the Python Module
 **********************************
 
-For complex problems requiring file input, or situations when you wish to script creation of problem input files, the code has an extensive Python module. The Python module closely resembles the structure of the text input files and hence the structure of the C++ code, and has an interface
-for specifying all simulation parameters through the ``problem`` class. The module is particularly useful for handling situations where inputs must be written to file in binary format. The module also includes functions that facilitate finding coordinate values for output units.
-
-One benefit in using the Python module is that the code performs an extensive series of checks prior to writing the simulation data to file. This, plus using the interfaces that are part of the ``problem`` class, grealy improves the likelihood that the simulation will be set up correctly, and is highly recommended if you will be using the code to simulate complex problems.
-
-===================
-Requirements
-===================
-
-The only external package required to use the Python module is NumPy, which uses numerical arrays to hold parameter values and writes them to file in binary format. The code supports both Python 2 and Python 3 and has been tested on both versions of Python.
-
-================
-Overview
-================
-
 .. automodule:: fdfault
 
 ====================

@@ -1,43 +1,50 @@
 """
-fdfault is a python module for setting up dynamic rupture problems for use with the C++ code.
+``fdfault`` is a python module for setting up dynamic rupture problems for use with the C++ code.
 
-It contains a number of classes, each of which corresponds to a similar class in the C++ code.
-While the individual classes are available to the user, it is easier to use the build-in methods
-of the problem class to specify and set up a problem (doing so will reduce the number of
-errors encountered when writing the problem to an input file). This will generally make your life
-easier, and I highly recommend using the problem class to set up all of your rupture problems.
+================
+Overview
+================
 
-The module contains the following classes for setting up problems:
+The Python module closely resembles the structure of the text input files and hence the structure
+of the C++ code, and has an interface for specifying all simulation parameters through the
+``problem`` class. The module is particularly useful for handling situations where inputs must be
+written to file in binary format. The module also includes functions that facilitate finding coordinate
+values nearest certain spatial locations for choosing indices for creating output units.
 
-fdfault.problem -- sets up a problem
-fdfault.domain -- contains domain information (number of blocks and interfaces, etc)
-fdfault.fields -- sets up details of stress fields
-fdfault.front -- sets up rupture front output
-fdfault.block -- represents a single block: spatial dimensions, grid, and boundary conditions
-fdfault.material -- block material properties (elastic or plastic)
-fdfault.surface -- represents boundary and interface surfaces
-fdfault.interface -- represents a locked interface between blocks
-fdfault.friction -- represents a frictionless (slipping) interface, inherits from interface
-fdfault.slipweak -- represents a slip weakening interface, inherits from friction
-fdfault.load -- represents load perturbations to frictional interfaces
-fdfault.output -- details for writing simulation data to file
+One benefit in using the Python module is that the code performs an extensive series of checks
+prior to writing the simulation data to file. This, plus using the interfaces that are part of the
+``problem`` class, grealy improves the likelihood that the simulation will be set up correctly, and
+is highly recommended if you will be using the code to simulate complex problems.
 
 While the module contains all classes (and you can set up simulations yourself using them),
-mostly you will be using the wrappers provided through the problem class, plus the constructors
-for material, load, loadfile, friction parameters, and output. To create a problem, you must supply a name:
+mostly you will be using the wrappers provided through the ``problem`` class, plus the constructors
+for ``surface``, ``curve``, ``material``, ``load``, ``loadfile``, ``swparam``, ``swparamfile``, ``stzparam``,
+``stzparamfile``, ``statefile``, and ``output``. To create a problem, you must supply a name:
 
 >>> import fdfault
 >>> p = fdfault.problem("myproblem")
 
-From there, you can use the methods of the problem class to specify your simulation. Once you
+From there, you can use the methods of the ``problem`` class to specify your simulation. Once you
 are ready to write the simulation to file, type
 
 >>> p.write_input()
 
-which writes the problem to the file "problems/myproblem.in". If you want to use a different filename,
-provide it as an argument in the call to write_input. Calling write_input will also write surface data to file.
+which writes the problem to the file ``problems/myproblem.in``, and any other input files such
+as block surfaces, initial stresses, or frictional parameters. If you want to use a different filename,
+provide it as an argument in the call to ``write_input``. Calling ``write_input`` will also write additional
+data such as block surface data to file.
 
 Details on the methods are provided in the documentation for the individual classes.
+
+===================
+Requirements
+===================
+
+The only external package required to use the Python module is NumPy, which uses numerical
+arrays to hold parameter values and writes them to file in binary format. The code has been tested
+starting with Numpy 1.9 and subsequent releases, though it will probably also work with some
+older versions. The code supports both Python 2 and Python 3 and has been tested on both
+versions of Python.
 """
 
 from .block import block
