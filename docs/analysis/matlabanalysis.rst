@@ -75,3 +75,11 @@ Because the data is written in row major order in the C++ code, but MATLAB store
              ``t`` (float array), rupture time values
 
 Because the data is written in row major order in the C++ code, but MATLAB stores data in column major order, index order is (y, x). Note also that because the interface is a 2D slice, ``nx`` and ``ny`` are used generically to describe the number of grid points on the interface no matter what the orientation of the interface is. Thus, if the array has an approximate normal in the x direction, ``nx`` is the number of grid points in the y direction and ``ny`` is the number of grid points in the z direction.
+
+========================
+Example
+========================
+
+An example of how to use the MATLAB functions is provided in the file ``matlab_example.m``, located in the ``matlab`` directory. The file is reproduced here.
+
+.. literalinclude:: ../../matlab/matlab_example.m

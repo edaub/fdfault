@@ -27,3 +27,11 @@ The ``write_scec`` submodule
 .. autofunction:: fdfault.analysis.write_scec.write_on_fault_2d
 
 .. autofunction:: fdfault.analysis.write_scec.write_front
+
+==========================
+Example
+==========================
+
+An example of how to use the included classes for analysis is included in the file ``python_example.py``, included in the ``python`` directory.
+
+.. literalinclude:: ../../python/python_example.py
