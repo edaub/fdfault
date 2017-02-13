@@ -761,6 +761,11 @@ class domain(object):
         assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         self.interfaces[niface].set_statefile(newstatefile)
 
+    def delete_statefile(self, niface):
+        "Deletes statefile for given interface"
+        assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
+        self.interfaces[niface].delete_statefile()
+
     def get_direction(self, index):
         "Returns direction of interface index"
         assert index >= 0 and index < self.nifaces, "Index out of range"

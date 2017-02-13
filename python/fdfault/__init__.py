@@ -19,20 +19,7 @@ is highly recommended if you will be using the code to simulate complex problems
 While the module contains all classes (and you can set up simulations yourself using them),
 mostly you will be using the wrappers provided through the ``problem`` class, plus the constructors
 for ``surface``, ``curve``, ``material``, ``load``, ``loadfile``, ``swparam``, ``swparamfile``, ``stzparam``,
-``stzparamfile``, ``statefile``, and ``output``. To create a problem, you must supply a name:
-
->>> import fdfault
->>> p = fdfault.problem("myproblem")
-
-From there, you can use the methods of the ``problem`` class to specify your simulation. Once you
-are ready to write the simulation to file, type
-
->>> p.write_input()
-
-which writes the problem to the file ``problems/myproblem.in``, and any other input files such
-as block surfaces, initial stresses, or frictional parameters. If you want to use a different filename,
-provide it as an argument in the call to ``write_input``. Calling ``write_input`` will also write additional
-data such as block surface data to file.
+``stzparamfile``, ``statefile``, and ``output``.
 
 Details on the methods are provided in the documentation for the individual classes.
 
