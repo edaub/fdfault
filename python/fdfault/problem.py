@@ -1362,7 +1362,38 @@ class problem(object):
         self.frt.set_value(value)
     
     def write_input(self, filename = None, directory = None, endian = '='):
-        "Writes problem to input file"
+        """
+        Writes problem to input file
+
+        Method writes the current state of a problem to an input file, also writing any binary
+        data to file (i.e. block boundary curves, heterogeneous stress tensors, heterogeneous
+        material properties, heterogeneous interface tractions, heterogeneous state variables,
+        or heterogeneous friction parameters).
+
+        All input arguments are optional. Possible arguments include ``filename`` (string,
+        default is problem name) which will set the input file name (the code adds on ``.in``
+        to the provided filename), ``directory`` (string holding the path to the location where
+        the file will be written, default is current directory), and ``endian`` to set byte-ordering
+        for writing binary files (default is ``=`` (native), other options inlcude ``<`` (little) and
+        ``>`` (big)).
+
+        When ``write_input`` is called, the code calls ``check``, which verifies the validity of
+        the simulation and alerts the user to any problems. ``check`` examines if block
+        surface edges match, if neighboring blocks have matching grids, and other things
+        that cannot be checked when modifying the simulation. The same checks are run
+        in the C++ code when initializing a problem, so a problem that runs into trouble
+        when calling ``check`` is likely to have similar difficulties when running the simulation.
+
+        :param filename: name of file (default is problem name); code will add ``.in`` to this
+        :type filename: str
+        :param directory: Location where input file should be written (default current directory)
+        :type directory: str
+        :param endian: Byte-ordering for files. Should match byte ordering of the system where
+                                the simulation will be run (it helps to run the Python script directly with
+                                native byte ordering enabled). Default is native (``=``), other options
+                                include ``<`` for little endian and ``>`` for big endian.
+        :returns: None
+        """
 
         assert directory is None or type(directory) is str, "Output directory must be a string"
 
