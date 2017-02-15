@@ -1002,7 +1002,8 @@ class problem(object):
 
     def get_nperts(self, index):
         """
-        Returns number of perturbations (integer) on given interface with given index
+        Returns number of frictional parameter perturbations (integer) on given interface with
+        given index
 
         :param index: index of desired interface (zero-indexed)
         :type index: int
@@ -1053,7 +1054,20 @@ class problem(object):
         self.d.delete_pert(niface, index)
 
     def get_pert(self, niface, index = None):
-        "Returns perturbation for index niface at position index. If no index provided, returns entire list"
+        """
+        Returns perturbation for index niface at position index
+
+        Method returns a perturbation from a particular interface. ``niface`` must be a valid integer
+        index referring to an interface. ``index`` is the index into the perturbation list for the
+        particular index. If ``index`` is not provided or is ``None``, the method returns the entire list.
+
+        :param niface: Index referring to an interface. (Must be a valid integer index.)
+        :type niface: int
+        :param index: Index into the perturbation list for the index in question (optional, if not
+                              provided or ``None``, then returns entire list)
+        :type index: int or None
+        :returns: pert or list
+        """
         return self.d.get_pert(niface, index)
 
     def get_loadfile(self, niface):
