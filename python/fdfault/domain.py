@@ -1061,6 +1061,8 @@ class domain(object):
 
         For 3D problems, indices for ``ns`` are (0 = sxx, 1 = sxy, 2 = sxz, 3 = syy, 4 = syz, 5 = szz)
 
+        Providing arrays of the incorrect size will result in an error.
+
         :param s: New heterogeneous stress array (numpy array with shape ``(3, nx, ny, nz)``
         :type s: ndarray
         :returns: None
@@ -1091,6 +1093,8 @@ class domain(object):
         ``(3, nx, ny, nz)``. First index indicates parameter value
         (0 = density, 1 = Lame parameter, 2 = Shear modulus). The other three indicate grid
         coordinates
+
+        An array with the wrong shape will result in an error.
 
         :param mat: New material properties array (numpy array with shape ``(3, nx, ny, nz)``)
         :type mat: ndarray
