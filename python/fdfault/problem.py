@@ -595,6 +595,20 @@ class problem(object):
         """
         self.d.set_mattype(mattype)
 
+    def get_material(self, coords):
+        """
+        Returns material properties for a given block
+
+        Returns the material class associated with block with coordinates ``coords``. ``coords``
+        must be a tuple or list of valid block indices
+
+        :param coords: Coordinates of the target block (tuple or list of 3 nonnegative integers)
+        :type coords: tuple or list
+        :returns: Material class with properties for this block
+        :rtype: material
+        """
+        self.d.get_material(coords)
+        
     def set_material(self, newmaterial, coords = None):
         """
         Sets block material properties for the block with indices given by ``coords``
@@ -620,7 +634,8 @@ class problem(object):
 
     def get_bounds(self, coords, loc = None):
         """
-        Returns boundary types of a particular block.
+        Returns boundary types of a particular block
+        
         If ``loc`` (int) is provided, the method returns a specific location (str). Otherwise it returns a list
         of all boundaries, which will have length 4 for 2D problems and length 6 for 3D problems.
         ``loc`` serves effectively as an index into the list, and the indices correspond to the following:

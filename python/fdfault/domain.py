@@ -498,6 +498,23 @@ class domain(object):
                 for b in b2:
                     b.set_mattype(mattype)
 
+    def get_material(self, coords):
+        """
+        Returns material properties for a given block
+
+        Returns the material class associated with block with coordinates ``coords``. ``coords``
+        must be a tuple or list of valid block indices
+
+        :param coords: Coordinates of the target block (tuple or list of 3 nonnegative integers)
+        :type coords: tuple or list
+        :returns: Material class with properties for this block
+        :rtype: material
+        """
+        assert len(coords) == 3, "block coordinates must have length 3"
+        for i in range(3):
+            assert (coords[i] >= 0 and coords[i] < self.nblocks[i]), "block coordinates do not match nblocks"
+        return self.blocks[coords[0]][coords[1]][coords[2]].get_material()
+            
     def set_material(self, newmaterial, coords = None):
         """
         Sets block material properties for the block with indices given by ``coords``
