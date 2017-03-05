@@ -1,3 +1,17 @@
+"""
+The ``write_scec`` module contains several functions useful for converting binary output from a
+simulation to the text file format used by the SCEC Rupture Code Verification group. Functions are
+written for on fault, off fault, and front data types, and there are versions for both 2D and 3D
+problems. The functions take several common optional arguments, including ``depthsign`` (indicates
+whether depth is positive or negative), ``author`` (the person who is submitting the results),
+``version`` (the code version used to run the simulation), and ``grid_spacing`` (the resolution
+of the simulation, in the event you are submitting data for multiple grid spacings).
+
+Each function writes a text file in the current directory following the file naming convention used
+by the server for the Code Verification group. More information on the file outputs are given
+in the documentation for each function.
+"""
+
 import numpy as np
 import fdfault
 import datetime
@@ -5,11 +19,31 @@ from scipy.integrate import cumtrapz
 
 def write_off_fault(problem, station, depthsign = 1., author = "", version = "", grid_spacing = ""):
     """
-    converts code output units for off-fault station into a formatted text file for SCEC website
-    required inputs are problem name (string) and station (tuple of strings for strike, across, depth)
-    optional input include depthsign (1. by default, changes sign on depth coordinate if -1.),
-    and author, verision, and grid spacing strings for header
-    file is written to {problem}_body{across}st{strike}dp{depth}.txt in the current directory
+    Converts code output units for off-fault station from a 3D simulation into a formatted text file
+    for SCEC website
+
+    This function converts off fault data from binary (written by the C++ code) to ASCII text
+    for a 3D benchmark simulation. Required inputs are the problem name (string) and station
+    (tuple of strings in the format ``(strike, across, depth)``). Optional inputs include depthsign
+    (1. by default, changes sign on depth coordinate if -1.), and author, verision, and grid spacing
+    strings which will be inserted into the header of the output file.
+    
+    The text file is written to ``{problem}_body{across}st{strike}dp{depth}.txt`` in the current
+    directory.
+
+    :param problem: Problem name to write to file
+    :type problem: str
+    :param station: Coordinates in 3D of output station (tuple of 3 strings)
+    :type station: tuple
+    :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type depthsign: float
+    :param author: Person who ran the simulation (optional, default is ``""``)
+    :type author: str
+    :param version: Code version used in simulation (optional, default is ``""``)
+    :type version: str
+    :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
+    :type grid_spacing: str
+    :returns: None
     """
 
     stationstr = 'body'+station[1]+'st'+station[0]+'dp'+station[2]
@@ -60,11 +94,30 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
 
 def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = "", grid_spacing = ""):
     """
-    converts code output units for off-fault station into a formatted text file for SCEC website
-    required inputs are problem name (string) and station (tuple of strings for strike, across, depth)
-    optional input include depthsign (1. by default, changes sign on depth coordinate if -1.),
-    and author, verision, and grid spacing strings for header
-    file is written to {problem}_body{across}st{strike}dp{depth}.txt in the current directory
+    Converts code output units for off-fault station into a formatted text file for SCEC website
+
+    This function converts off fault data from binary (written by the C++ code) to ASCII text
+    for a 3D benchmark simulation. Required inputs are the problem name (string) and station
+    (tuple of strings in the format ``(strike, across, depth)``). Optional inputs include depthsign
+    (1. by default, changes sign on depth coordinate if -1.), and author, verision, and grid spacing
+    strings which will be inserted into the header of the output file.
+    
+    The text file is written to ``{problem}_body{across}st{strike}dp{depth}.txt`` in the current
+    directory.
+
+    :param problem: Problem name to write to file
+    :type problem: str
+    :param station: Coordinates in 2D of output station (tuple of 3 strings, but ``strike`` should be ``'0'``)
+    :type station: tuple
+    :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type depthsign: float
+    :param author: Person who ran the simulation (optional, default is ``""``)
+    :type author: str
+    :param version: Code version used in simulation (optional, default is ``""``)
+    :type version: str
+    :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
+    :type grid_spacing: str
+    :returns: None
     """
 
     stationstr = 'body'+station[1]+'st'+station[0]+'dp'+station[2]
@@ -112,12 +165,30 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
 def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
                    version = "", grid_spacing = ""):
     """
-    converts code output units for on-fault station into a formatted text file for SCEC website
-    required inputs are problem name (string) and station (tuple of strings for strike and depth)
-    optional input include depthsign (1. by default, changes sign on depth coordinate if -1.),
-    whether or not normal stress information is to be written, and author, verision, and grid spacing
-    strings for header
-    file is written to {problem}_faultst{strike}dp{depth}.txt in the current directory
+    Converts code output units for on-fault station into a formatted text file for SCEC website
+
+    This function converts on fault data from binary (written by the C++ code) to ASCII text
+    for a 3D benchmark simulation. Required inputs are the problem name (string) and station
+    (tuple of strings in the format ``(strike, depth)``). Optional inputs include depthsign
+    (1. by default, changes sign on depth coordinate if -1.), and author, verision, and grid spacing
+    strings which will be inserted into the header of the output file.
+    
+    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` in the current
+    directory.
+
+    :param problem: Problem name to write to file
+    :type problem: str
+    :param station: Coordinates of output station (tuple of 2 strings for strike and depth coordinates)
+    :type station: tuple
+    :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type depthsign: float
+    :param author: Person who ran the simulation (optional, default is ``""``)
+    :type author: str
+    :param version: Code version used in simulation (optional, default is ``""``)
+    :type version: str
+    :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
+    :type grid_spacing: str
+    :returns: None
     """
 
     stationstr = 'faultst'+station[0]+'dp'+station[1]
@@ -189,12 +260,31 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
 def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = "",
                    version = "", grid_spacing = ""):
     """
-    converts code output units for on-fault station into a formatted text file for SCEC website
-    required inputs are problem name (string) and station (tuple of strings for strike and depth)
-    optional input include depthsign (1. by default, changes sign on depth coordinate if -1.),
-    whether or not normal stress information is to be written, and author, verision, and grid spacing
-    strings for header
-    file is written to {problem}_faultst{strike}dp{depth}.txt in the current directory
+    Converts code output units for on-fault station into a formatted text file for SCEC website
+
+    This function converts on fault data from binary (written by the C++ code) to ASCII text
+    for a 2D benchmark simulation. Required inputs are the problem name (string) and station
+    (tuple of strings in the format ``(strike, depth)``, with values chosen appropriately for a 2D
+    simulation). Optional inputs include depthsign (1. by default, changes sign on depth
+    coordinate if -1.), and author, verision, and grid spacing strings which will be inserted into the
+    header of the output file.
+    
+    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` in the current
+    directory.
+
+    :param problem: Problem name to write to file
+    :type problem: str
+    :param station: Coordinates of output station (tuple of 2 strings for strike and depth coordinates)
+    :type station: tuple
+    :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type depthsign: float
+    :param author: Person who ran the simulation (optional, default is ``""``)
+    :type author: str
+    :param version: Code version used in simulation (optional, default is ``""``)
+    :type version: str
+    :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
+    :type grid_spacing: str
+    :returns: None
     """
 
     stationstr = 'faultst'+station[0]+'dp'+station[1]
@@ -256,11 +346,30 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
 
 def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", grid_spacing = ""):
     """
-    converts front into a formatted text file for SCEC website
-    required input is problem name (string)
-    optional input include interface number (integer, 0 by default), depthsign (1. by default, changes
-    sign on depth coordinate if -1.), and author, verision, and grid spacing strings for header
-    file is written to {problem}_cplot.txt in the current directory
+    Converts code output units for rupture front times into a formatted text file for SCEC website
+
+    This function converts rupture time data from binary (written by the C++ code) to ASCII text
+    for a 3D benchmark simulation. Required inputs are the problem name (string). Optional
+    inputs include the interface to write to file (default is ``0``), depthsign (1. by default, changes
+    sign on depth coordinate if -1.), and author, verision, and grid spacing strings which will be
+    inserted into the header of the output file.
+    
+    The text file is written to ``{problem}_cplot.txt`` in the current
+    directory.
+
+    :param problem: Problem name to write to file
+    :type problem: str
+    :param iface: Interface to be written to file (default is ``0``)
+    :type station: int
+    :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type depthsign: float
+    :param author: Person who ran the simulation (optional, default is ``""``)
+    :type author: str
+    :param version: Code version used in simulation (optional, default is ``""``)
+    :type version: str
+    :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
+    :type grid_spacing: str
+    :returns: None
     """
 
     assert(depthsign == 1. or depthsign == -1.)
