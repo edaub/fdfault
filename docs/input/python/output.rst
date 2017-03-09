@@ -4,7 +4,7 @@
 The ``output`` Class
 **********************************
 
-Details on output units are set using the ``output`` class.
+.. automodule:: fdfault.output
 
 .. autoclass:: fdfault.output
     :members:

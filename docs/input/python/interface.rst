@@ -8,3 +8,4 @@ The ``interface`` class is the parent class of all other interfaces. It describe
 
 .. autoclass:: fdfault.interface
     :members:
+	
