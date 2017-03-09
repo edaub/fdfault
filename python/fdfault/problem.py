@@ -1056,7 +1056,7 @@ class problem(object):
         ``niface`` is an integer indicating the index of the desired interface. If out of bounds, will
         give an error.
 
-        ``index`` is an integer that indicates the position within the list of loads. Default is most
+        ``index`` is an integer that indicates the position within the list of perturbations. Default is most
         recently added (-1).
 
         :param niface: Index of interface from which to remove the parameter perturbation
@@ -1095,8 +1095,8 @@ class problem(object):
 
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: Current loadfile for the interface
-        :rtype: loadfile
+        :returns: Current loadfile for the interface (if the interface does not have a loadfile, returns None)
+        :rtype: loadfile or None
         """
         return self.d.get_loadfile(niface)
 
@@ -1183,7 +1183,8 @@ class problem(object):
 
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: float
+        :returns: Initial state variable
+        :rtype: float
         """
         return self.d.get_state(niface)
 
@@ -1208,9 +1209,11 @@ class problem(object):
         """
         Returns state file of given interface
 
+        If interface does not have a statefile returns None
+
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: statefile
+        :returns: statefile or None
         """
         return self.d.get_statefile(niface)
 
@@ -1236,7 +1239,7 @@ class problem(object):
         Deletes statefile for given interface
 
         Delete the statefile for a given interface. ``niface`` must be a valid index that refers to
-        an interface with a state variable.
+        an interface with a state variable. Will set the statefile attribute for the interface to None.
 
         :param niface: Index of interface that will have its statefile removed
         :type niface: int

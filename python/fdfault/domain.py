@@ -1356,8 +1356,8 @@ class domain(object):
 
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: Current loadfile for the interface
-        :rtype: loadfile
+        :returns: Current loadfile for the interface (if the interface does not have a loadfile, returns None)
+        :rtype: loadfile or None
         """
         assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         return self.interfaces[niface].get_loadfile()
@@ -1450,7 +1450,8 @@ class domain(object):
 
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: float
+        :returns: Initial state variable
+        :rtype: float
         """
         assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         return self.interfaces[niface].get_state()
@@ -1477,9 +1478,11 @@ class domain(object):
         """
         Returns state file of given interface
 
+        If interface does not have a statefile returns None
+
         :param niface: index of desired interface (zero-indexed)
         :type index: int
-        :returns: statefile
+        :returns: statefile or None
         """
         assert type(niface) is int and niface >= 0 and niface < self.nifaces, "Must give integer index for interface"
         return self.interfaces[niface].get_statefile()
@@ -1507,7 +1510,7 @@ class domain(object):
         Deletes statefile for given interface
 
         Delete the statefile for a given interface. ``niface`` must be a valid index that refers to
-        an interface with a state variable.
+        an interface with a state variable. Will set the statefile attribute for the interface to None.
 
         :param niface: Index of interface that will have its statefile removed
         :type niface: int

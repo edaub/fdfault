@@ -578,7 +578,7 @@ class output(object):
         a list of output units that are formatted for input into the C++ code.
 
         :param f: file handle for output file
-        "type f: file
+        :type f: file
         :returns: None
         """
         f.write(self.name+"\n")

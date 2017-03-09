@@ -188,7 +188,7 @@ class fields(object):
 
         :param mat: New material properties array (numpy array with shape ``(3, nx, ny, nz)``)
         :type mat: ndarray
-        :returns None
+        :returns: None
         """
         if self.ndim == 2 and self.mode == 3:
             assert(mat.shape[0] == 2), "for mode 3 problems, heterogeneous material properties must have 2 components"
