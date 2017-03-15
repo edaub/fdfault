@@ -1,11 +1,72 @@
+"""
+The ``surface`` and ``curve`` classes are used to define non-rectangular geometries for simulation
+blocks. Every block in a simulation can accept instances of the ``surface`` or ``curve`` class to
+override the rectangular geometry defined by the lower left coordinate and block length. Any
+block edge that is not defined by a surface or curve will automatically take on the rectangular
+geometry, so you only need to define surfaces or curves for edges that do not match the
+rectangular geometry defined in this way.
+
+The ``surface`` and ``curve`` classes rely on Numpy arrays to hold the coordinate values of
+the block edges. In particular, each surface holds three (n1,n2)-shaped arrays ``x``, ``y``, and ``z``
+that define the coordinates of the surface. Curves similarly hold two (n1,1) arrays ``x`` and ``y``
+(``z`` is defined but holds a single point and is not used).
+
+Surfaces are defined by providing the number of grid points, normal direction in the computational
+space (a string ``'x'``, ``'y'``, or ``'z'``), and the arrays ``x``, ``y``, and ``z`` holding the coordinates.
+An example of how to define a surface in the ``'z'`` direction is as follows:
+
+>>> import fdfault
+>>> import numpy as np
+>>> nx = 401
+>>> ny = 201
+>>> x = np.linspace(0., 40., nx)
+>>> y = np.linspace(0., 20., ny)
+>>> xm, ym = np.meshgrid(x, y, index='ij')
+>>> z = np.exp(-(x-20.)**2/5.-(y-10.)**2/5.)
+>>> surf = fdfault.surface(nx, ny, 'z', xm, ym, z)
+
+Note that this example uses a uniform grid spacing on the x and y coordinates. This is not required,
+and you are free to use irregular grid spacing as long as the resulting 3D grid meets the smoothness
+requirements imposed by the numerical method (precisely, the metric tensor for the grid must have
+a positive Jacobian everywhere).
+
+Similarly, you can define a curve, though fewer arguments are needed:
+
+>>> import fdfault
+>>> import numpy as np
+>>> nx = 401
+>>> x = np.linspace(0., 40., nx)
+>>> y = np.sin(np.pi*x/40.)
+>>> curv = fdfault.curve(nx, 'y', x, y)
+
+Once the surfaces or curves are created, you can use the ``set_block_surf`` method of a problem
+to set the bounding surfaces or curves of a given block. The necessary binary files holding
+the coordinates will be automatically written to file when the ``write_input``method of the problem
+is called.
+"""
+
 from __future__ import division, print_function
 
 import numpy as np
 
 class surface(object):
     '''
-    surface class
-    represents a surface for defining interfaces and block boundaries
+    The surface class represents a surface for defining interfaces and block boundaries
+
+    Each surface contains the following attributes:
+
+    :ivar n1: Number of grid points in the first spatial direction (x unless the interface is an ``'x'`` interface)
+    :type n1: int
+    :ivar n2: Number of grid points in the second spatial direction (z unless the interface is a ``'z'`` interface)
+    :type n1: int
+    :ivar direction: Normal direction in computational space
+    :type direction: str
+    :ivar x: Numpy array holding x coordinates, must have shape (n1,n2)
+    :type x: ndarray
+    :ivar y: Numpy array holding y coordinates, must have shape (n1,n2)
+    :type y: ndarray
+    :ivar z: Numpy array holding z coordinates, must have shape (n1,n2)
+    :type z: ndarray
     '''
     def __init__(self, n1, n2, direction, x, y, z):
         '''
@@ -29,26 +90,44 @@ class surface(object):
         assert (n1, n2) == self.z.shape, "z must have shape (n1, n2)"
 
     def get_direction(self):
-        "returns approximate normal direction"
+        """
+        Returns approximate normal direction
+
+        :returns: Normal direction in computational space
+        :rtype: str
+        """
         return self.direction
 
     def get_n1(self):
         '''
-        returns number of grid points along first dimension
+        Returns number of grid points along first dimension
+
+        :returns: Number of grid points along first dimension (x unless interface direction is ``'x'``)
+        :rtype: int
         '''
         return self.n1
 
     def get_n2(self):
         '''
-        returns number of grid points along second dimension
+        Returns number of grid points along second dimension
+
+        :returns: Number of grid points along second dimension (z unless interface direction is ``'z'``)
+        :rtype: int
         '''
         return self.n2
 
     def get_x(self, i=None):
         '''
-        returns x coordinate array
-        if no argument provided, returns entire array
-        otherwise, specify a tuple indicating the desired indices
+        Returns x coordinate array
+        
+        if no argument is provided, the method returns the entire array. Otherwise, ``i`` must
+        be a valid index tuple for the array.
+
+        :param i: Index tuple (must be a valid index into the array). Optional, if not provided or
+                       if ``None`` is given, this returns the entire array.
+        :type i: tuple or None
+        :returns: Value of x coordinate
+        :rtype: ndarray or float
         '''
         if i is None:
             return self.x
@@ -57,9 +136,16 @@ class surface(object):
 
     def get_y(self, i=None):
         '''
-        returns y coordinate array
-        if no argument provided, returns entire array
-        otherwise, specify a tuple indicating the desired indices
+        Returns y coordinate array
+        
+        if no argument is provided, the method returns the entire array. Otherwise, ``i`` must
+        be a valid index tuple for the array.
+
+        :param i: Index tuple (must be a valid index into the array). Optional, if not provided or
+                       if ``None`` is given, this returns the entire array.
+        :type i: tuple or None
+        :returns: Value of y coordinate
+        :rtype: ndarray or float
         '''
         if i is None:
             return self.y
@@ -68,9 +154,16 @@ class surface(object):
 
     def get_z(self, i=None):
         '''
-        returns x coordinate array
-        if no argument provided, returns entire array
-        otherwise, specify a tuple indicating the desired indices
+        Returns z coordinate array
+        
+        if no argument is provided, the method returns the entire array. Otherwise, ``i`` must
+        be a valid index tuple for the array.
+
+        :param i: Index tuple (must be a valid index into the array). Optional, if not provided or
+                       if ``None`` is given, this returns the entire array.
+        :type i: tuple or None
+        :returns: Value of z coordinate
+        :rtype: ndarray or float
         '''
         if i is None:
             return self.z
@@ -86,11 +179,25 @@ class surface(object):
 
     def has_same_edge(self, edge1, edge2, othersurf):
         '''
-        compares edges of two surfaces based on indices 0-3, returns boolean
-        0 means edge where second index is zero
-        1 means edge where first index is zero
-        2 means edge where second index is n2-1
-        3 means edge where first index is n1-1
+        Compares the edges of two surfaces
+        
+        The method compares the edges of two surfaces, using the indices 0-3 to indicate the
+        edges (one argument must be provided for each surface)
+            * 0 means edge where second index is zero
+            * 1 means edge where first index is zero
+            * 2 means edge where second index is n2-1
+            * 3 means edge where first index is n1-1
+
+        Returns a boolean.
+
+        :param edge1: Edge of first surface to be used. Must be integer 0-3
+        :type edge1: int
+        :param edge2: Edge of second surface to be used. Must be integer 0-3
+        :type edge2: int
+        :param othersurf: The second surface, must be a surface
+        :type othersurf: surface
+        :returns: Whether or not the selected edges match
+        :rtype: bool
         '''
 
         assert type(edge1) is int and edge1 >= 0 and edge1 < 4, "edge1 out of range"
@@ -142,12 +249,17 @@ class surface(object):
 
     def write(self, filename, endian = '='):
         '''
-        write surface to binary file
-        can optionally specify endianness of the result
-        = native
-        > big endian
-        < little endian
-        by default, output is native
+        Write surface to binary file
+        
+        Method writes the surface to a binary file. Input arguments include the desired filename
+        (required) and the byte ordering of the file (``'='`` native, ``'>'`` big endian, ``'<'`` little endian;
+        default is native)
+
+        :param filename: Filename for output
+        :type filename: str
+        :param endian: Byte ordering of output (optional, default is native)
+        :type endian: str
+        :returns: None
         '''
         
         assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
@@ -167,7 +279,24 @@ class surface(object):
         return 'Surface with normal direction ' + self.direction +', n1 = ' + str(self.n1) + ', n2 = ' + str(self.n2)
 
 class curve(surface):
-    "Class representing surfaces for 2D problems"
+    '''
+    The curve class represents a curve for defining interfaces and block boundaries in 2D problems
+
+    A curve is simply a surface class with the z spatial dimension removed. However, you cannot
+    use curves and surfaces interchangeably as the C++ code reads the files
+    for 2D and 3D problems differently, thus appropriate typing is enforced.
+
+    Each curve contains the following attributes:
+
+    :ivar n1: Number of grid points (x for ``'y'`` interfaces, y for ``'x'`` interfaces)
+    :type n1: int
+    :ivar direction: Normal direction in computational space
+    :type direction: str
+    :ivar x: Numpy array holding x coordinates, must have shape (n1,)
+    :type x: ndarray
+    :ivar y: Numpy array holding y coordinates, must have shape (n1,)
+    :type y: ndarray
+    '''
     def __init__(self, n, direction, x, y):
         '''
         initialize curve
@@ -190,11 +319,24 @@ class curve(surface):
 
     def has_same_edge(self, edge1, edge2, othersurf):
         '''
-        compares edges of two surfaces based on indices 0-3, returns boolean
-        0 means edge where second index is zero
-        1 means edge where first index is zero
-        2 means edge where second index is n2-1
-        3 means edge where first index is n1-1
+        Compares the edges of two curves
+        
+        The method compares the edges of two curves, using the indices 1 or 3 to indicate the
+        edges (one argument must be provided for each curve). Note that this definition
+        is made to be consistent with the surface class.
+            * 1 means edge where first index is zero
+            * 3 means edge where first index is n1-1
+
+        Returns a boolean.
+
+        :param edge1: Edge of first surface to be used. Must be integer 1 or 3
+        :type edge1: int
+        :param edge2: Edge of second surface to be used. Must be integer 1 or 3
+        :type edge2: int
+        :param othersurf: The second curve, must be a curve
+        :type othersurf: curve
+        :returns: Whether or not the selected edges match
+        :rtype: bool
         '''
 
         assert type(edge1) is int and (edge1 == 1 or edge1 == 3), "edge1 out of range"
@@ -214,12 +356,17 @@ class curve(surface):
 
     def write(self, filename, endian = '='):
         '''
-        write surface to binary file
-        can optionally specify endianness of the result
-        = native
-        > big endian
-        < little endian
-        by default, output is native
+        Write curve to binary file
+        
+        Method writes the curve to a binary file. Input arguments include the desired filename
+        (required) and the byte ordering of the file (``'='`` native, ``'>'`` big endian, ``'<'`` little endian;
+        default is native)
+
+        :param filename: Filename for output
+        :type filename: str
+        :param endian: Byte ordering of output (optional, default is native)
+        :type endian: str
+        :returns: None
         '''
         
         assert(endian == '=' or endian == '>' or endian == '<')
