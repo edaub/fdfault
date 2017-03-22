@@ -1,0 +1,94 @@
+[fdfault.problem]
+tpv4
+data/
+701
+0.0
+0.0
+0.3
+100
+4
+
+[fdfault.domain]
+3
+2
+201 202 101
+1 2 1
+201
+101 101
+101
+1
+slipweak
+4
+elastic
+
+[fdfault.fields]
+0.0 0.0 0.0 0.0 0.0 0.0
+none
+
+[fdfault.block000]
+2.67 32.04 32.04
+0.0 0.0 0.0
+40.0 20.0 20.0
+absorbing
+absorbing
+absorbing
+none
+absorbing
+free
+none
+none
+none
+none
+none
+none
+
+[fdfault.block010]
+2.67 32.04 32.04
+0.0 20.0 0.0
+40.0 20.0 20.0
+absorbing
+absorbing
+none
+absorbing
+absorbing
+free
+none
+none
+none
+none
+none
+none
+
+[fdfault.interface0]
+y
+0 0 0
+0 1 0
+
+[fdfault.friction]
+2
+constant 0.0 0.0 0.0 0.0 0.0 -120.0 70.0 0.0
+boxcar 0.0 20.0 1.5 12.5 1.5 0.0 11.6 0.0
+none
+
+[fdfault.slipweak]
+4
+constant 0.0 0.0 0.0 0.0 0.0 0.4 0.677 0.525 0.0 0.0 0.0
+boxcar 0.0 20.0 20.0 2.5 2.5 0.0 10000.0 0.0 0.0 0.0 0.0
+boxcar 0.0 2.5 2.5 12.5 7.5 0.0 10000.0 0.0 0.0 0.0 0.0
+boxcar 0.0 37.5 2.5 12.5 7.5 0.0 10000.0 0.0 0.0 0.0 0.0
+none
+
+[fdfault.outputlist]
+vf
+V
+0 700 10
+0 200 1
+101 101 1
+0 100 1
+
+
+[fdfault.frontlist]
+1
+V
+0.001
+
