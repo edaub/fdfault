@@ -906,12 +906,12 @@ class slipweak(paramfric):
     are set using parameter perturbations (the ``swparam`` class) and parameter files (the
     ``swparamfile`` class). Parameters that can be specified include:
 
-    * The slip weakening distance $d_c$, ``dc``
-    * The static friction value $\mu_s$, ``mus``
-    * The dynamic friction value $\mu_d$, ``mud``
-    * The frictional cohesion $c_0$, ``c0``
-    * The forced rupture time $t_{rup}$, ``trup``
-    * The characteristic weakening time $t_c$, ``tc``
+    * The slip weakening distance :math:`{d_c}`, ``dc``
+    * The static friction value :math:`{\mu_s}`, ``mus``
+    * The dynamic friction value :math:`{\mu_d}`, ``mud``
+    * The frictional cohesion :math:`{c_0}`, ``c0``
+    * The forced rupture time :math:`{t_{rup}}`, ``trup``
+    * The characteristic weakening time :math:`{t_c}`, ``tc``
 
     Slip weakening Frictional interfaces have the following attributes:
 
@@ -989,15 +989,15 @@ class stz(statefric):
     values in addition to the initial value of the state variable. All of these can be set
     using some combination of perturbations and files. Parameters include:
 
-    * Reference velocity $V_0$ , ``v0``
-    * Reference activation barrier $f_0$, ``f0``
-    * Frictional direct effect $a$, ``a``
-    * Frictional yield coefficient $\mu_y$, ``muy``
-    * Effective temperature specific heat $c_0$, ``c0``
-    * Effective temperature relaxation rate $R$, ``R``
-    * Effective temperature relaxation barrier $\beta$, ``beta``
-    * Effective temperature activation barrier $\chi_w$, ``chiw``
-    * Reference velocity for effective temperature activation $V_1$, ``v1``
+    * Reference velocity :math:`{V_0}` , ``v0``
+    * Reference activation barrier :math:`{f_0}`, ``f0``
+    * Frictional direct effect :math:`{a}`, ``a``
+    * Frictional yield coefficient :math:`{\mu_y}`, ``muy``
+    * Effective temperature specific heat :math:`{c_0}`, ``c0``
+    * Effective temperature relaxation rate :math:`{R}`, ``R``
+    * Effective temperature relaxation barrier :math:`{\\beta}`, ``beta``
+    * Effective temperature activation barrier :math:`{\chi_w}`, ``chiw``
+    * Reference velocity for effective temperature activation :math:`{V_1}`, ``v1``
 
     STZ Frictional interfaces have the following attributes:
 
