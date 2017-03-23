@@ -24,11 +24,12 @@ Installation Instructions:
 
 If installing from a downloaded source tarball, enter
 
-> tar -zxvf fdfault-v1.0.tar.gz
+> tar -zxvf fdfault-1.0.tar.gz
 
-Or clone the git repository using
+Depending on which version you downloaded, the filename for the zipped tarball might
+be different. Or clone the git repository using
 
-> git clone http://github.io/fdfault.git
+> git clone https://github.com/egdaub/fdfault.git
 
 For most users, building the source code should simply require
 
@@ -82,13 +83,19 @@ directory. Similarly, to make the analysis features available in the data direct
 This allows you to type "import fdfault" from within the data directory and have the 
 analysis tools at your disposal.
 
-If you downloaded the code via a gzipped tarball, the User's Guide should already be 
-available in the docs/_build/html and docs/_build/latex directories for the HTML and
-PDF versions, respectively. If you downloaded the code from the git repository, 
-you will need to build the User's Guide yourself (requires Sphinx, with MathJax required for the HTML verions and a LaTeX distribution for the PDF version).
+Finally you will need to build the User's Guide (requires Sphinx, with MathJax required 
+for the HTML verions and a LaTeX distribution for the PDF version).
 
 > cd fdfault/docs/
 > make html && make latexpdf
+
+This should build the notes in the fdfault/docs/_build/html or fdfault/docs/_build/latex
+directories. If you wish to build only the html or pdf version, use the appropriate 
+command. If you do not have Sphinx or LaTeX on your machine, both versions of the 
+documentation are available on the web:
+
+http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/html/index.html (html)
+http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf (pdf)
 
 #########################################################################################
 
