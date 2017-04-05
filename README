@@ -83,12 +83,9 @@ directory. Similarly, to make the analysis features available in the data direct
 This allows you to type "import fdfault" from within the data directory and have the 
 analysis tools at your disposal.
 
-<<<<<<< HEAD
-Finally you will need to build the User's Guide (requires Sphinx, with MathJax required 
-for the HTML verions and a LaTeX distribution for the PDF version).
-=======
-Finally you will need to build the User's Guide (requires Sphinx, with MathJax required for the HTML verions and a LaTeX distribution for the PDF version).
->>>>>>> devel
+Finally you will need to build the User's Guide. The user's guide requires Sphinx and
+MathJax (or an internet connection to access MathJax online) for the HTML version and
+a LaTeX distribution for the PDF version).
 
 > cd fdfault/docs/
 > make html && make latexpdf
@@ -99,12 +96,4 @@ command. If you do not have Sphinx or LaTeX on your machine, both versions of th
 documentation are available on the web:
 
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/html/index.html (html)
-<<<<<<< HEAD
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf (pdf)
-=======
-http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf
->>>>>>> devel
-
-#########################################################################################
-
-If you use this code in a scientific publication, please cite the following papers:
