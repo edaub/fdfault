@@ -57,21 +57,39 @@ parallel I/O is handled in the code.
 * ``'Sy'`` - y shear traction component (signed)
 * ``'Sz'`` - z shear traction component (signed)
 
-Note that for interfaces that do not align with a particular coordinate direction such as x or y,
-the interface components will not be exactly along the specified directions, and will instead
-conform to the following rules:
+The different interface components do not truly correspond to the corresponding coordinate
+directions. The code handles complex boundary conditions by rotating the fields into a
+coordinate system defined by three mutually orthogonal unit vectors. The normal direction
+is defined to always point into the "positive" block and is uniquely defined by the boundary
+geometry. The two tangential components are defined as follows for each different type of
+interface:
 
-* First, the code finds the largest of the three components of the normal vector.
+* Depending on the orientation of the interface in the computational space, a different
+  convention is used to set the first tangent vector. For ``'x'`` or ``'y'`` oriented interfaces,
+  the :math:`{z}` component of the first tangent vector is set to zero. This is done to ensure 
+  that for 2D problems, the second tangent vector points in the :math:`{z}`-direction. For
+  ``'z'`` oriented interfaces, the :math:`{y}` component of the first tangent vector is set to zero.
+  
+* With one component of the first tangent vector defined, the other two components can be
+  uniquely determined to make the tangent vector orthogonal up to a sign. The sign is chosen
+  such that the tangent vector points in the direction where the grid points are increasing.
+  
+* The second tangent vector is defined by taking the right-handed cross product of the normal
+  and first tangent vectors, except for ``'y'`` interfaces, where the left-handed cross product is
+  used. This is done to ensure that for 2D problems, the vertical component always points in the
+  :math:`{+z}`-direction.
 
-* If the largest component is the :math:`{x}` or :math:`{y}` component, the :math:`{z}` component of the first tangent vector is set to zero.
-  This is done to ensure that for 2D problems, the second tangent vector points in the :math:`{z}`-direction. If the :math:`{z}` component is
-  largest, the :math:`{y}` component of the first tangent vector is set to zero.
-
-* With one component of the first tangent vector defined, the other two components can be uniquely determined to make the tangent vector
-  orthogonal up to a sign. The sign is chosen such that the largest of the two remaining components keeps its original sign (usually positive). 
-  Again, this is done to ensure that the for 2D problems, the second tangent vector points in the :math:`{z}`-direction.
-
-* The second tangent vector is defined by taking the cross product of the normal and first tangent vectors.
+The consequence of this is that the letter used to designate the desired component is only valid
+for rectangular geometries. For non-rectangular geometries, the components will be rotated into
+the coordinate system described above. For interfaces in the "x" direction (i.e. connecting blocks
+whose indices only differ in the :math:`{x}`-direction), the :math:`{y}` component of output units
+will be along the first tangent vector, and the :math:`{z}` component will be along the second
+tangent vector. Similarly, for "y" interfaces the :math:`{x}` component is set by the first tangent
+vector and the :math:`{z}` component is determined by the second tangent vector, and for "z"
+interfaces the first tangent vector is in the :math:`{x}`-direction and the second tangent vector
+corresponds to the :math:`{y}`-direction. If you desire the components in a different coordinate
+system, you can convert them from the output data. Note that this also means that you can only
+specify certain components for interface output, depending on the direction of the interface.
 """
 
 from __future__ import division, print_function

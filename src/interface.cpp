@@ -638,7 +638,24 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                     nn[l] = nx[l][ii][jj];
                 }
 
-                if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
+                switch (direction) {
+                    case 0:
+                    	t1[2] = 0.;
+                    	t1[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    	t1[0] = -nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                        break;
+                    case 1:
+                    	t1[2] = 0.;
+                    	t1[0] = nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                    	t1[1] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
+                        break;
+                    case 2:
+                    	t1[1] = 0.;
+                    	t1[0] = nn[2]/sqrt(pow(nn[0],2)+pow(nn[2],2));
+                    	t1[2] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[2],2));
+                }
+
+/*                if (fabs(nn[0]) > fabs(nn[1]) && fabs(nn[0]) > fabs(nn[2])) {
                     t1[2] = 0.;
                     t1[1] = nn[0]/sqrt(pow(nn[0],2)+pow(nn[1],2));
                     t1[0] = -nn[1]/sqrt(pow(nn[0],2)+pow(nn[1],2));
@@ -650,11 +667,18 @@ void interface::apply_bcs(const double dt, const double t, fields& f, const bool
                     t1[1] = 0.;
                     t1[0] = nn[2]/sqrt(pow(nn[0],2)+pow(nn[2],2));
                     t1[2] = -nn[0]/sqrt(pow(nn[0],2)+pow(nn[2],2));
-                }
+                }*/
                 t2[0] = nn[1]*t1[2]-nn[2]*t1[1];
                 t2[1] = nn[2]*t1[0]-nn[0]*t1[2];
                 t2[2] = nn[0]*t1[1]-nn[1]*t1[0];
                 
+                switch (direction) {
+                    case 1:
+                    	t2[0] = -t2[0];
+                    	t2[1] = -t2[1];
+                    	t2[2] = -t2[2];
+				}
+				
                 // rotate fields
                 
                 boundfields b1, b2, b_rot1, b_rot2, b_rots1, b_rots2;

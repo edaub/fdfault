@@ -30,13 +30,27 @@ Load perturbations have the following format: ::
 
 In the simulations, the values of ``x0 dx y0 dy`` are only interpreted literally for rectangular blocks. For non-rectangular blocks, these values are interpreted assuming the interface follows a rectangular block on the minus side, using the values given under the block header. This means that the values may not be interpreted exactly as you expect!
 
-Finally, a trio of numbers set the vector surface traction applied to the interface. The first component is the normal traction, and the next two numbers are the two shear tractions. For 2D problems, the code sets the appropriate shear traction component to zero. For 3D problems, the exact meaning of the shear traction components are determined by the surface normal direction.
+Finally, a trio of numbers set the vector surface traction applied to the interface. The first component is the normal traction, and the next two numbers are the two shear tractions. For 2D problems, the first shear component is the in-plane shear traction (only valid for mode 2 problems), and the second is the out of plane shear traction (always in the :math:`{z}`-direction and only valid for mode 3 problems). The code sets the unused shear traction component to zero. For 3D problems, the exact meaning of the shear traction components are determined by the surface normal direction, described as follows.
+
+The different interface components do not truly correspond to the corresponding coordinate directions. The code handles complex boundary conditions by rotating the fields into a coordinate system defined by three mutually orthogonal unit vectors. The normal direction is defined to always point into the "positive" block and is uniquely defined by the boundary geometry. The two tangential components are defined as follows for each different type of interface:
+
+* Depending on the orientation of the interface in the computational space, a different convention is used to set the first tangent vector.
+  For ``'x'`` or ``'y'`` oriented interfaces, the :math:`{z}` component of the first tangent vector is set to zero. This is done to ensure 
+  that for 2D problems, the second tangent vector points in the :math:`{z}`-direction. For ``'z'`` oriented interfaces, the :math:`{y}`
+  component of the first tangent vector is set to zero.
+  
+* With one component of the first tangent vector defined, the other two components can be uniquely determined to make the tangent vector
+  orthogonal up to a sign. The sign is chosen such that the tangent vector points in the direction where the grid points are increasing.
+  
+* The second tangent vector is defined by taking the right-handed cross product of the normal and first tangent vectors, except for
+  ``'y'`` interfaces, where the left-handed cross product is used. This is done to ensure that for 2D problems, the vertical component
+  always points in the :math:`{+z}`-direction.
 
 ====================
 File Perturbations
 ====================
 
-After all of the surface traction perturbations, the code takes a filename of a file that adds additional tractions to the surface. The file contains a series of double precision floating point binary numbers of length :math:`{3\times n1 \times n2}`, where :math:`{n1}` and :math:`{n2}` are the number of grid points along the interface. The first block of :math:`{n1\times n2}` is for the normal traction (in row major order), then the first shear traction component, and finally the second shear traction component. Endianness is assumed to match the computer where the simulation is being run.
+After all of the surface traction perturbations, the code takes a filename of a file that adds additional tractions to the surface. The file contains a series of double precision floating point binary numbers of length :math:`{3\times n1 \times n2}`, where :math:`{n1}` and :math:`{n2}` are the number of grid points along the interface. The first block of :math:`{n1\times n2}` is for the normal traction (in row major order), then the in-plane shear traction component, and finally the out of plane shear traction component, with the same convention described above for setting the tangential directions. Endianness is assumed to match the computer where the simulation is being run.
 
 ==============================================
 Additional Friction Parameter Specifications
