@@ -1,0 +1,4 @@
+# ignore all files in data directory as they are large, predominantly binary files
+*
+# except .gitignore, which is needed as a placeholder to add keep this directory in place
+!.gitignore

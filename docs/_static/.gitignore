@@ -1,0 +1,4 @@
+# ignore all files in directory, which will be automatically generated
+*
+# except .gitignore, which is needed as a placeholder to add keep this directory in place
+!.gitignore
