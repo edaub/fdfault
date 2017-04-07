@@ -885,29 +885,69 @@ class stzparam(pert):
                 +str(self.beta)+", chiw = "+str(self.chiw)+", v1 = "+str(self.v1))
 
 class paramfile(object):
-    "template class for loading parameters to simulation from file"
+    """
+    The ``paramfile`` class is a template class for loading parameters to simulation from file.
+    It defines the basic functionality for defining the number of gridpoints and the function
+    for writing data to file. The individual subclasses define their own sets of parameters.
+    
+    All ``paramfile`` members contain the following internal parameters:
+
+    :ivar n1: Number of grid points along first coordinate direction
+    :type n1: int
+    :ivar n2: Number of grid points along the second coordinate direction
+    :type n2: int
+
+    Subclasses of ``paramfile`` will also define a number of numpy arrays with shape ``(n1,n2)``.
+    Parameter files do not include any information about the shape of the boundary, and it is
+    up to the user to ensure that that the parameter values correspond to the coordinates
+    of the interface. However, because parameter files explicitly assign a value to each grid
+    point, there is less ambiguity regarding the final values when compared to perturbations.
+    Depending on the orientation of the interface, the two coordinate directions will have
+    different orientations in space. The first coordinate direction is the :math:`{x}` direction
+    for :math:`{y}` and :math:`{z}` interfaces (for :math:`{x}` interfaces, the first index is in the
+    :math:`{y}` direction), and the second coordinate is in the :math:`{z}` direction except for
+    :math:`{z}` interfaces, where :math:`{y}` is the second index}.
+
+    When writing ``paramfile`` instances to disk, the code uses numpy to write information
+    to disk in binary format. Byte-ordering can be specified, and should correspond to the
+    byte-ordering on the system where the simulation will be run (default is native).
+    """
     def __init__(self, n1, n2):
         "create loadfile given number of grid points and load data (normal, horizontal, and vertical)"
         self.n1 = int(n1)
         self.n2 = int(n2)
 
     def get_n1(self):
-        "returns number of grid points in 1st coordinate direction"
+        """
+        Returns number of grid points in 1st coordinate direction
+
+        :returns: Number of grid points in 1st coordinate direction (:math:`{x}`, except for
+                      :math:`{x}` interfaces, where :math:`{y}` is the first coordinate direction)
+        :rtype: int
+        """
         return self.n1
 
     def get_n2(self):
-        "returns number of grid points in 2nd coordinate direction"
+        """
+        Returns number of grid points in 2nd coordinate direction
+
+        :returns: Number of grid points in 2nd coordinate direction (:math:`{z}`, except for
+                      :math:`{z}` interfaces, where :math:`{y}` is the second coordinate direction)
+        :rtype: int
+        """
         return self.n2
 
     def write(self, filename, endian = '='):
         """
-        write perturbation data to file with given endianness
-        = native
-        < little endian
-        > big endian
-        if endianness not provided uses native
-        """
+        Write perturbation data to file
 
+        :param filename: Name of binary file to be written
+        :type filename: str
+        :param endian: Byte-ordering for output. Options inclue ``'='`` for native, ``'<'`` for little endian,
+                                and ``'>'`` for big endian. Optional, default is native
+        :type endian: str
+        :returns: None
+        """
         raise(NotImplementedError, "write function not valid for template paramfile")
 
     def __str__(self):
@@ -915,7 +955,71 @@ class paramfile(object):
         return " File with n1 = "+str(self.n1)+", n2 = "+str(self.n2)
     
 class loadfile(paramfile):
-    "class representing a load perturbation (to be written to file)"
+    """
+    The ``loadfile`` class is a class for loading interface tractions to simulation from file.
+    It includes arrays for normal and two components of shear tractions to be applied
+    at the specific boundary.
+    
+    All ``loadfile`` members contain the following internal parameters:
+
+    :ivar n1: Number of grid points along first coordinate direction
+    :type n1: int
+    :ivar n2: Number of grid points along the second coordinate direction
+    :type n2: int
+    :ivar sn: Normal stress perturbation (must be an ``(n1,n2)`` shaped numpy array)
+    :type sn: ndarray
+    :ivar s2: In plane shear stress perturbation (must be an ``(n1,n2)`` shaped numpy array)
+    :type s2: ndarray
+    :ivar s3: Out of plane shear stress perturbation (must be an ``(n1,n2)`` shaped numpy array)
+    :type s3: ndarray
+
+    ``loadfile`` instances hold three numpy arrays with shape ``(n1,n2)`` for the normal and
+    two shear tractions actin on the interface. Load files do not include any information about
+    the shape of the boundary, and it is up to the user to ensure that that the parameter values
+    correspond to the coordinates of the interface. However, because parameter files explicitly
+    assign a value to each grid point, there is less ambiguity regarding the final values when
+    compared to perturbations. Depending on the orientation of the interface, the two coordinate
+    directions will have different orientations in space. The first coordinate direction is the
+    :math:`{x}` direction for :math:`{y}` and :math:`{z}` interfaces (for :math:`{x}` interfaces,
+    the first index is in the :math:`{y}` direction), and the second coordinate is in the :math:`{z}`
+    direction except for :math:`{z}` interfaces, where :math:`{y}` is the second index}.
+
+    The different traction components may not correspond to unique coordinate directions for
+    the interface. The code handles complex boundary conditions by rotating the fields into a
+    coordinate system defined by three mutually orthogonal unit vectors. The normal direction
+    is defined to always point into the "positive" block and is uniquely defined by the boundary
+    geometry. The two tangential components are defined as follows for each different type of
+    interface:
+
+    * Depending on the orientation of the interface in the computational space, a different
+      convention is used to set the first tangent vector. For ``'x'`` or ``'y'`` oriented interfaces,
+      the :math:`{z}` component of the first tangent vector is set to zero. This is done to ensure 
+      that for 2D problems, the second tangent vector points in the :math:`{z}`-direction. For
+      ``'z'`` oriented interfaces, the :math:`{y}` component of the first tangent vector is set to zero.
+  
+    * With one component of the first tangent vector defined, the other two components can be
+      uniquely determined to make the tangent vector orthogonal up to a sign. The sign is chosen
+      such that the tangent vector points in the direction where the grid points are increasing.
+  
+    * The second tangent vector is defined by taking the right-handed cross product of the normal
+      and first tangent vectors, except for ``'y'`` interfaces, where the left-handed cross product is
+      used. This is done to ensure that for 2D problems, the vertical component always points in the
+      :math:`{+z}`-direction.
+
+    The consequence of this is that the letter used to designate the desired component is only valid
+    for rectangular geometries. For non-rectangular geometries, the components will be rotated into
+    the coordinate system described above. For interfaces in the "x" direction (i.e. connecting blocks
+    whose indices only differ in the :math:`{x}`-direction), the :math:`{y}` component of output units
+    will be along the first tangent vector, and the :math:`{z}` component will be along the second
+    tangent vector. Similarly, for "y" interfaces the :math:`{x}` component is set by the first tangent
+    vector and the :math:`{z}` component is determined by the second tangent vector, and for "z"
+    interfaces the first tangent vector is in the :math:`{x}`-direction and the second tangent vector
+    corresponds to the :math:`{y}`-direction.
+
+    When writing ``loadfile`` instances to disk, the code uses numpy to write information
+    to disk in binary format. Byte-ordering can be specified, and should correspond to the
+    byte-ordering on the system where the simulation will be run (default is native).
+    """
     def __init__(self, n1, n2, sn, s2, s3):
         "create loadfile given number of grid points and load data (normal, horizontal, and vertical)"
 
@@ -929,21 +1033,51 @@ class loadfile(paramfile):
         assert (n1, n2) == self.s3.shape, "vertical stress must have shape (n1, n2)"
 
     def get_sn(self, index = None):
-        "returns normal stress of given indices, if none provided returns entire array"
+        """
+        Returns normal stress at given indices
+
+        Returns normal stress perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into ``sn`` array (optional, if not provided returns entire array)
+        :type index: float, tuple, or None
+        :returns: Normal stress perturbation (either ndarray or float, depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.sn
         else:
             return self.sn[index]
 
     def get_s2(self, index = None):
-        "returns horizontal shear stress of given indices, if none provided returns entire array"
+        """
+        Returns in plane shear stress at given indices
+
+        Returns in plane shear stress perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into ``s2`` array (optional, if not provided returns entire array)
+        :type index: float, tuple, or None
+        :returns: In plane shear stress perturbation (either ndarray or float, depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.s2
         else:
             return self.s2[index]
 
     def get_s3(self, index = None):
-        "returns vertical shear stress of given indices, if none provided returns entire array"
+        """
+        Returns out of plane shear stress at given indices
+
+        Returns out of plane shear stress perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into ``s3`` array (optional, if not provided returns entire array)
+        :type index: float, tuple, or None
+        :returns: Out of plane shear stress perturbation (either ndarray or float, depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.s3
         else:
@@ -951,11 +1085,14 @@ class loadfile(paramfile):
 
     def write(self, filename, endian = '='):
         """
-        write perturbation data to file with given endianness
-        = native
-        < little endian
-        > big endian
-        if endianness not provided uses native
+        Write perturbation data to file
+
+        :param filename: Name of binary file to be written
+        :type filename: str
+        :param endian: Byte-ordering for output. Options inclue ``'='`` for native, ``'<'`` for little endian,
+                                and ``'>'`` for big endian. Optional, default is native
+        :type endian: str
+        :returns: None
         """
 
         assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
@@ -973,7 +1110,35 @@ class loadfile(paramfile):
         return "Load"+paramfile.__str__(self)
 
 class statefile(paramfile):
-    "class representing a state variable perturbation (to be written to file)"
+    """
+    The ``statefile`` class is a class for loading heterogeneous initial state variable values from file.
+    It is only used for friction laws that require an additional state variable in addition to the
+    slip/slip rate to specify frictional strength
+    
+    All ``statefile`` instances contain the following internal parameters:
+
+    :ivar n1: Number of grid points along first coordinate direction
+    :type n1: int
+    :ivar n2: Number of grid points along the second coordinate direction
+    :type n2: int
+    :ivar state: Array holding state variable perturbation (numpy array with shape ``(n1,n2)``)
+    :type state: ndarray
+
+    ``statefile`` will also define a numpy array with shape ``(n1,n2)`` holding the state variable.
+    State files do not include any information about the shape of the boundary, and it is
+    up to the user to ensure that that the parameter values correspond to the coordinates
+    of the interface. However, because parameter files explicitly assign a value to each grid
+    point, there is less ambiguity regarding the final values when compared to perturbations.
+    Depending on the orientation of the interface, the two coordinate directions will have
+    different orientations in space. The first coordinate direction is the :math:`{x}` direction
+    for :math:`{y}` and :math:`{z}` interfaces (for :math:`{x}` interfaces, the first index is in the
+    :math:`{y}` direction), and the second coordinate is in the :math:`{z}` direction except for
+    :math:`{z}` interfaces, where :math:`{y}` is the second index}.
+
+    When writing ``statefile`` instances to disk, the code uses numpy to write information
+    to disk in binary format. Byte-ordering can be specified, and should correspond to the
+    byte-ordering on the system where the simulation will be run (default is native).
+    """
     def __init__(self, n1, n2, state):
         "create statefile given number of grid points and state variable data"
         paramfile.__init__(self, n1, n2)
@@ -982,7 +1147,17 @@ class statefile(paramfile):
         assert (n1, n2) == self.state.shape, "state must have shape (n1, n2)"
 
     def get_state(self, index = None):
-        "returns state of given indices, if none provided returns entire array"
+        """
+        Returns state variable at given indices
+
+        Returns state variable perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into state variable array (optional, if not provided returns entire array)
+        :type index: float, tuple, or None
+        :returns: State variable perturbation (either ndarray or float, depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.state
         else:
@@ -990,11 +1165,14 @@ class statefile(paramfile):
 
     def write(self, filename, endian = '='):
         """
-        write perturbation data to file with given endianness
-        = native
-        < little endian
-        > big endian
-        if endianness not provided uses native
+        Write perturbation data to file
+
+        :param filename: Name of binary file to be written
+        :type filename: str
+        :param endian: Byte-ordering for output. Options inclue ``'='`` for native, ``'<'`` for little endian,
+                                and ``'>'`` for big endian. Optional, default is native
+        :type endian: str
+        :returns: None
         """
 
         assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
@@ -1010,7 +1188,46 @@ class statefile(paramfile):
         return "State"+paramfile.__str__(self)
         
 class swparamfile(paramfile):
-    "class representing sw parameter perturbations (to be written to file)"
+    """
+    The ``swparamfile`` class is a class for loading heterogeneous friction parameter values from file.
+    It is only used for slip weakening interfaces.
+    
+    All ``swparamfile`` instances contain the following internal parameters:
+
+    :ivar n1: Number of grid points along first coordinate direction
+    :type n1: int
+    :ivar n2: Number of grid points along the second coordinate direction
+    :type n2: int
+    :ivar dc: Array holding slip weakening distance perturbation (numpy array with shape ``(n1,n2)``)
+    :type dc: ndarray
+    :ivar mus: Array holding static friction coefficient perturbation (numpy array with shape ``(n1,n2)``)
+    :type mus: ndarray
+    :ivar mud: Array holding dynamic friction coefficient perturbation (numpy array with shape ``(n1,n2)``)
+    :type mud: ndarray
+    :ivar c0: Array holding frictional cohesion perturbation (numpy array with shape ``(n1,n2)``)
+    :type c0: ndarray
+    :ivar trup: Array holding forced rupture time perturbation (numpy array with shape ``(n1,n2)``)
+    :type trup: ndarray
+    :ivar tc: Array holding characteristic failure time perturbation (numpy array with shape ``(n1,n2)``)
+    :type tc: ndarray
+
+    ``swparamfile`` will also define six numpy array with shape ``(n1,n2)`` holding the
+    various friction parameters (slip weakening distance, static friction coefficient, dynamic
+    friction coefficient, frictional cohesion, forced rupture time, and characteristic failure time.
+    Slip weakening parameter files do not include any information about the shape of the
+    boundary, and it is up to the user to ensure that that the parameter values correspond to
+    the coordinates of the interface. However, because parameter files explicitly assign a value
+    to each grid point, there is less ambiguity regarding the final values when compared to
+    perturbations. Depending on the orientation of the interface, the two coordinate directions
+    will have different orientations in space. The first coordinate direction is the :math:`{x}` direction
+    for :math:`{y}` and :math:`{z}` interfaces (for :math:`{x}` interfaces, the first index is in the
+    :math:`{y}` direction), and the second coordinate is in the :math:`{z}` direction except for
+    :math:`{z}` interfaces, where :math:`{y}` is the second index}.
+
+    When writing ``swparamfile`` instances to disk, the code uses numpy to write information
+    to disk in binary format. Byte-ordering can be specified, and should correspond to the
+    byte-ordering on the system where the simulation will be run (default is native).
+    """
     def __init__(self, n1, n2, dc, mus, mud, c0, trup, tc):
         "create swparamfile given number of grid points and parameter data (dc, mus, mud, c0, trup, tc)"
 
@@ -1030,42 +1247,114 @@ class swparamfile(paramfile):
         assert (n1, n2) == self.tc.shape, "tc must have shape (n1, n2)"
 
     def get_dc(self, index = None):
-        "returns slip weakening distance of given indices, if none provided returns entire array"
+        """
+        Returns slip weakening distance at given indices
+
+        Returns slip weakening distance perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into slip weakening distance array (optional, if not provided returns
+                              entire array)
+        :type index: float, tuple, or None
+        :returns: Slip weakening distance perturbation (either ndarray or float, depending on value
+                      of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.dc
         else:
             return self.dc[index]
 
     def get_mus(self, index = None):
-        "returns static friction of given indices, if none provided returns entire array"
+        """
+        Returns static friction coefficient at given indices
+
+        Returns static friction coefficient perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into static friction coefficient array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Static friction coefficient perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.mus
         else:
             return self.mus[index]
 
     def get_mud(self, index = None):
-        "returns dynamic friction of given indices, if none provided returns entire array"
+        """
+        Returns dynamic friction coefficient at given indices
+
+        Returns dynamic friction coefficient perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into dynamic friction coefficient array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Dynamic friction coefficient perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.mud
         else:
             return self.mud[index]
 
     def get_c0(self, index = None):
-        "returns cohesion of given indices, if none provided returns entire array"
+        """
+        Returns frictional cohesion at given indices
+
+        Returns frictional cohesion perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into frictional cohesion array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Frictional cohesion perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.c0
         else:
             return self.c0[index]
 
     def get_trup(self, index = None):
-        "returns rutpure time of given indices, if none provided returns entire array"
+        """
+        Returns force rupture time at given indices
+
+        Returns forced rupture time perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into forced rupture time array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Static forced rupture time perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.trup
         else:
             return self.trup[index]
 
     def get_tc(self, index = None):
-        "returns time weakening scale of given indices, if none provided returns entire array"
+        """
+        Returns characteristic failure time at given indices
+
+        Returns characteristic failure time perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into characteristic failure time array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Characteristic failure time perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.tc
         else:
@@ -1073,11 +1362,14 @@ class swparamfile(paramfile):
 
     def write(self, filename, endian = '='):
         """
-        write perturbation data to file with given endianness
-        = native
-        < little endian
-        > big endian
-        if endianness not provided uses native
+        Write perturbation data to file
+
+        :param filename: Name of binary file to be written
+        :type filename: str
+        :param endian: Byte-ordering for output. Options inclue ``'='`` for native, ``'<'`` for little endian,
+                                and ``'>'`` for big endian. Optional, default is native
+        :type endian: str
+        :returns: None
         """
 
         assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
@@ -1098,7 +1390,58 @@ class swparamfile(paramfile):
         return "SW Parameter"+paramfile.__str__(self)
 
 class stzparamfile(paramfile):
-    "class representing sw parameter perturbations (to be written to file)"
+    """
+    The ``stzparamfile`` class is a class for loading heterogeneous friction parameter values from file.
+    It is only used for STZ interfaces.
+    
+    All ``stzparamfile`` instances contain the following internal parameters:
+
+    :ivar n1: Number of grid points along first coordinate direction
+    :type n1: int
+    :ivar n2: Number of grid points along the second coordinate direction
+    :type n2: int
+    :ivar v0: Array holding reference slip rate perturbation (numpy array with shape ``(n1,n2)``)
+    :type v0: ndarray
+    :ivar f0: Array holding friction activation barrier perturbation (numpy array with shape ``(n1,n2)``)
+    :type f0: ndarray
+    :ivar a: Array holding frictional direct effect perturbation (numpy array with shape ``(n1,n2)``)
+    :type a: ndarray
+    :ivar muy: Array holding yielding friction coefficient perturbation (numpy array with shape ``(n1,n2)``)
+    :type muy: ndarray
+    :ivar c0: Array holding effective temperature specific heat perturbation (numpy array with shape
+                 ``(n1,n2)``)
+    :type c0: ndarray
+    :ivar R: Array holding effective temperature relaxation rate perturbation (numpy array with shape
+                ``(n1,n2)``)
+    :type R: ndarray
+    :ivar beta: Array holding effective temperature relaxation activation barrier perturbation (numpy
+                    array with shape ``(n1,n2)``)
+    :type beta: ndarray
+    :ivar chiw: Array holding effective temperature activation barrier perturbation (numpy array with
+                    shape ``(n1,n2)``)
+    :type chiw: ndarray
+    :ivar v1: Array holding  effective temperature reference slip rate perturbation (numpy array with
+                 shape ``(n1,n2)``)
+    :type v1: ndarray
+
+    ``stzparamfile`` will also define nine numpy array with shape ``(n1,n2)`` holding the
+    various friction parameters (reference slip rate, friction activation barrier, frictional direct
+    effect, yielding friction coefficient, effective temperature specific heat, effective temperature
+    relaxation rate, effective temperature relaxation activation barrier, effective temperature activation
+    barrier, and effective temperature reference slip rate. STZ parameter files do not include any
+    information about the shape of the boundary, and it is up to the user to ensure that that the
+    parameter values correspond to the coordinates of the interface. However, because parameter
+    files explicitly assign a value to each grid point, there is less ambiguity regarding the final values
+    when compared to perturbations. Depending on the orientation of the interface, the two
+    coordinate directions will have different orientations in space. The first coordinate direction is
+    the :math:`{x}` direction for :math:`{y}` and :math:`{z}` interfaces (for :math:`{x}` interfaces, the
+    first index is in the :math:`{y}` direction), and the second coordinate is in the :math:`{z}` direction
+    except for :math:`{z}` interfaces, where :math:`{y}` is the second index}.
+
+    When writing ``stzparamfile`` instances to disk, the code uses numpy to write information
+    to disk in binary format. Byte-ordering can be specified, and should correspond to the
+    byte-ordering on the system where the simulation will be run (default is native).
+    """
     def __init__(self, n1, n2, v0, f0, a, muy, c0, R, beta, chiw, v1):
         "create stzparamfile given number of grid points and parameter data"
 
@@ -1124,63 +1467,171 @@ class stzparamfile(paramfile):
         assert (n1, n2) == self.v1.shape, "v1 must have shape (n1, n2)"
 
     def get_v0(self, index = None):
-        "returns v0 parameter of given indices, if none provided returns entire array"
+        """
+        Returns reference slip rate at given indices
+
+        Returns reference slip rate perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into reference slip rate array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Reference slip rate perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.v0
         else:
             return self.v0[index]
 
     def get_f0(self, index = None):
-        "returns activation barrier of given indices, if none provided returns entire array"
+        """
+        Returns friction activation barrier at given indices
+
+        Returns friction activation barrier perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into friction activation barrier array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Friction activation barrier perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.f0
         else:
             return self.f0[index]
 
     def get_a(self, index = None):
-        "returns direct effect of given indices, if none provided returns entire array"
+        """
+        Returns frictional direct effect at given indices
+
+        Returns frictional direct effect perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into frictional direct effect array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Frictional direct effect perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.a
         else:
             return self.a[index]
 
     def get_muy(self, index = None):
-        "returns yield friction of given indices, if none provided returns entire array"
+        """
+        Returns yielding friction coefficient at given indices
+
+        Returns yielding friction coefficient perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into yielding friction coefficient array (optional, if not provided returns entire
+                              array)
+        :type index: float, tuple, or None
+        :returns: Yielding friction coefficient perturbation (either ndarray or float, depending on value of
+                      ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.muy
         else:
             return self.muy[index]
 
     def get_c0(self, index = None):
-        "returns specific heat of given indices, if none provided returns entire array"
+        """
+        Returns effective temperature specific heat at given indices
+
+        Returns effective temperature specific heat perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into effective temperature specific heat array (optional, if not provided
+                              returns entire array)
+        :type index: float, tuple, or None
+        :returns: Effective temperature specific heat perturbation (either ndarray or float, depending
+                      on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.c0
         else:
             return self.c0[index]
 
     def get_R(self, index = None):
-        "returns relaxation rate of given indices, if none provided returns entire array"
+        """
+        Returns effective temperature relaxation rate at given indices
+
+        Returns effective temperature relaxation rate perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into effective temperature relaxation rate array (optional, if not provided
+                               returns entire array)
+        :type index: float, tuple, or None
+        :returns: Effective temperature relaxation rate perturbation (either ndarray or float, depending
+                      on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.R
         else:
             return self.R[index]
 
     def get_beta(self, index = None):
-        "returns relaxation barrier of given indices, if none provided returns entire array"
+        """
+        Returns effective temperature relaxation activation barrier at given indices
+
+        Returns effective temperature relaxation activation barrier perturbation at the indices
+        given by ``index``. If no indices are provided, the method returns the entire array.
+
+        :param index: Index into effective temperature relaxation activation barrier array
+                              (optional, if not provided returns entire array)
+        :type index: float, tuple, or None
+        :returns: Effective temperature relaxation activation barrier perturbation (either ndarray
+                      or float, depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.beta
         else:
             return self.beta[index]
 
     def get_chiw(self, index = None):
-        "returns effective temperature activation barrier of given indices, if none provided returns entire array"
+        """
+        Returns effective temperature activation barrier at given indices
+
+        Returns effective temperature activation barrier perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into effective temperature activation barrier array (optional, if not provided
+                              returns entire array)
+        :type index: float, tuple, or None
+        :returns: Effective temperature activation barrier perturbation (either ndarray or float, depending
+                      on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.chiw
         else:
             return self.chiw[index]
 
     def get_v1(self, index = None):
-        "returns melting velocity of given indices, if none provided returns entire array"
+        """
+        Returns effective temperature reference slip rate at given indices
+
+        Returns effective temperature reference slip rate perturbation at the indices given by ``index``.
+        If no indices are provided, the method returns the entire array.
+
+        :param index: Index into effective temperature reference slip rate array (optional, if not provided
+                              returns entire array)
+        :type index: float, tuple, or None
+        :returns: Effective temperature reference slip rate perturbation (either ndarray or float,
+                      depending on value of ``index``)
+        :rtype: ndarray or float
+        """
         if index is None:
             return self.v1
         else:
@@ -1188,11 +1639,14 @@ class stzparamfile(paramfile):
 
     def write(self, filename, endian = '='):
         """
-        write perturbation data to file with given endianness
-        = native
-        < little endian
-        > big endian
-        if endianness not provided uses native
+        Write perturbation data to file
+
+        :param filename: Name of binary file to be written
+        :type filename: str
+        :param endian: Byte-ordering for output. Options inclue ``'='`` for native, ``'<'`` for little endian,
+                                and ``'>'`` for big endian. Optional, default is native
+        :type endian: str
+        :returns: None
         """
 
         assert(endian == '=' or endian == '>' or endian == '<'), "bad value for endianness"
