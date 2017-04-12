@@ -440,7 +440,7 @@ class friction(interface):
         self.iftype = "frictionless"
         self.nloads = 0
         self.loads = []
-        self.loadfile = None
+        self.lf = None
 
     def get_nloads(self):
         """
@@ -648,7 +648,7 @@ class paramfric(friction):
         friction.__init__(self, ndim, index, direction, bm, bp)
         self.nperts = 0
         self.perts = []
-        self.paramfile = None
+        self.pf = None
 
     def get_nperts(self):
         """

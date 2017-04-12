@@ -114,6 +114,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
     assert(mode_in == 2 || mode_in == 3);
 	for (int i=0; i<ndim_in; i++) {
 		assert(nx_in[i] > 0);
+		assert(nx_in[i] >= 4*fd.get_sbporder()-3); // block must have enough points to accommodate finite difference method
 		assert(xm_in[i] >= 0);
 	}
 	

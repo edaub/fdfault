@@ -1660,6 +1660,10 @@ class domain(object):
                 assert j > 0, "Number of grid points in each block must be positive"
             assert sum(self.nx_block[i]) == self.nx[i], "Number of grid points in blocks must equal nx"
 
+        for i in range(self.ndim):
+            for j in self.nx_block[i]:
+                assert j >= 4*self.sbporder-3, "Number of block grid points must be compatible with difference method"
+
         for i in range(self.nblocks[0]):
             for j in range(self.nblocks[1]):
                 for k in range(self.nblocks[2]):
