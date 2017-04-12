@@ -11,8 +11,8 @@ class pert(object):
 
     Perturbations have the following attributes:
 
-    :ivar loadtype: String describing perturbation shape. See available types below.
-    :type loadtype: str
+    :ivar perttype: String describing perturbation shape. See available types below.
+    :type perttype: str
     :ivar t0: Perturbation onset time (linear ramp function that attains its maximum at t0;
                  ``t0 = 0.`` means perturbation is on at all times)
     :type t0: float
@@ -55,15 +55,37 @@ class pert(object):
     at each grid point. However, for some simple forms, perturbations can be more convenient
     as they use less memory and do not require loading information in parallel from external files.
     """
-    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0.):
-        "Initialize perturbation"
-        assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
+    def __init__(self, perttype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0.):
+        """
+        Initialize a new instance of a perturbation
+
+        Method creates a new instance of a perturbation. This is called by all subclasses to initialize
+        the spatial and temporal details of the perturbation, while each subclass has its own
+        variables that are perturbed at the interface. Default values are provided for all arguments
+        (all zeros, with a perttype of ``'constant'``).
+        
+        :param perttype: Perturbation type (string, default is ``'constant'``)
+        :type perttype: str
+        :param t0: Linear ramp time scale (default 0.)
+        :type t0: float
+        :param x0: Perturbation location along first interface dimension (default 0.)
+        :type x0: float
+        :param dx: Perturbation scale along first interface dimension (default 0.)
+        :type dx: float
+        :param y0: Perturbation location along second interface dimension (default 0.)
+        :type y0: float
+        :param dy: Perturbation scale along second interface dimension (default 0.)
+        :type dy: float
+        :returns: New instance of perturbation
+        :rtype: pert
+        """
+        assert (perttype == "gaussian" or perttype == "constant" or perttype == "ellipse"
+                or perttype == "boxcar" or perttype == "linear"), "Perturbation type must be constant, gaussian, ellipse, linear, or boxcar"
         assert t0 >= 0., "t0 must be nonnegative"
         assert dx >= 0., "dx must be nonnegative"
         assert dy >= 0., "dy must be nonnegative"
         
-        self.loadtype = loadtype
+        self.perttype = perttype
         self.t0 = float(t0)
         self.x0 = float(x0)
         self.y0 = float(y0)
@@ -77,22 +99,22 @@ class pert(object):
         :returns: Perturbation type
         :rtype: str
         """
-        return self.loadtype
+        return self.perttype
 
-    def set_type(self,loadtype):
+    def set_type(self, perttype):
         """
         Sets perturbation type
 
-        Resets the perturbation type to ``loadtype``. Note that the new type must be among the
+        Resets the perturbation type to ``perttype``. Note that the new type must be among the
         valid perturbation types.
 
-        :param loadtype: New value for load type, must be a valid perturbation type
-        :type loadtype: str
+        :param perttype: New value for perttype, must be a valid perturbation type
+        :type perttype: str
         :returns: None
         """
-        assert (loadtype == "gaussian" or loadtype == "constant" or loadtype == "ellipse"
-                or loadtype == "boxcar" or loadtype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
-        self.loadtype = loadtype
+        assert (perttype == "gaussian" or perttype == "constant" or perttype == "ellipse"
+                or perttype == "boxcar" or perttype == "linear"), "Load must be constant, gaussian, ellipse, linear, or boxcar"
+        self.perttype = perttype
 
     def get_t0(self):
         """
@@ -210,12 +232,12 @@ class pert(object):
         :type f: file
         :returns: none
         """
-        f.write(self.loadtype+" "+repr(self.t0)+" "+repr(self.x0)+" "+repr(self.dx)+" "+repr(self.y0)+
+        f.write(self.perttype+" "+repr(self.t0)+" "+repr(self.x0)+" "+repr(self.dx)+" "+repr(self.y0)+
                 " "+repr(self.dy))
 
     def __str__(self):
         "Returns a string representation"
-        return ("type = "+self.loadtype+", t0 = "+str(self.t0)+", x0 = "+str(self.x0)+", dx = "+str(self.dx)+
+        return ("type = "+self.perttype+", t0 = "+str(self.t0)+", x0 = "+str(self.x0)+", dx = "+str(self.dx)+
                 ", y0 = "+str(self.y0)+", dy = "+str(self.dy))
 
 class load(pert):
@@ -228,8 +250,8 @@ class load(pert):
 
     Perturbations have the following attributes:
 
-    :ivar loadtype: String describing perturbation shape. See available types below.
-    :type loadtype: str
+    :ivar perttype: String describing perturbation shape. See available types below.
+    :type perttype: str
     :ivar t0: Perturbation onset time (linear ramp function that attains its maximum at t0;
                  ``t0 = 0.`` means perturbation is on at all times)
     :type t0: float
@@ -310,10 +332,37 @@ class load(pert):
     interfaces the first tangent vector is in the :math:`{x}`-direction and the second tangent vector
     corresponds to the :math:`{y}`-direction.
     """
-    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., sn = 0., s2 = 0., s3 =0.):
-        "Initialize interface load perturbation"
+    def __init__(self, perttype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., sn = 0., s2 = 0., s3 =0.):
+        """
+        Initialize a new instance of an interface load perturbation
 
-        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+        Method creates a new instance of a load perturbation. It calls the superclass routine to initialize
+        the spatial and temporal details of the perturbation, and creates the variables holding the interface
+        traction details. Default values are provided for all arguments (all zeros, with a perttype of ``'constant'``).
+        
+        :param perttype: Perturbation type (string, default is ``'constant'``)
+        :type perttype: str
+        :param t0: Linear ramp time scale (default 0.)
+        :type t0: float
+        :param x0: Perturbation location along first interface dimension (default 0.)
+        :type x0: float
+        :param dx: Perturbation scale along first interface dimension (default 0.)
+        :type dx: float
+        :param y0: Perturbation location along second interface dimension (default 0.)
+        :type y0: float
+        :param dy: Perturbation scale along second interface dimension (default 0.)
+        :type dy: float
+        :param sn: Interface normal traction perturbation (negative in compression, default 0.)
+        :type sn: float
+        :param s2: Interface horizontal shear traction perturbation (default 0.)
+        :type s2: float
+        :param s3: Interface vertical shear traction perturbation (default 0.)
+        :type s3: float
+        :returns: New instance of perturbation
+        :rtype: fdfault.load
+        """
+
+        pert.__init__(self, perttype, t0, x0, dx, y0, dy)
 
         self.sn = float(sn)
         self.s2 = float(s2)
@@ -403,8 +452,8 @@ class swparam(pert):
 
     Perturbations have the following attributes:
 
-    :ivar loadtype: String describing perturbation shape. See available types below.
-    :type loadtype: str
+    :ivar perttype: String describing perturbation shape. See available types below.
+    :type perttype: str
     :ivar t0: Perturbation onset time (linear ramp function that attains its maximum at t0;
                  ``t0 = 0.`` means perturbation is on at all times)
     :type t0: float
@@ -459,10 +508,44 @@ class swparam(pert):
     at each grid point. However, for some simple forms, perturbations can be more convenient
     as they use less memory and do not require loading information in parallel from external files.
     """
-    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., dc = 0., mus = 0., mud =0., c0 = 0., trup = 0., tc = 0.):
-        "Initialize interface load perturbation"
+    def __init__(self, perttype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., dc = 0., mus = 0., mud =0., c0 = 0., trup = 0., tc = 0.):
+        """
+        Initialize a new instance of an slip weakening parameter perturbation
 
-        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+        Method creates a new instance of a slip weakening parameter perturbation. It calls the superclass routine to 
+        initialize the spatial and temporal details of the perturbation, and creates the variables holding the parameter
+        values specific to the slip weakening law. Default values are provided for all arguments (all zeros, with a perttype of
+        ``'constant'``).
+        
+        :param perttype: Perturbation type (string, default is ``'constant'``)
+        :type perttype: str
+        :param t0: Linear ramp time scale (default 0.)
+        :type t0: float
+        :param x0: Perturbation location along first interface dimension (default 0.)
+        :type x0: float
+        :param dx: Perturbation scale along first interface dimension (default 0.)
+        :type dx: float
+        :param y0: Perturbation location along second interface dimension (default 0.)
+        :type y0: float
+        :param dy: Perturbation scale along second interface dimension (default 0.)
+        :type dy: float
+        :param dc: Slip weakening distance perturbation (negative in compression, default 0.)
+        :type dc: float
+        :param mus: Static friction coefficient perturbation (default 0.)
+        :type mus: float
+        :param mud: Dynamic friction coefficient perturbation (default 0.)
+        :type mud: float
+        :param c0: Frictional cohesion perturbation (negative in compression, default 0.)
+        :type c0: float
+        :param trup: Forced rupture time perturbation (default 0.)
+        :type trup: float
+        :param tc: Characteristic weakening time perturbation (default 0.)
+        :type tc: float
+        :returns: New instance of slip weakening parameter perturbation
+        :rtype: swparam
+        """
+
+        pert.__init__(self, perttype, t0, x0, dx, y0, dy)
 
         self.dc = float(dc)
         self.mus = float(mus)
@@ -615,8 +698,8 @@ class stzparam(pert):
 
     Perturbations have the following attributes:
 
-    :ivar loadtype: String describing perturbation shape. See available types below.
-    :type loadtype: str
+    :ivar perttype: String describing perturbation shape. See available types below.
+    :type perttype: str
     :ivar t0: Perturbation onset time (linear ramp function that attains its maximum at t0;
                  ``t0 = 0.`` means perturbation is on at all times)
     :type t0: float
@@ -677,11 +760,51 @@ class stzparam(pert):
     at each grid point. However, for some simple forms, perturbations can be more convenient
     as they use less memory and do not require loading information in parallel from external files.
     """
-    def __init__(self, loadtype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., v0 = 0., f0 = 0., a = 0.,
-                 muy = 0., c0 = 0., R = 0., beta = 0., chiw = 0., v1 = 0.):
-        "Initialize interface load perturbation"
+    def __init__(self, perttype = 'constant', t0 = 0., x0 = 0., dx = 0., y0 = 0., dy = 0., v0 = 0., f0 = 0., a = 0., muy = 0., 
+                    c0 = 0., R = 0., beta = 0., chiw = 0., v1 = 0.):
+        """
+        Initialize a new instance of an STZ parameter perturbation
 
-        pert.__init__(self, loadtype, t0, x0, dx, y0, dy)
+        Method creates a new instance of a STZ parameter perturbation. It calls the superclass routine to 
+        initialize the spatial and temporal details of the perturbation, and creates the variables holding
+        the parameter values specific to the STZ law. Default values are provided for all arguments (all
+        zeros, with a perttype of ``'constant'``).
+        
+        :param perttype: Perturbation type (string, default is ``'constant'``)
+        :type perttype: str
+        :param t0: Linear ramp time scale (default 0.)
+        :type t0: float
+        :param x0: Perturbation location along first interface dimension (default 0.)
+        :type x0: float
+        :param dx: Perturbation scale along first interface dimension (default 0.)
+        :type dx: float
+        :param y0: Perturbation location along second interface dimension (default 0.)
+        :type y0: float
+        :param dy: Perturbation scale along second interface dimension (default 0.)
+        :type dy: float
+        :param v0: Reference slip rate perturbation (default 0.)
+        :type v0: float
+        :param f0: Friction activation barrier perturbation (default 0.)
+        :type f0: float
+        :param a: Frictional direct effect perturbation (default 0.)
+        :type a: float
+        :param muy: Yielding friction coefficient perturbation (default 0.)
+        :type muy: float
+        :param c0: Effective temperature specific heat perturbation (default 0.)
+        :type c0: float
+        :param R: Effective temperature relaxation rate perturbation (default 0.)
+        :type R: float
+        :param beta: Effective temperature relaxation barrier perturbation (default 0.)
+        :type beta: float
+        :param chiw: Effective temperature activation barrier perturbation (default 0.)
+        :type chiw: float
+        :param v1: Effective temperature reference slip rate perturbation (default 0.)
+        :type v1: float
+        :returns: New instance of slip weakening parameter perturbation
+        :rtype: stzparam
+        """
+
+        pert.__init__(self, perttype, t0, x0, dx, y0, dy)
 
         self.v0 = float(v0)
         self.f0 = float(f0)
@@ -913,7 +1036,20 @@ class paramfile(object):
     byte-ordering on the system where the simulation will be run (default is native).
     """
     def __init__(self, n1, n2):
-        "create loadfile given number of grid points and load data (normal, horizontal, and vertical)"
+        """
+        Initialize a new instance of a paramfile object
+        
+        Create a new instance of a paramfile, which is a template class for other classes holding boundary
+        perturbations in a file. Required information is the number of grid points for the interface;
+        the subclasses will hold additional information on the arrays holding parameter perturbation values.
+        
+        :param n1: Number of grid points along first coordinate direction
+        :type n1: int
+        :param n2: Number of grid points along the second coordinate direction
+        :type n2: int
+        :returns: New paramfile instance
+        :rtype: paramfile
+        """
         self.n1 = int(n1)
         self.n2 = int(n2)
 
@@ -1021,7 +1157,27 @@ class loadfile(paramfile):
     byte-ordering on the system where the simulation will be run (default is native).
     """
     def __init__(self, n1, n2, sn, s2, s3):
-        "create loadfile given number of grid points and load data (normal, horizontal, and vertical)"
+        """
+        Initialize a new instance of a loadfile object
+        
+        Create a new instance of a loadfile, which is a class describing interface boundary traction
+        perturbations in a file. Required information is the number of grid points for the interface and
+        one array for each of the three interface traction component perturbations. All the array shapes
+        must be ``(n1, n2)`` or the code will raise an error.
+        
+        :param n1: Number of grid points along first coordinate direction
+        :type n1: int
+        :param n2: Number of grid points along the second coordinate direction
+        :type n2: int
+        :param sn: Interface normal traction perturbation array (negative in compression)
+        :type sn: ndarray
+        :param s2: Interface horizontal shear traction perturbation array
+        :type s2: ndarray
+        :param s3: Interface vertical shear traction perturbation array
+        :type s3: ndarray
+        :returns: New loadfile instance
+        :rtype: loadfile
+        """
 
         paramfile.__init__(self, n1, n2)
 
@@ -1140,7 +1296,23 @@ class statefile(paramfile):
     byte-ordering on the system where the simulation will be run (default is native).
     """
     def __init__(self, n1, n2, state):
-        "create statefile given number of grid points and state variable data"
+        """
+        Initialize a new instance of a statefile object
+        
+        Create a new instance of a statefile, which is a class describing interface state variable value
+        perturbations in a file. Required information is the number of grid points for the interface and
+        one array for the state variable. The array shape must be ``(n1, n2)`` or the code will raise an
+        error.
+        
+        :param n1: Number of grid points along first coordinate direction
+        :type n1: int
+        :param n2: Number of grid points along the second coordinate direction
+        :type n2: int
+        :param sn: State variable perturbation array
+        :type sn: ndarray
+        :returns: New statefile instance
+        :rtype: statefile
+        """
         paramfile.__init__(self, n1, n2)
         
         self.state = np.array(state)
@@ -1229,7 +1401,33 @@ class swparamfile(paramfile):
     byte-ordering on the system where the simulation will be run (default is native).
     """
     def __init__(self, n1, n2, dc, mus, mud, c0, trup, tc):
-        "create swparamfile given number of grid points and parameter data (dc, mus, mud, c0, trup, tc)"
+        """
+        Initialize a new instance of a swparamfile object
+        
+        Create a new instance of a swparamfile, which is a class describing slip weakening parameter
+        perturbations in a file. Required information is the number of grid points for the interface and
+        one array for each of the six parameter perturbations. All the array shapes must be ``(n1, n2)``
+        or the code will raise an error.
+        
+        :param n1: Number of grid points along first coordinate direction
+        :type n1: int
+        :param n2: Number of grid points along the second coordinate direction
+        :type n2: int
+        :param dc: Slip weakening distance perturbation array
+        :type dc: ndarray
+        :param mus: Static friction coefficient perturbation array
+        :type mus: ndarray
+        :param mud: Dynamic friction coefficient perturbation array
+        :type mud: ndarray
+        :param c0: Frictional cohesion perturbation array
+        :type c0: ndarray
+        :param trup: Forced rupture time perturbation array
+        :type trup: ndarray
+        :param tc: Characteristic weakening time perturbation array
+        :type tc: ndarray
+        :returns: New swparamfile instance
+        :rtype: swparamfile
+        """
 
         paramfile.__init__(self, n1, n2)
 
@@ -1443,7 +1641,39 @@ class stzparamfile(paramfile):
     byte-ordering on the system where the simulation will be run (default is native).
     """
     def __init__(self, n1, n2, v0, f0, a, muy, c0, R, beta, chiw, v1):
-        "create stzparamfile given number of grid points and parameter data"
+        """
+        Initialize a new instance of a stzparamfile object
+        
+        Create a new instance of a stzparamfile, which is a class describing STZ parameter
+        perturbations in a file. Required information is the number of grid points for the interface and
+        one array for each of the nine parameter perturbations. All the array shapes must be ``(n1, n2)``
+        or the code will raise an error.
+        
+        :param n1: Number of grid points along first coordinate direction
+        :type n1: int
+        :param n2: Number of grid points along the second coordinate direction
+        :type n2: int
+        :param v0: Reference slip rate perturbation array
+        :type v0: ndarray
+        :param f0: Friction activation barrier perturbation array
+        :type f0: ndarray
+        :param a: Frictional direct effect perturbation array
+        :type a: ndarray
+        :param muy: Yielding friction coefficient perturbation array
+        :type muy: ndarray
+        :param c0: Effective temperature specific heat perturbation array
+        :type c0: ndarray
+        :param R: Effective temperature relaxation rate perturbation array
+        :type R: ndarray
+        :param beta: Effective temperature relaxation barrier perturbation array
+        :type beta: ndarray
+        :param chiw: Effective temperature activation barrier perturbation array
+        :type chiw: ndarray
+        :param v1: Effective temperature reference slip rate perturbation array
+        :type v1: ndarray
+        :returns: New swparamfile instance
+        :rtype: swparamfile
+        """
 
         paramfile.__init__(self, n1, n2)
 

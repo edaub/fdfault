@@ -111,33 +111,82 @@ class output(object):
     :ivar tp: Maximum time index to be written to file (inclusive)
     :type tp: int
     :ivar ts: Stride for time output (will skip over appropriate number of time steps so that
-                 every ``ts`` time steps are saved between ``tm`` and ``tp)
+                 every ``ts`` time steps are saved between ``tm`` and ``tp``)
     :type ts: int
     :ivar xm: Minimum x index to be written to file (inclusive)
     :type xm: int
     :ivar xp: Maximum x index to be written to file (inclusive)
     :type xp: int
     :ivar xs: Stride for x output (will skip over appropriate number of x grid points so that
-                 one per every ``xs`` points are saved between ``xm`` and ``xp)
+                 one per every ``xs`` points are saved between ``xm`` and ``xp``)
     :type xs: int
     :ivar ym: Minimum y index to be written to file (inclusive)
     :type ym: int
     :ivar yp: Maximum y index to be written to file (inclusive)
     :type yp: int
     :ivar ys: Stride for y output (will skip over appropriate number of y grid points so that
-                 one per every ``ys`` points are saved between ``ym`` and ``yp)
+                 one per every ``ys`` points are saved between ``ym`` and ``yp``)
     :type ys: int
     :ivar zm: Minimum z index to be written to file (inclusive)
     :type zm: int
     :ivar zp: Maximum z index to be written to file (inclusive)
     :type zp: int
     :ivar zs: Stride for z output (will skip over appropriate number of z grid points so that
-                 one per every ``zs`` points are saved between ``zm`` and ``zp)
+                 one per every ``zs`` points are saved between ``zm`` and ``zp``)
     :type zs: int
     """
     def __init__(self, name, field, tm = 0, tp = 0, ts = 1, xm = 0, xp = 0, xs = 1, ym = 0,
                  yp = 0, ys = 1, zm = 0, zp = 0, zs = 1):
-        "Initializes ouput unit"
+        """
+        Initialize a new ouput unit
+
+        Creates a new output unit. Required arguments are the name and field to be saved.
+        Specifying additional parameters gives the user control over what data is saved.
+        Time and three spatial dimensions can be set with a triplet of integers representing
+        minus, plius, and stride values. Minus sets the first index that is saved, plus sets the
+        last, and stride controls how frequently the data is saves (stride of 1 means every value
+        is saved, 2 means every other point is saved, etc.). Specifying values out of bounds
+        such as minus > plus or any number less than zero will result in an error. If values
+        that are outside the simulation range are given, the code will give a warning but not
+        an error.
+
+        All triplets have default values of minus = 0, plus = 0, and stride = 1, and are optional.
+
+        :param name: Name used in files for saving data
+        :type name: str
+        :param field: Field to be saved to file (see list of acceptable values above)
+        :type field: str
+        :param tm: Minimum time index to be written to file (inclusive)
+        :type tm: int
+        :param tp: Maximum time index to be written to file (inclusive)
+        :type tp: int
+        :param ts: Stride for time output (will skip over appropriate number of time steps so that
+                     every ``ts`` time steps are saved between ``tm`` and ``tp``)
+        :type ts: int
+        :param xm: Minimum x index to be written to file (inclusive)
+        :type xm: int
+        :param xp: Maximum x index to be written to file (inclusive)
+        :type xp: int
+        :param xs: Stride for x output (will skip over appropriate number of x grid points so that
+                     one per every ``xs`` points are saved between ``xm`` and ``xp``)
+        :type xs: int
+        :param ym: Minimum y index to be written to file (inclusive)
+        :type ym: int
+        :param yp: Maximum y index to be written to file (inclusive)
+        :type yp: int
+        :param ys: Stride for y output (will skip over appropriate number of y grid points so that
+                     one per every ``ys`` points are saved between ``ym`` and ``yp``)
+        :type ys: int
+        :param zm: Minimum z index to be written to file (inclusive)
+        :type zm: int
+        :param zp: Maximum z index to be written to file (inclusive)
+        :type zp: int
+        :param zs: Stride for z output (will skip over appropriate number of z grid points so that
+                     one per every ``zs`` points are saved between ``zm`` and ``zp``)
+        :type zs: int
+        :returns: New instance of output unit
+        :rtype: ~fdfault.output
+        """
         assert type(name) is str, "output name must be a string"
         assert (field == "vx" or field == "vy" or field == "vz" or field == "sxx" or field == "sxy"
                 or field == "sxz" or field == "syy" or field == "syz" or field == "szz" or field == "Ux"

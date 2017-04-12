@@ -9,6 +9,10 @@ The main classes used for handling complex geometries are the ``surface`` and ``
 .. autoclass:: fdfault.surface
     :members:
     
+    .. automethod:: fdfault.surface.__init__
+    
 .. autoclass:: fdfault.curve
     :members:
     :inherited-members:
+    
+    .. automethod:: fdfault.curve.__init__

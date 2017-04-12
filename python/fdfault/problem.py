@@ -46,13 +46,15 @@ class problem(object):
     :vartype ninfo: int
     :ivar rkorder: Order of accuracy of time integration (default is 1)
     :vartype rkorder: int
-    :ivar domain: Initializing a problem also creates a new domain, which can be modified
+    :ivar d: Initializing a problem also creates a new domain, which can be modified
                          using the methods below.
-    :type fdfault.domain:
-    :ivar output: Initializing a problem creates an empty output list. To create output items, add
+    :vartype d: ~fdfault.domain
+    :ivar outputlist: Initializing a problem creates an empty output list. To create output items, add
                         them to the list using the appropriate method.
-    :ivar front: A new problem contains a front with output turned off. To turn on front output, use
+    :vartype outputlist: list
+    :ivar frt: A new problem contains a front with output turned off. To turn on front output, use
                      the appropriate method.
+    :vartype frt: ~fdfault.front
 
     The four variables related to the time step provide several ways to set the time step. You
     can set the time step using any pair of the variables *except* the time step and the Courant
@@ -69,7 +71,34 @@ class problem(object):
     """
     def __init__(self, name):
         """
-        Creates problem class with a given name, all other attributes set to zero
+        Creates a new instance of the ``problem`` class
+
+        Initializes a new instance of the ``problem`` class. Requires a problem name (string),
+        other parameters are set to the following defaults:
+
+            * ``datadir = 'data/'`` (path is relative to the main code directory)
+            
+            * ``nt``, ``dt``, ``ttot``, and ``cfl`` are set to zero. You must specify two of these to set
+              the time step, *except* the time step and the Courant ratio
+              
+            * ``ninfo = 10``
+            
+            * ``rkorder = 1``
+            
+            * An empty output list is initialized
+
+            * front output is ``False``
+
+            * A ``domain`` is created with a single block with 1 grid point in each direction,
+              default material properties, and a 2nd order finite difference method. All boundary
+              conditions are set to ``'none'``
+
+        All properties can be modified using the provided interfaces through the problem class.
+
+        :param name: Name for new problem
+        :type name: str
+        :returns: New problem instance
+        :rtype: problem
         """
         assert type(name) is str, "Problem name must be a string"
 
@@ -664,9 +693,11 @@ class problem(object):
         The block to be modified is determined by ``coords``, which is a tuple or list of 3 integers
         that match the coordinates of a block.
         
-        There are two ways to use ``set_bounds``.
+        There are two ways to use ``set_bounds``:
+        
         1. Set ``loc`` to be ``None`` (default) and provide a list of strings specifying boundary
            type for ``bounds``. The length of ``bounds`` is 4 for a 2D simulation and 6 for 3D.
+           
         2. Set ``loc`` to be an integer denoting location and give ``bounds`` as a single string. 
            The possible locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back,
            4 = bottom, 5 = top. 4 and 5 are only applicable to 3D simulations (0 <= loc < 2*ndim).
@@ -910,7 +941,7 @@ class problem(object):
 
         :param mat: New material properties array (numpy array with shape ``(3, nx, ny, nz)``)
         :type mat: ndarray
-        :returns None
+        :returns: None
         """
         self.d.set_het_material(mat)
 
@@ -972,11 +1003,11 @@ class problem(object):
         out of bounds or indicate an interface that is not frictional will raise an error.
         Default value is ``None`` (all interfaces).
 
-        ``newload`` must be a load perturbation (i.e. have type ``load``), or the code will raise an
+        ``newload`` must be a load perturbation (i.e. have type ~fdfault.load), or the code will raise an
         error. ``newload`` will be appended to the load list
 
         :param newload: Load to be added
-        :type newload: load
+        :type newload: ~fdfault.load
         :param index: Interface to which the load should be added. Can be a single integer,
                               iterable of integers, or ``None`` to add to all interfaces (default is ``None``)
         :type index: int or tuple or list or None
@@ -994,7 +1025,7 @@ class problem(object):
         ``index`` indicates the position in the load list that should be deleted.
         Default for ``index`` is ``-1`` (most recently added).
 
-        :param niface: Interface from which the load should be removed. ``niface``must refer to
+        :param niface: Interface from which the load should be removed. ``niface`` must refer to
                                a frictional interface
         :type niface: int
         :param index: Index within the load perturbation that should be removed (default is last)
@@ -1289,7 +1320,7 @@ class problem(object):
         for output lists)
 
         :param item: New output item
-        :type item: output
+        :type item: ~fdfault.output
         :returns: None
         """
         assert type(item) is output, "Item must be of type output"

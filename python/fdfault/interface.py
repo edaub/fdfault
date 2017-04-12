@@ -50,8 +50,29 @@ class interface(object):
     :type direction: str
     """
     def __init__(self, ndim, index, direction, bm, bp):
-        "Initializes interface given an index, direction, and block coordinates"
-        assert index >= 0, "interface index must be nonnegative"
+        """
+        Initializes an instance of the ``interface`` class
+
+        Create a new ``interface`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of interface class
+        :rtype: interface
+        """
+        assert int(ndim) == 2 or int(ndim) == 3, "number of dimensions must be 2 or 3"
+        assert int(index) >= 0, "interface index must be nonnegative"
         assert (direction == "x" or direction == "y" or direction == "z"), "Direction must be x, y, or z"
         assert len(bm) == 3, "must provide 3 integers for block indices"
         assert len(bp) == 3, "must provide 3 integers for block indices"
@@ -72,7 +93,7 @@ class interface(object):
             assert int(bp[0]) == int(bm[0]), "blocks must be neighboring to be coupled via an interface"
             assert int(bp[1]) == int(bm[1]), "blocks must be neighboring to be coupled via an interface"
 
-        self.ndim = ndim
+        self.ndim = int(ndim)
         self.iftype = "locked"
         self.index = int(index)
         self.bm = (int(bm[0]), int(bm[1]), int(bm[2]))
@@ -169,7 +190,7 @@ class interface(object):
         parameter is not a load perturbation, this will result in an error.
 
         :param newload: New load to be added to the interface (must have type ``load``)
-        :type newload: load
+        :type newload: ~fdfault.load
         :returns: None
         """
         raise NotImplementedError("Interfaces do not support load perturbations")
@@ -390,11 +411,31 @@ class friction(interface):
     :type nloads: int
     :ivar loads: List of load perturbations
     :type loads: list
-    :ivar loadfile: Loadfile holding traction at each point
-    :type loadfile: loadfile
+    :ivar lf: Loadfile holding traction at each point
+    :type lf: loadfile
     """
     def __init__(self, ndim, index, direction, bm, bp):
-        "Initializes frictional interface, also calls __init__ method of interface"
+        """
+        Initializes an instance of the ``friction`` class
+
+        Create a new ``friction`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of friction class
+        :rtype: friction
+        """
         interface.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "frictionless"
         self.nloads = 0
@@ -420,7 +461,7 @@ class friction(interface):
         parameter is not a load perturbation, this will result in an error.
 
         :param newload: New load to be added to the interface (must have type ``load``)
-        :type newload: load
+        :type newload: fdfault.load
         :returns: None
         """
         assert type(newload) is load, "Cannot add types other than loads to load list"
@@ -486,7 +527,7 @@ class friction(interface):
         :returns: None
         """
         assert type(newloadfile) is loadfile, "load file must have appropriate type"
-        self.loadfile = newloadfile
+        self.lf = newloadfile
 
     def delete_loadfile(self):
         """
@@ -494,7 +535,7 @@ class friction(interface):
 
         :returns: None
         """
-        self.loadfile = None
+        self.lf = None
 
     def write_input(self, f, probname, directory, endian = '='):
         """
@@ -529,11 +570,11 @@ class friction(interface):
         for l in self.loads:
             l.write_input(f)
 
-        if self.loadfile is None:
+        if self.lf is None:
             f.write("none\n")
         else:
             f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+".load\n")
-            self.loadfile.write(join(directory, probname+"_interface"+str(self.index)+".load"), endian)
+            self.lf.write(join(directory, probname+"_interface"+str(self.index)+".load"), endian)
 
         f.write("\n")
         
@@ -544,7 +585,7 @@ class friction(interface):
             loadstring += "\n"+str(load)
         return ('Frictional interface '+str(self.index)+":\ndirection = "+self.direction+
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)+"\nnloads = "
-                +str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.loadfile))
+                +str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.lf))
 
 class paramfric(friction):
     """
@@ -573,16 +614,37 @@ class paramfric(friction):
     :type nloads: int
     :ivar loads: List of load perturbations
     :type loads: list
-    :ivar loadfile: Loadfile holding traction at each point
-    :type loadfile: loadfile
+    :ivar lf: Loadfile holding traction at each point
+    :type lf: loadfile
     :ivar nperts: Number of parameter perturbations (length of ``perts`` list)
     :type nperts: int
     :ivar perts: List of parameter perturbations (type of perturbation must match the interface type)
     :type perts: list
-    :ivar paramfile: Paramfile holding traction at each point (type must match the interface type)
-    :type paramfile: paramfile
+    :ivar pf: Paramfile holding traction at each point (type must match the interface type)
+    :type pf: paramfile
     """
     def __init__(self, ndim, index, direction, bm, bp):
+        """
+        Initializes an instance of the ``paramfric`` class
+
+        Create a new ``param`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of paramfric class
+        :rtype: paramfric
+        """
         friction.__init__(self, ndim, index, direction, bm, bp)
         self.nperts = 0
         self.perts = []
@@ -655,9 +717,10 @@ class paramfric(friction):
         Can return a subtype of paramfile corresponding to any of the specific friction
         law types.
         
-        :returns: paramfile
+        :returns: Paramfile for this interface
+        :rtype: paramfile
         """
-        return self.paramfile
+        return self.pf
 
     def set_paramfile(self, newparamfile):
         """
@@ -675,7 +738,7 @@ class paramfric(friction):
                                         friction law of the particular interface and have the right shape)
         :returns: None
         """
-        self.paramfile = newparamfile
+        self.pf = newparamfile
 
     def delete_paramfile(self):
         """
@@ -686,7 +749,7 @@ class paramfric(friction):
 
         :returns: None
         """
-        self.paramfile = None
+        self.pf = None
 
     def write_input(self, f, probname, directory, endian = '='):
         """
@@ -719,11 +782,11 @@ class paramfric(friction):
         for p in self.perts:
             p.write_input(f)
 
-        if self.paramfile is None:
+        if self.pf is None:
             f.write("none\n")
         else:
             f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+"."+self.suffix+"\n")
-            self.paramfile.write(join(directory, probname+"_interface"+str(self.index)+"."+self.suffix), endian)
+            self.pf.write(join(directory, probname+"_interface"+str(self.index)+"."+self.suffix), endian)
 
         f.write("\n")
 
@@ -734,7 +797,7 @@ class paramfric(friction):
             loadstring += "\n"+str(load)
         return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
-                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.paramfile))
+                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.pf))
 
 class statefric(paramfric):
     """
@@ -763,24 +826,44 @@ class statefric(paramfric):
     :type nloads: int
     :ivar loads: List of load perturbations
     :type loads: list
-    :ivar loadfile: Loadfile holding traction at each point
-    :type loadfile: loadfile
+    :ivar lf: Loadfile holding traction at each point
+    :type lf: loadfile
     :ivar nperts: Number of parameter perturbations (length of ``perts`` list)
     :type nperts: int
     :ivar perts: List of parameter perturbations (type of perturbation must match the interface type)
     :type perts: list
-    :ivar paramfile: Paramfile holding traction at each point (type must match the interface type)
-    :type paramfile: paramfile
+    :ivar pf: Paramfile holding traction at each point (type must match the interface type)
+    :type pf: paramfile
     :ivar state: Initial value of state variable
     :type state: float
-    :ivar statefile: Statefile holding heterogeneous initial state variable values
-    :type statefile: statefile
+    :ivar sf: Statefile holding heterogeneous initial state variable values
+    :type sf: statefile
     """
     def __init__(self, ndim, index, direction, bm, bp):
-        "initialize friction law with state variable"
+        """
+        Initializes an instance of the ``statefric`` class
+
+        Create a new ``statefric`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of interface class
+        :rtype: interface
+        """
         paramfric.__init__(self, ndim, index, direction, bm, bp)
         self.state = 0.
-        self.statefile = None
+        self.sf = None
 
     def get_state(self):
         """
@@ -814,7 +897,7 @@ class statefric(paramfric):
         :type index: int
         :returns: statefile or None
         """
-        return self.statefile
+        return self.sf
 
     def set_statefile(self, newstatefile):
         """
@@ -828,7 +911,7 @@ class statefric(paramfric):
         :returns: None
         """
         assert type(newstatefile) is statefile, "new state file must be of type statefile"
-        self.statefile = newstatefile
+        self.sf = newstatefile
 
     def delete_statefile(self):
         """
@@ -838,7 +921,7 @@ class statefric(paramfric):
 
         :returns: None
         """
-        self.statefile = None
+        self.sf = None
 
     def write_input(self, f, probname, directory, endian = '='):
         """
@@ -868,11 +951,11 @@ class statefric(paramfric):
 
         f.write("[fdfault."+self.iftype+"]\n")
         f.write(str(self.state)+"\n")
-        if self.statefile is None:
+        if self.sf is None:
             f.write("none\n")
         else:
             f.write(join(inputfiledir, probname)+"_interface"+str(self.index)+".state\n")
-            self.statefile.write(join(directory, probname+"_interface"+str(self.index)+".state"), endian)
+            self.sf.write(join(directory, probname+"_interface"+str(self.index)+".state"), endian)
         
         f.write(str(self.nperts)+"\n")
         for p in self.perts:
@@ -893,8 +976,9 @@ class statefric(paramfric):
             loadstring += "\n"+str(load)
         return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
                 "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
-                +"\nstate = "+str(self.state)+"\nstatefile = "+str(self.statefile)+
-                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.paramfile))
+                +"\nstate = "+str(self.state)+"\nstatefile = "+str(self.sf)+
+                +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.lf)
+                +"\nParameter File:\n"+str(self.pf))
         
 
 class slipweak(paramfric):
@@ -931,16 +1015,37 @@ class slipweak(paramfric):
     :type nloads: int
     :ivar loads: List of load perturbations
     :type loads: list
-    :ivar loadfile: Loadfile holding traction at each point
-    :type loadfile: loadfile
+    :ivar lf: Loadfile holding traction at each point
+    :type lf: loadfile
     :ivar nperts: Number of parameter perturbations (length of ``perts`` list)
     :type nperts: int
     :ivar perts: List of parameter perturbations (perturbations must be ``swparam`` type)
     :type perts: list
-    :ivar paramfile: Paramfile holding traction at each point (must be ``swparamfile`` type)
-    :type paramfile: paramfile
+    :ivar pf: Paramfile holding traction at each point
+    :type pf: swparamfile
     """
     def __init__(self, ndim, index, direction, bm, bp):
+        """
+        Initializes an instance of the ``slipweak`` class
+
+        Create a new ``slipweak`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of slipweak class
+        :rtype: slipweak
+        """
         paramfric.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "slipweak"
         self.suffix = 'sw'
@@ -1017,20 +1122,41 @@ class stz(statefric):
     :type nloads: int
     :ivar loads: List of load perturbations
     :type loads: list
-    :ivar loadfile: Loadfile holding traction at each point
-    :type loadfile: loadfile
+    :ivar lf: Loadfile holding traction at each point
+    :type lf: loadfile
     :ivar nperts: Number of parameter perturbations (length of ``perts`` list)
     :type nperts: int
-    :ivar perts: List of parameter perturbations (type of perturbation must match the interface type)
+    :ivar perts: List of parameter perturbations (each must be ``stzparam``)
     :type perts: list
-    :ivar paramfile: Paramfile holding traction at each point (type must match the interface type)
-    :type paramfile: paramfile
+    :ivar pf: Paramfile holding traction at each point
+    :type pf: stzparamfile
     :ivar state: Initial value of state variable
     :type state: float
-    :ivar statefile: Statefile holding heterogeneous initial state variable values
-    :type statefile: statefile
+    :ivar sf: Statefile holding heterogeneous initial state variable values
+    :type sf: statefile
     """
     def __init__(self, ndim, index, direction, bm, bp):
+        """
+        Initializes an instance of the ``stz`` class
+
+        Create a new ``stz`` given an index, direction, and block coordinates.
+
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param index: Interface index, used for bookkeeping purposes, must be nonnegative
+        :type index: int
+        :param direction: String indicating normal direction of interface in computational space,
+                                    must be ``'x'``, ``'y'``, or ``'z'``, with ``'z'`` only allowed for 3D problems)
+        :type direction: str
+        :param bm: Coordinates of block in minus direction (tuple of length 3 of integers)
+        :type bm: tuple
+        :param bp: Coordinates of block in plus direction (tuple of length 3 or integers, must
+                          differ from ``bm`` by 1 only along the given direction to ensure blocks
+                          are neighboring one another)
+        :type bp: tuple
+        :returns: New instance of stz class
+        :rtype: stz
+        """
         statefric.__init__(self, ndim, index, direction, bm, bp)
         self.iftype = "stz"
         self.suffix = "stz"

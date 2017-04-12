@@ -10,10 +10,16 @@ The ``friction`` class is the parent class of all frictional interfaces. Informa
     :members:
     :inherited-members:
     
+    .. automethod:: fdfault.friction.__init__
+        
 .. autoclass:: fdfault.load
     :members:
     :inherited-members:
     
+    .. automethod:: fdfault.load.__init__
+        
 .. autoclass:: fdfault.loadfile
     :members:
     :inherited-members:
+    
+    .. automethod:: fdfault.loadfile.__init__

@@ -34,9 +34,24 @@ class fields(object):
                   that for mode 3 problems, the in-plane normal stresses ``sxx`` and ``syy`` will
                   be used to determine the normal stress on any faults in the simulation, even
                   though the normal stresses do not change during the simulation.
+    :vartype s0: list
     """
     def __init__(self, ndim, mode):
-        "Initializes fields for a given number of dimensions and rupture mode"
+        """
+        Initializes an instance of the ``fields`` class
+
+        Creates a new instance of the ``fields`` class. Attributes required to create a new instance
+        is the number of dimensions and rupture mode. By default, the new ``fields`` instance is
+        an elastic simulation with a stress tensor initialized to zero. The simulation also does not
+        have a heterogeneous stress or heterogeneous material properties.
+
+        :param ndim: Number of dimensions in the simulation (must be 2 or 3)
+        :type ndim: int
+        :param mode: Rupture mode (2 or 3, only relevant for 2D problems)
+        :type mode: int
+        :returns: New instance of the fields class
+        :rtype: fields
+        """
         assert(ndim == 2 or ndim == 3), "ndim must be 2 or 3"
         assert(mode == 2 or mode == 3), "mode must be 2 or 3"
         self.ndim = ndim

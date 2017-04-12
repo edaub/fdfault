@@ -68,9 +68,21 @@ class domain(object):
     :ivar cdiss: Artificial dissipation coefficient (float, default 0.). A nonzero value will
                       turn on artificial dissipation in the simulation. It is up to the user to select
                       this value correctly.
+    :vartype cdiss: float
     """
     def __init__(self):
-        "Initialize problem, default configuration is one block with one grid point"
+        """
+        Create a new instance of a ``domain`` class
+        
+        Initializes a new domain with a 2D mode 2 rupture containing a single elastic block.
+        The block has the default material properties, one grid point in each direction, unit
+        length in each direction, and the block is located at (0., 0., 0.) in space. The domain
+        has a default finite difference order of 2 and no artificial dissipation. All defaults
+        can be modified using the provided interfaces in the class.
+
+        :returns: New ``domain`` instance with default properties
+        :rtype: domain
+        """
         self.ndim = 2
         self.mode = 2
         self.mattype = 'elastic'
@@ -684,9 +696,11 @@ class domain(object):
         The block to be modified is determined by ``coords``, which is a tuple or list of 3 integers
         that match the coordinates of a block.
         
-        There are two ways to use ``set_bounds``.
+        There are two ways to use ``set_bounds``:
+        
         1. Set ``loc`` to be ``None`` (default) and provide a list of strings specifying boundary
            type for ``bounds``. The length of ``bounds`` is 4 for a 2D simulation and 6 for 3D.
+           
         2. Set ``loc`` to be an integer denoting location and give ``bounds`` as a single string. 
            The possible locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back,
            4 = bottom, 5 = top. 4 and 5 are only applicable to 3D simulations (0 <= loc < 2*ndim).
@@ -1115,7 +1129,7 @@ class domain(object):
 
         :param mat: New material properties array (numpy array with shape ``(3, nx, ny, nz)``)
         :type mat: ndarray
-        :returns None
+        :returns: None
         """
         if self.ndim == 3:
             assert (mat.shape[1:] == self.nx), "heterogeneous material properties shape must match grid sizes"
@@ -1207,7 +1221,7 @@ class domain(object):
         error. ``newload`` will be appended to the load list
 
         :param newload: Load to be added
-        :type newload: load
+        :type newload: ~fdfault.load
         :param index: Interface to which the load should be added. Can be a single integer,
                               iterable of integers, or ``None`` to add to all interfaces (default is ``None``)
         :type index: int or tuple or list or None
@@ -1238,7 +1252,7 @@ class domain(object):
         ``index`` indicates the position in the load list that should be deleted.
         Default for ``index`` is ``-1`` (most recently added).
 
-        :param niface: Interface from which the load should be removed. ``niface``must refer to
+        :param niface: Interface from which the load should be removed. ``niface`` must refer to
                                a frictional interface
         :type niface: int
         :param index: Index within the load perturbation that should be removed (default is last)

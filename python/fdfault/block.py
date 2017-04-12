@@ -53,13 +53,26 @@ class block(object):
     '''
     def __init__(self, ndim, mode, nx, mat):
         '''
-        initialize block
-        ndim = number of dimensions
-        mode = slip mode (if 2D)
-        nx = (nx, ny, nz) tuple with number of grid points
-        xm = (xm, ym, zm) = lower left coordinates
+        Initialize a new ``block`` instance
+
+        Creates a new block instance with the given dimensionality, rupture mode, number of
+        grid points, and material type. If the problem is 2d, the number of z grid points will
+        be automatically set to one. By default, the block length is unity in each direction,
+        the lower left coordinate is ``(0., 0., 0.)``,  all boundary conditions are set to ``'none'``,
+        material properties take on their default values, and there are no irregular edge shapes.
+        All of these default properties can be modified using the provided interfaces.
         
-        mat = material type (``'elastic'`` or ``'plastic'``)
+        :param ndim: Number of spatial dimensions (must be 2 or 3)
+        :type ndim: int
+        :param mode: Slip mode (2 or 3, only relevant if the problem is in 2D)
+        :type mode: int
+        :param nx: Tuple of length 3 with number of grid points ``(nx, ny, nz)``
+        :type nx: tuple or list        
+        :param mat: Block material type (string, must be ``'elastic'`` or ``'plastic'``). The
+                            method initializes a default set of material properties based on this type.
+        :type mat: str
+        :returns: New block instance
+        :rtype: block
         '''
         assert(ndim == 2 or ndim == 3), "ndim must be 2 or 3"
         assert(mode == 2 or mode == 3), "mode must be 2 or 3"
@@ -286,9 +299,11 @@ class block(object):
         (incoming wave amplitude set to zero), 'free' (no traction on boundary), 'rigid' (no displacement
         of boundary), or 'none' (boundary conditions set by imposing interface conditions).
         
-        There are two ways to use ``set_bounds``.
+        There are two ways to use ``set_bounds``:
+        
         1. Set ``loc`` to be ``None`` (default) and provide a list of strings specifying boundary
            type for ``bounds``. The length of ``bounds`` is 4 for a 2D simulation and 6 for 3D.
+           
         2. Set ``loc`` to be an integer denoting location and give ``bounds`` as a single string. 
            The possible locations correspond to the following: 0 = left, 1 = right, 2 = front, 3 = back,
            4 = bottom, 5 = top. 4 and 5 are only applicable to 3D simulations (0 <= loc < 2*ndim).

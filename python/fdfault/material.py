@@ -52,6 +52,32 @@ class material(object):
     to correct for this.
     '''
     def __init__(self, mattype, rho = 2.67, lam = 32.04, g = 32.04, mu = 0.5735, c = 0., beta = 0.2867, eta = 0.2775):
+        """
+        Create a new instance of the ``material`` class
+
+        Initialize a new material. The user must specify whether the material type is elastic or plastic,
+        but all other parameters are optional (any not specified will take default values). All
+        parameters must be positive (rho, lam, g, mu) or nonnegative (beta, eta, c).
+
+        :param mattype: Material type, must be ``'elastic'`` or ``'plastic'``
+        :type mattype: str
+        :param rho: Density
+        :type rho: float
+        :param lam: First Lame parameter
+        :type lam: float
+        :param g: Shear modulus
+        :type g: float
+        :param mu: Internal friction coefficient
+        :type mu: float
+        :param c: Cohesion
+        :type c: float
+        :param beta: Plastic dilatancy
+        :type beta: float
+        :param eta: Plastic viscosity
+        :type eta: float
+        :returns: New material instance
+        :rtype: material
+        """
         assert mattype == "elastic" or mattype == "plastic", "Material type must be elastic or plastic"
         assert(rho > 0.)
         assert(lam > 0.)

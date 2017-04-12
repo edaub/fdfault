@@ -15,8 +15,8 @@ class front(object):
 
     Relevant internal variables include:
 
-    :ivar output: Boolean indicating if front output is on/off (Default ``False``)
-    :type output: bool
+    :ivar out: Boolean indicating if front output is on/off (Default ``False``)
+    :type out: bool
     :ivar field: Field to use for determining rupture time (rupture time is earliest time this field
                     exceeds the threshold). Default is ``'V'`` (scalar slip velocity), can also be
                     ``'U'`` (slip).
@@ -25,9 +25,17 @@ class front(object):
     :type value: float
     """
     def __init__(self):
-        "Initializes front"
+        """
+        Initializes rupture front
 
-        self.output = False
+        Create a new instance of the ``front`` class with default properties (output is ``False``,
+        output field is ``'V'``, and output threshold value is ``0.001``).
+
+        :returns: New rupture front class:
+        :rtype: ~fdfault.front
+        """
+
+        self.outputstatus = False
         self.field = 'V'
         self.value = 0.001
 
@@ -38,21 +46,21 @@ class front(object):
         :returns: Status of front output
         :rtype: bool
         """
-        return self.output
+        return self.outputstatus
 
-    def set_output(self, output):
+    def set_output(self, newoutput):
         """
         Sets front output to be on or off
 
         Sets rupture front output to be the specified value (boolean). Will raise an error
         if the provided value cannot be converted into a boolean.
 
-        :param output: New value of output
-        :type output: bool
+        :param newoutput: New value of output
+        :type newoutput: bool
         :returns: None
         """
-        assert type(output) is bool, "front output must be a boolean"
-        self.output = output
+        assert type(newoutput) is bool, "front output must be a boolean"
+        self.outputstatus = newoutput
 
     def get_field(self):
         """
@@ -114,14 +122,14 @@ class front(object):
         :returns: None
         """
         f.write("[fdfault.frontlist]\n")
-        f.write(str(int(self.output))+"\n")
-        if self.output:
+        f.write(str(int(self.outputstatus))+"\n")
+        if self.outputstatus:
             f.write(self.field+"\n")
             f.write(repr(self.value)+"\n")
         
     def __str__(self):
         "Returns string representation of front"
-        outstr = "Front: output = "+str(self.output)
-        if self.output:
+        outstr = "Front: output = "+str(self.outputstatus)
+        if self.outputstatus:
             outstr += ", field = "+self.field+", value = "+str(self.value)
         return outstr
