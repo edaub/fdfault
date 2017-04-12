@@ -10,11 +10,11 @@ Installation
 Building the Main Executable
 ===============================
 
-If installing from a downloaded source tarball, enter ::
+If installing from a downloaded zip archive, enter ::
 
-    tar -zxvf fdfault-1.0.tar.gz
+    unzip fdfault-1.0.zip
 
-Depending on which version you downloaded, the filename for the zipped tarball might be different. Or clone the git repository using ::
+Depending on which version you downloaded, the filename for the zipped archive might be different. Or clone the git repository using ::
 
     git clone https://github.com/egdaub/fdfault.git
 
@@ -88,4 +88,5 @@ command. If you do not have Sphinx or LaTeX on your machine, both versions of th
 documentation are available on the web:
 
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/html/index.html (html)
+
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf (pdf)

@@ -22,11 +22,11 @@ recommended)
 
 Installation Instructions:
 
-If installing from a downloaded source tarball, enter
+If installing from a downloaded zip archive, enter
 
-> tar -zxvf fdfault-1.0.tar.gz
+> unzip fdfault-1.0.zip
 
-Depending on which version you downloaded, the filename for the zipped tarball might
+Depending on which version you downloaded, the filename for the zipped archive might
 be different. Or clone the git repository using
 
 > git clone https://github.com/egdaub/fdfault.git
