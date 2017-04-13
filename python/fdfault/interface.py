@@ -584,7 +584,7 @@ class friction(interface):
         for load in self.loads:
             loadstring += "\n"+str(load)
         return ('Frictional interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)+"\nnloads = "
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nnloads = "
                 +str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.lf))
 
 class paramfric(friction):
@@ -796,7 +796,7 @@ class paramfric(friction):
         for load in self.loads:
             loadstring += "\n"+str(load)
         return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)
                 +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nParameter File:\n"+str(self.pf))
 
 class statefric(paramfric):
@@ -975,7 +975,7 @@ class statefric(paramfric):
         for load in self.loads:
             loadstring += "\n"+str(load)
         return (' frictional interface '+str(self.index)+":\ndirection = "+self.direction+
-                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)+"\nsurface = "+str(self.surf)
+                "\nbm = "+str(self.bm)+"\nbp = "+str(self.bp)
                 +"\nstate = "+str(self.state)+"\nstatefile = "+str(self.sf)+
                 +"\nnloads = "+str(self.nloads)+"\nLoads:"+loadstring+"\nLoad File:\n"+str(self.lf)
                 +"\nParameter File:\n"+str(self.pf))

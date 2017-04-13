@@ -633,13 +633,14 @@ void fields::read_mat(const string matfile) {
         MPI_File_read(infile, &mat_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]], nx_loc[0]*nx_loc[1]*nx_loc[2], MPI_DOUBLE, MPI_STATUS_IGNORE);
     }
     
-    // copy to appropriate place in s array (avoid ghost cells)
+    // copy to appropriate place in array (avoid ghost cells)
     
     for (int i=0; i<nmat; i++) {
         for (int j=0; j<nx_loc[0]; j++) {
             for (int k=0; k<nx_loc[1]; k++) {
                 for (int l=0; l<nx_loc[2]; l++) {
                     mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] = mat_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]+j*nx_loc[1]*nx_loc[2]+k*nx_loc[2]+l];
+					assert(mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] > 0.); // check that material properties are positive
                 }
             }
         }

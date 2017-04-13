@@ -1671,26 +1671,26 @@ class domain(object):
                     if (i != 0):
                         s1 = self.blocks[i-1][j][k].get_surf(1)
                         s2 = self.blocks[i][j][k].get_surf(0)
-                        if (s1 is None or s2 is None):
+                        if (s1 is None and s2 is None):
                             assert(self.blocks[i-1][j][k].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
                             assert(self.blocks[i-1][j][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
-                        else:
+                        elif (s1 is not None and s2 is not None):
                             assert s1 == s2, "block edges do not match"
                     if (j != 0):
                         s1 = self.blocks[i][j-1][k].get_surf(3)
                         s2 = self.blocks[i][j][k].get_surf(2)
-                        if (s1 is None or s2 is None):
+                        if (s1 is None and s2 is None):
                             assert(self.blocks[i][j-1][k].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
                             assert(self.blocks[i][j-1][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
-                        else:
+                        elif (s1 is not None and s2 is not None):
                             assert s1 == s2, "block edges do not match"
                     if (k != 0):
                         s1 = self.blocks[i][j][k-1].get_surf(5)
                         s2 = self.blocks[i][j][k].get_surf(4)
-                        if (s1 is None or s2 is None):
+                        if (s1 is None and s2 is None):
                             assert(self.blocks[i][j][k-1].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
                             assert(self.blocks[i][j][k-1].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
-                        else:
+                        elif (s1 is not None and s2 is not None):
                             assert s1 == s2, "block edges do not match"
 
         for iface in self.interfaces:
