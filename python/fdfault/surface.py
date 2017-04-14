@@ -195,8 +195,8 @@ class surface(object):
         '''
         compares two surfaces, returns boolean indicating if all coordinates are identical
         '''
-        return (self.get_x().all() == othersurf.get_x().all() and self.get_y().all() == othersurf.get_y().all()
-                and self.get_z().all() == othersurf.get_z().all())
+        return (np.allclose(self.get_x(), othersurf.get_x()) and np.allclose(self.get_y(), othersurf.get_y())
+                and np.allclose(self.get_z().all(), othersurf.get_z()))
 
     def has_same_edge(self, edge1, edge2, othersurf):
         '''
@@ -239,17 +239,17 @@ class surface(object):
                     edge2index = 0
                 else:
                     edge2index = othersurf.get_n2()-1
-                return (self.get_x()[:,edge1index].all() == othersurf.get_x()[:,edge2index].all() 
-                        and self.get_y()[:,edge1index].all() == othersurf.get_y()[:,edge2index].all() 
-                        and self.get_z()[:,edge1index].all() == othersurf.get_z()[:,edge2index].all())
+                return (np.allclose(self.get_x()[:,edge1index], othersurf.get_x()[:,edge2index]) 
+                        and np.allclose(self.get_y()[:,edge1index], othersurf.get_y()[:,edge2index]) 
+                        and np.allclose(self.get_z()[:,edge1index] == othersurf.get_z()[:,edge2index]))
             else:
                 if (edge2 == 1):
                     edge2index = 0
                 else:
                     edge2index = othersurf.get_n1()-1
-                return (self.get_x()[:,edge1index].all() == othersurf.get_x()[edge2index,:].all() 
-                        and self.get_y()[:,edge1index].all() == othersurf.get_y()[edge2index,:].all() 
-                        and self.get_z()[:,edge1index].all() == othersurf.get_z()[edge2index,:].all())
+                return (np.allclose(self.get_x()[:,edge1index], othersurf.get_x()[edge2index,:]) 
+                        and np.allclose(self.get_y()[:,edge1index], othersurf.get_y()[edge2index,:]) 
+                        and np.allclose(self.get_z()[:,edge1index] == othersurf.get_z()[edge2index,:]))
         else:
             if (edge1 == 1):
                 edge1index = 0
@@ -260,17 +260,18 @@ class surface(object):
                     edge2index = 0
                 else:
                     edge2index = othersurf.get_n2()-1
-                return (self.get_x()[edge1index,:].all() == othersurf.get_x()[:,edge2index].all() 
-                        and self.get_y()[edge1index,:].all() == othersurf.get_y()[:,edge2index].all() 
-                        and self.get_z()[edge1index,:].all() == othersurf.get_z()[:,edge2index].all())
+                return (np.allclose(self.get_x()[edge1index,:], othersurf.get_x()[:,edge2index]) 
+                        and np.allclose(self.get_y()[edge1index,:], othersurf.get_y()[:,edge2index]) 
+                        and np.allclose(self.get_z()[edge1index,:] == othersurf.get_z()[:,edge2index]))
             else:
                 if (edge2 == 1):
                     edge2index = 0
                 else:
                     edge2index = othersurf.get_n1()-1
-                return (self.get_x()[edge1index,:].all() == othersurf.get_x()[edge2index,:].all() 
-                        and self.get_y()[edge1index,:].all() == othersurf.get_y()[edge2index,:].all() 
-                        and self.get_z()[edge1index,:].all() == othersurf.get_z()[edge2index,:].all())
+                return (np.allclose(self.get_x()[edge1index,:], othersurf.get_x()[edge2index,:]) 
+                        and np.allclose(self.get_y()[edge1index,:], othersurf.get_y()[edge2index,:]) 
+                        and np.allclose(self.get_z()[edge1index,:] == othersurf.get_z()[edge2index,:]))
+            
 
     def write(self, filename, endian = '='):
         '''

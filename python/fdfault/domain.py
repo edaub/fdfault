@@ -1669,42 +1669,18 @@ class domain(object):
                 for k in range(self.nblocks[2]):
                     self.blocks[i][j][k].check()
                     if (i != 0):
-                        s1 = self.blocks[i-1][j][k].get_surf(1)
-                        s2 = self.blocks[i][j][k].get_surf(0)
-                        if (s1 is None and s2 is None):
-                            assert(self.blocks[i-1][j][k].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
-                            assert(self.blocks[i-1][j][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
-                        elif (s1 is not None and s2 is not None):
-                            assert s1 == s2, "block edges do not match"
+                        s1 = self.blocks[i-1][j][k].make_tempsurfs()[1]
+                        s2 = self.blocks[i][j][k].make_tempsurfs()[0]
+                        assert s1 == s2, "block edges do not match"
                     if (j != 0):
-                        s1 = self.blocks[i][j-1][k].get_surf(3)
-                        s2 = self.blocks[i][j][k].get_surf(2)
-                        if (s1 is None and s2 is None):
-                            assert(self.blocks[i][j-1][k].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
-                            assert(self.blocks[i][j-1][k].get_lx()[2] == self.blocks[i][j][k].get_lx()[2]), "block edges do not match"
-                        elif (s1 is not None and s2 is not None):
-                            assert s1 == s2, "block edges do not match"
+                        s1 = self.blocks[i][j-1][k].make_tempsurfs()[3]
+                        s2 = self.blocks[i][j][k].make_tempsurfs()[2]
+                        assert s1 == s2, "block edges do not match"
                     if (k != 0):
-                        s1 = self.blocks[i][j][k-1].get_surf(5)
-                        s2 = self.blocks[i][j][k].get_surf(4)
-                        if (s1 is None and s2 is None):
-                            assert(self.blocks[i][j][k-1].get_lx()[0] == self.blocks[i][j][k].get_lx()[0]), "block edges do not match"
-                            assert(self.blocks[i][j][k-1].get_lx()[1] == self.blocks[i][j][k].get_lx()[1]), "block edges do not match"
-                        elif (s1 is not None and s2 is not None):
-                            assert s1 == s2, "block edges do not match"
-
-        for iface in self.interfaces:
-            coordsm = iface.get_bm()
-            if iface.get_direction() == 'x':
-                loc = 1
-            elif iface.get_direction() == 'y':
-                loc = 3
-            else:
-                loc = 5
-            s1 = self.blocks[coordsm[0]][coordsm[1]][coordsm[2]].get_surf(loc)
-            coordsp = iface.get_bp()
-            loc -= 1
-            s2 = self.blocks[coordsp[0]][coordsp[1]][coordsp[2]].get_surf(loc)
+                        s1 = self.blocks[i][j][k-1].make_tempsurfs()[5]
+                        s2 = self.blocks[i][j][k].make_tempsurfs()[4]
+                        assert s1 == s2, "block edges do not match"
+                        
     
     def __str__(self):
         "returns a string representation of a domain"
