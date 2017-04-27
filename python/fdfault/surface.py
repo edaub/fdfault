@@ -196,7 +196,7 @@ class surface(object):
         compares two surfaces, returns boolean indicating if all coordinates are identical
         '''
         return (np.allclose(self.get_x(), othersurf.get_x()) and np.allclose(self.get_y(), othersurf.get_y())
-                and np.allclose(self.get_z().all(), othersurf.get_z()))
+                and np.allclose(self.get_z(), othersurf.get_z()))
 
     def has_same_edge(self, edge1, edge2, othersurf):
         '''
