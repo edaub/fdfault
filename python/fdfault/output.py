@@ -204,18 +204,18 @@ class output(object):
         
         self.name = name
         self.field = field
-        self.tm = tm
-        self.tp = tp
-        self.ts = ts
-        self.xm = xm
-        self.ym = ym
-        self.zm = zm
-        self.xp = xp
-        self.yp = yp
-        self.zp = zp
-        self.xs = xs
-        self.ys = ys
-        self.zs = zs
+        self.tm = int(tm)
+        self.tp = int(tp)
+        self.ts = int(ts)
+        self.xm = int(xm)
+        self.ym = int(ym)
+        self.zm = int(zm)
+        self.xp = int(xp)
+        self.yp = int(yp)
+        self.zp = int(zp)
+        self.xs = int(xs)
+        self.ys = int(ys)
+        self.zs = int(zs)
 
     def get_name(self):
         """
