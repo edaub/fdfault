@@ -352,6 +352,17 @@ class interface(object):
         """
         raise NotImplementedError("Interfaces do not support parameter files")
 
+    def check(self, nx):
+        """
+        Checks if interface size is consistent with simulation. Only needed for interfaces using
+        files for load, state, or parameter values.
+
+        :param nx: Number of grid points of neighboring block (tuple of two integers)
+        :type nx: tuple
+        :returns: None
+        """
+        pass
+
     def write_input(self, f, probname, directory, endian = '='):
         """
         Writes interface details to input file
@@ -536,6 +547,18 @@ class friction(interface):
         :returns: None
         """
         self.lf = None
+
+    def check(self, nx):
+        """
+        Checks if interface size is consistent with simulation. Only needed for interfaces using
+        files for load, state, or parameter values.
+
+        :param nx: Number of grid points of neighboring block (tuple of two integers)
+        :type nx: tuple
+        :returns: None
+        """
+        if self.lf is not None:
+            assert (self.lf.get_n1() == nx[0] and self.lf.get_n2() == nx[1]), "loadfile size not consistent with neighboring blocks"
 
     def write_input(self, f, probname, directory, endian = '='):
         """
@@ -751,6 +774,20 @@ class paramfric(friction):
         """
         self.pf = None
 
+    def check(self, nx):
+        """
+        Checks if interface size is consistent with simulation. Only needed for interfaces using
+        files for load, state, or parameter values.
+
+        :param nx: Number of grid points of neighboring block (tuple of two integers)
+        :type nx: tuple
+        :returns: None
+        """
+        friction.check(self, nx)
+        
+        if self.pf is not None:
+            assert (self.pf.get_n1() == nx[0] and self.pf.get_n2() == nx[1]), "paramfile size not consistent with neighboring blocks"
+
     def write_input(self, f, probname, directory, endian = '='):
         """
         Writes interface details to input file
@@ -922,6 +959,21 @@ class statefric(paramfric):
         :returns: None
         """
         self.sf = None
+
+    def check(self, nx):
+        """
+        Checks if interface size is consistent with simulation. Only needed for interfaces using
+        files for load, state, or parameter values.
+
+        :param nx: Number of grid points of neighboring block (tuple of two integers)
+        :type nx: tuple
+        :returns: None
+        """
+        paramfric.check(self, nx)
+        
+        if self.sf is not None:
+            assert (self.sf.get_n1() == nx[0] and self.sf.get_n2() == nx[1]), "statefile size not consistent with neighboring blocks"
+
 
     def write_input(self, f, probname, directory, endian = '='):
         """

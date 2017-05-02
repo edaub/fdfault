@@ -1680,7 +1680,18 @@ class domain(object):
                         s1 = self.blocks[i][j][k-1].make_tempsurfs()[5]
                         s2 = self.blocks[i][j][k].make_tempsurfs()[4]
                         assert s1 == s2, "block edges do not match"
-                        
+
+        for iface in self.interfaces:
+            (i, j, k) = iface.get_bm()
+            (nx, ny, nz) = self.blocks[i][j][k].get_nx()
+            direction = iface.get_direction()
+            if direction == 'x':
+                iface.check((ny, nz))
+            elif direction == 'y':
+                iface.check((nx, nz))
+            else:
+                iface.check((nx, ny))
+            
     
     def __str__(self):
         "returns a string representation of a domain"
