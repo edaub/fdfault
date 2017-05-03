@@ -286,7 +286,11 @@ double slipweak::calc_mu(const double phi, const double eta, const double snc, c
     if (trupt <= 0. || t < trupt) {
         f2 = 0.;
     } else if (t >= trupt && t < trupt+tct) {
-        f2 = (t-trupt)/tct;
+		if (tct == 0.) {
+			f2 = 1.;
+		} else {
+			f2 = (t-trupt)/tct;
+		}
     } else {
         f2 = 1.;
     }
