@@ -27,9 +27,9 @@ function output = load_output(probname, name, datadir)
     end
 
     cd(datadir);
-    system(['cp ' probname '_' name '.m _tmpfile.m']);
-    eval('_tmpfile');
-    system(['rm -f _tmpfile.m']);
+    system(['cp ' probname '_' name '.m tmpfile.m']);
+    eval('tmpfile');
+    system(['rm -f tmpfile.m']);
     cd(deblank(currentdir));
 
     output.field = field;

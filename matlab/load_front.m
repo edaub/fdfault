@@ -25,9 +25,9 @@ function front = load_front(probname, iface, datadir)
     end
 
     cd(datadir);
-    system(['cp ' probname '_front_' num2str(iface) '.m _tmpfile.m']);
-    eval('_tmpfile');
-    system(['rm -f _tmpfile.m']);
+    system(['cp ' probname '_front_' num2str(iface) '.m tmpfile.m']);
+    eval('tmpfile');
+    system(['rm -f tmpfile.m']);
     cd(deblank(currentdir));
 
     front.endian = endian;
