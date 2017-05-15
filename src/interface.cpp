@@ -331,7 +331,8 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
     // check that block edges match
     
 	double a, b;
-	double epsilon = 1.e-12;
+    double abtol = 1.e-8;
+	double reltol = 1.e-5;
 	
     for (int i=0; i<ndim; i++) {
         for (int j=mlb[0]; j<prb[0]; j++) {
@@ -339,7 +340,7 @@ interface::interface(const char* filename, const int ndim_in, const int mode_in,
                 for (int l=mlb[2]; l<prb[2]; l++) {
 					a = f.x[i*nxd[0]+j*nxd[1]+k*nxd[2]+l];
 					b = f.x[i*nxd[0]+(j+delta[0])*nxd[1]+(k+delta[1])*nxd[2]+l+delta[2]];
-                    assert(fabs(a - b) <= ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon));
+                    assert(fabs(a - b) <= (abtol + reltol*fabs(b)));
                 }
             }
         }

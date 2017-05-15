@@ -139,7 +139,8 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
 	// 3 means edge where first index is n1-1
 	
 	int edge1index, edge2index;
-    double epsilon = 1.e-12;
+    double abtol = 1.e-8;
+	double reltol = 1.e-5;
 	double a, b;
 	
 	if (edge1%2 == 1) {
@@ -163,7 +164,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
                     for (int j=0; j<n[1]; j++) {
 						a = x[i*n[0]*n[1]+edge1index*n[1]+j];
 						b = othersurf.get_x(i,edge2index,j);
-						if(fabs(a - b) > ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon)) {
+						if(fabs(a - b) > (abtol + reltol*fabs(b))) {
                             return false;
                         }
                     }
@@ -184,7 +185,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
                     for (int j=0; j<n[1]; i++) {
 						a = x[i*n[0]*n[1]+edge1index*n[1]+j];
 						b = othersurf.get_x(i,j,edge2index);
-						if(fabs(a - b) > ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon)) {
+						if(fabs(a - b) > (abtol + reltol*fabs(b))) {
                             return false;
                         }
                     }
@@ -213,7 +214,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
                     for (int j=0; j<n[0]; j++) {
 						a = x[i*n[0]*n[1]+j*n[1]+edge1index];
 						b = othersurf.get_x(i,edge2index,j);
-						if(fabs(a - b) > ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon)) {
+						if(fabs(a - b) > (abtol + reltol*fabs(b))) {
                             return false;
                         }
 					}
@@ -234,7 +235,7 @@ bool surface::has_same_edge(const int edge1, const int edge2, const surface& oth
                     for (int j=0; j<n[0]; j++) {
 						a = x[i*n[0]*n[1]+j*n[1]+edge1index];
 						b = othersurf.get_x(i,j,edge2index);
-						if(fabs(a - b) > ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon)) {
+						if(fabs(a - b) > (abtol + reltol*fabs(b))) {
                             return false;
                         }
 					}
