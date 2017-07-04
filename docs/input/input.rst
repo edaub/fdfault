@@ -6,7 +6,7 @@ Specifying Simulation Parameters
 
 Parameters for simulations are set with input files. These are text files that are formatted to be understood by the C++ code. They mostly consist of section headers followed by raw numbers, strings, or file names. They are manageable for small, simple problems, but to really use the full power of the code it is suggested to take advantage of the Python module. Either way, parameters are set through an input file ``problemname.in``, though the problem name is actually set in the input file itself so the input file name and problem name need not be the same.
 
-Once the input file is written to disk, you can launch a simulation. From the main ``fdfault`` directory, simply enter:
+Once the input file is written to disk, you can launch a simulation. From the main ``fdfault`` directory, simply enter: ::
 
     > mpirun -n 4 fdfault problems/problemname.in
     
