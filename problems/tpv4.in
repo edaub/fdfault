@@ -24,6 +24,8 @@ elastic
 [fdfault.fields]
 0.0 0.0 0.0 0.0 0.0 0.0
 none
+none
+0
 
 [fdfault.block000]
 2.67 32.04 32.04

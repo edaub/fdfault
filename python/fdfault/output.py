@@ -37,6 +37,17 @@ Acceptable field names for volume output:
 * ``'szz'`` - zz stress component
 * ``'gammap'`` - scalar plastic strain
 * ``'lambda'`` - scalar plastic strain rate
+* ``'epxx'`` - xx plastic strain component
+* ``'epxy'`` - xy plastic strain component
+* ``'epxz'`` - xz plastic strain component
+* ``'epyy'`` - yy plastic strain component
+* ``'epyz'`` - yz plastic strain component
+* ``'epzz'`` - zz plastic strain component
+
+Selecting a plastic field in an elastic simulation will result in an error. If you wish to save a
+component of the plastic strain tensor, you must turn on the ``plastic_tensor`` option
+using the ``set_plastic_tensor`` method of a problem (i.e. set to ``True``). Otherwise you will
+get an error.
 
 Acceptable field names for interface output (coordinates must form a 2D (1D for 2D problems)
 slice through the domain along a single interface between two blocks. Note that if your
@@ -192,7 +203,9 @@ class output(object):
                 or field == "sxz" or field == "syy" or field == "syz" or field == "szz" or field == "Ux"
                 or field == "Uy" or field == "Uz" or field == "Vx" or field == "Vy" or field == "Vz"
                 or field == "U" or field == "V" or field == "Sx" or field == "Sy" or field == "Sz"
-                or field == "S" or field == "Sn" or field == "gammap" or field == 'lambda' or field == "state"), "Incorrect field name"
+                or field == "S" or field == "Sn" or field == "gammap" or field == 'lambda' or field == "state"
+                or field == "epxx" or field == "epxy" or field == "epxz" or field == "epyy" or field == "epyz"
+                or field == "epzz"), "Incorrect field name"
         assert (tm >= 0 and tp >= 0 and tp >= tm and ts > 0), "bad time limits"
         assert (xm >= 0 and xp >= 0 and xp >= xm and xs > 0), "bad x limits"
         assert (ym >= 0 and yp >= 0 and yp >= ym and ys > 0), "bad y limits"
@@ -258,7 +271,9 @@ class output(object):
                 or field == "sxz" or field == "syy" or field == "syz" or field == "szz" or field == "Ux"
                 or field == "Uy" or field == "Vx" or field == "Vy" or field == "U" or field == "V"
                 or field == "Sx" or field == "Sy" or field == "Sz" or field == "S" or field == "Sn"
-                or field == "lambda" or field == "gammap" or field == "state"), "Incorrect field name"
+                or field == "lambda" or field == "gammap" or field == "state" or field == "epxx"
+                or field == "epxy" or field == "epxz" or field == "epyy" or field == "epyz"
+                or field == "epzz"), "Incorrect field name"
         self.field = field
 
     def get_tm(self):

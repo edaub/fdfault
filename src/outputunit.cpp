@@ -25,6 +25,10 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
         assert(d.is_plastic);
     }
     
+    if (field_in == "epxx" || field_in == "epxy" || field_in == "epxz" || field_in == "epyy" || field_in == "epyz" || field_in == "epzz") {
+        assert(d.f->plastic_tensor);
+    }
+    
     ndim = d.get_ndim();
     mode = d.get_mode();
     
@@ -63,7 +67,8 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
     // set location
     
     if (field_in == "vx" || field_in == "vy" || field_in == "vz" || field_in == "sxx" || field_in == "sxy" || field_in == "sxz" || field_in == "syy" ||
-        field_in == "syz" || field_in == "szz" || field_in == "lambda" || field_in == "gammap") {
+        field_in == "syz" || field_in == "szz" || field_in == "lambda" || field_in == "gammap" || field_in == "epxx" || field_in == "epxy" ||
+        field_in == "epxz" || field_in == "epyy" || field_in == "epyz" || field_in == "epzz") {
         location = -1;
     } else {
         // find interface corresponding to input indices
@@ -137,6 +142,18 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                 field = 9;
             } else if (field_in == "gammap") {
                 field = 10;
+            } else if (field_in == "epxx") {
+                field = 11;
+            } else if (field_in == "epxy") {
+                field = 12;
+            } else if (field_in == "epxz") {
+                field = 13;
+            } else if (field_in == "epyy") {
+                field = 14;
+            } else if (field_in == "epyz") {
+                field = 15;
+            } else if (field_in == "epzz") {
+                field = 16;
             } else if (field_in == "Vx") {
                 field = 0;
             } else if (field_in == "Vy") {
@@ -189,6 +206,18 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 6;
                     } else if (field_in == "gammap") {
                         field = 7;
+                    } else if (field_in == "epxx") {
+                        field = 8;
+                    } else if (field_in == "epxy") {
+                        field = 9;
+                    } else if (field_in == "epxz") {
+                        field = 10;
+                    } else if (field_in == "epyy") {
+                        field = 11;
+                    } else if (field_in == "epyz") {
+                        field = 12;
+                    } else if (field_in == "epzz") {
+                        field = 13;
                     } else if (field_in == "Vx") {
                         field = 0;
                     } else if (field_in == "Vy") {
@@ -227,6 +256,18 @@ outputunit::outputunit(const string probname, const string datadir, const int nt
                         field = 3;
                     } else if (field_in == "gammap") {
                         field = 4;
+                    } else if (field_in == "epxx") {
+                        field = 5;
+                    } else if (field_in == "epxy") {
+                        field = 6;
+                    } else if (field_in == "epxz") {
+                        field = 7;
+                    } else if (field_in == "epyy") {
+                        field = 8;
+                    } else if (field_in == "epyz") {
+                        field = 9;
+                    } else if (field_in == "epzz") {
+                        field = 10;
                     } else if (field_in == "Vz") {
                         field = 0;
                     } else if (field_in == "V") {
