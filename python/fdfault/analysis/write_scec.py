@@ -13,11 +13,13 @@ in the documentation for each function.
 """
 
 import numpy as np
-import fdfault
+import fdfault.analysis
 import datetime
 from scipy.integrate import cumtrapz
+from os.path import join
 
-def write_off_fault(problem, station, depthsign = 1., author = "", version = "", grid_spacing = ""):
+def write_off_fault(problem, station, depthsign = 1., author = "", version = "", grid_spacing = "",
+                    datadir = None, savepath=None):
     """
     Converts code output units for off-fault station from a 3D simulation into a formatted text file
     for SCEC website
@@ -48,11 +50,11 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
 
     stationstr = 'body'+station[1]+'st'+station[0]+'dp'+station[2]
 
-    h_vel = fdfault.output(problem,stationstr+'-h-vel')
+    h_vel = fdfault.analysis.output(problem,stationstr+'-h-vel', datadir)
     h_vel.load()
-    n_vel = fdfault.output(problem,stationstr+'-n-vel')
+    n_vel = fdfault.analysis.output(problem,stationstr+'-n-vel', datadir)
     n_vel.load()
-    v_vel = fdfault.output(problem,stationstr+'-v-vel')
+    v_vel = fdfault.analysis.output(problem,stationstr+'-v-vel', datadir)
     v_vel.load()
 
     assert(h_vel.nt == v_vel.nt)
@@ -63,7 +65,10 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
     n_disp = cumtrapz(n_vel.vy, n_vel.t, initial=0.)
     v_disp = cumtrapz(v_vel.vz, v_vel.t, initial=0.)
 
-    f = open(problem+'_'+stationstr+'.txt','w')
+    if savepath is None:
+        savepath = ''
+
+    f = open(join(savepath,problem+'_'+stationstr+'.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
@@ -92,7 +97,8 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
 
     f.close()
 
-def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = "", grid_spacing = ""):
+def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = "", grid_spacing = "",
+                       datadir = None, savepath=None):
     """
     Converts code output units for off-fault station into a formatted text file for SCEC website
 
@@ -122,9 +128,9 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
 
     stationstr = 'body'+station[1]+'st'+station[0]+'dp'+station[2]
 
-    n_vel = fdfault.output(problem,stationstr+'-n-vel')
+    n_vel = fdfault.analysis.output(problem,stationstr+'-n-vel', datadir)
     n_vel.load()
-    v_vel = fdfault.output(problem,stationstr+'-v-vel')
+    v_vel = fdfault.analysis.output(problem,stationstr+'-v-vel', datadir)
     v_vel.load()
 
     assert(n_vel.nt == v_vel.nt)
@@ -133,7 +139,10 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
     n_disp = cumtrapz(n_vel.vx, n_vel.t, initial=0.)
     v_disp = cumtrapz(v_vel.vy, v_vel.t, initial=0.)
 
-    f = open(problem+'_'+stationstr+'.txt','w')
+    if savepath is None:
+        savepath = ''
+
+    f = open(join(savepath,problem+'_'+stationstr+'.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
@@ -163,7 +172,7 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
     f.close()
 
 def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
-                   version = "", grid_spacing = ""):
+                   version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
 
@@ -193,17 +202,17 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
 
     stationstr = 'faultst'+station[0]+'dp'+station[1]
 
-    h_slip = fdfault.output(problem,stationstr+'-h-slip')
+    h_slip = fdfault.analysis.output(problem,stationstr+'-h-slip', datadir)
     h_slip.load()
-    h_slip_rate = fdfault.output(problem,stationstr+'-h-slip-rate')
+    h_slip_rate = fdfault.analysis.output(problem,stationstr+'-h-slip-rate', datadir)
     h_slip_rate.load()
-    h_shear_stress = fdfault.output(problem,stationstr+'-h-shear-stress')
+    h_shear_stress = fdfault.analysis.output(problem,stationstr+'-h-shear-stress', datadir)
     h_shear_stress.load()
-    v_slip = fdfault.output(problem,stationstr+'-v-slip')
+    v_slip = fdfault.analysis.output(problem,stationstr+'-v-slip', datadir)
     v_slip.load()
-    v_slip_rate = fdfault.output(problem,stationstr+'-v-slip-rate')
+    v_slip_rate = fdfault.analysis.output(problem,stationstr+'-v-slip-rate', datadir)
     v_slip_rate.load()
-    v_shear_stress = fdfault.output(problem,stationstr+'-v-shear-stress')
+    v_shear_stress = fdfault.analysis.output(problem,stationstr+'-v-shear-stress', datadir)
     v_shear_stress.load()
 
     assert(h_slip.nt == h_slip_rate.nt)
@@ -214,10 +223,13 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     assert(depthsign == 1. or depthsign == -1.)
 
     if normal:
-        n_stress = fdfault.output(problem,stationstr+'-n-stress')
+        n_stress = fdfault.analysis.output(problem,stationstr+'-n-stress', datadir)
         n_stress.load()        
 
-    f = open(problem+'_'+stationstr+'.txt','w')
+    if savepath is None:
+        savepath = ''
+
+    f = open(join(savepath,problem+'_'+stationstr+'.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
@@ -258,7 +270,7 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     f.close()
 
 def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = "",
-                   version = "", grid_spacing = ""):
+                   version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
 
@@ -289,11 +301,11 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
 
     stationstr = 'faultst'+station[0]+'dp'+station[1]
 
-    v_slip = fdfault.output(problem,stationstr+'-v-slip')
+    v_slip = fdfault.analysis.output(problem,stationstr+'-v-slip', datadir)
     v_slip.load()
-    v_slip_rate = fdfault.output(problem,stationstr+'-v-slip-rate')
+    v_slip_rate = fdfault.analysis.output(problem,stationstr+'-v-slip-rate', datadir)
     v_slip_rate.load()
-    v_shear_stress = fdfault.output(problem,stationstr+'-v-shear-stress')
+    v_shear_stress = fdfault.analysis.output(problem,stationstr+'-v-shear-stress', datadir)
     v_shear_stress.load()
 
     assert(v_slip.nt == v_slip_rate.nt)
@@ -301,10 +313,13 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
     assert(depthsign == 1. or depthsign == -1.)
 
     if normal:
-        n_stress = fdfault.output(problem,stationstr+'-n-stress')
+        n_stress = fdfault.analysis.output(problem,stationstr+'-n-stress', datadir)
         n_stress.load()        
 
-    f = open(problem+'_'+stationstr+'.txt','w')
+    if savepath is None:
+        savepath = ''
+
+    f = open(join(savepath,problem+'_'+stationstr+'.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
@@ -374,10 +389,13 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
 
     assert(depthsign == 1. or depthsign == -1.)
 
-    frt = fdfault.front(problem, iface)
+    frt = fdfault.analysis.front(problem, iface, datadir)
     frt.load()
 
-    f = open(problem+'_'+'cplot.txt','w')
+    if savepath is None:
+        savepath = ''
+
+    f = open(join(savepath,problem+'_cplot.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
