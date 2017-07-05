@@ -359,7 +359,8 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
 
     f.close()
 
-def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", grid_spacing = ""):
+def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", grid_spacing = "",
+                datadir = None, savepath=None):
     """
     Converts code output units for rupture front times into a formatted text file for SCEC website
 
