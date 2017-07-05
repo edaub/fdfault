@@ -304,6 +304,84 @@ class surface(object):
         '''
         return 'Surface with normal direction ' + self.direction +', n1 = ' + str(self.n1) + ', n2 = ' + str(self.n2)
 
+class curve3d(surface):
+    """
+    The curve3d clas represents a curve in 3 dimensions. Used only to define flat surfaces more easily
+
+    curve3d is simply a curve with n2 = 1
+    """
+    def __init__(self, n1, direction, x, y, z):
+        '''
+        Initialize a ``surface`` instance
+
+        Required arguments are n1 and n2, which are number of grid points in each direction,
+        a direction which indicates the surface orientation in computational space (``'x'``, ``'y'``,
+        or ``'z'``), plus three arrays x, y, and z (must have shape ``(n1, n2)`` that hold the
+        coordinates for the new surface. Initializing with a negative number of grid points, with
+        arrays that do not have the correct shape, or with a bad string for the surface orientation
+        will result in an error.
+
+        :param n1: Number of grid points along first dimension
+        :type n1: int
+        :param n2: Number of grid points along second dimension
+        :type n2: int
+        :param direction: String indicating surface normal direction in computational space
+                                (must be ``'x'``, ``'y'``, or ``'z'``)
+        :type direction: str
+        :param x: Array holding surface x coordinates (must have shape ``(n1, n2)``)
+        :type x: ndarray
+        :param y: Array holding surface y coordinates (must have shape ``(n1, n2)``)
+        :type y: ndarray
+        :param z: Array holding surface z coordinates (must have shape ``(n1, n2)``)
+        :type z: ndarray
+        :returns: New surface with specified properties
+        :rtype: surface
+        '''
+
+        x = np.reshape(np.array(x), (n1,1))
+        y = np.reshape(np.array(y), (n1,1))
+        z = np.reshape(np.array(z), (n1,1))
+        surface.__init__(self, n1, 1, direction, x, y, z)
+
+    def has_same_edge(self, edge1, edge2, othersurf):
+        '''
+        Compares the edges of two curve3d objects
+        
+        The method compares the edges of two curves, using the indices 1 or 3 to indicate the
+        edges (one argument must be provided for each curve). Note that this definition
+        is made to be consistent with the surface class.
+
+        * 1 means edge where first index is zero
+
+        * 3 means edge where first index is n1-1
+
+        Returns a boolean.
+
+        :param edge1: Edge of first surface to be used. Must be integer 1 or 3
+        :type edge1: int
+        :param edge2: Edge of second surface to be used. Must be integer 1 or 3
+        :type edge2: int
+        :param othersurf: The second curve, must be a curve
+        :type othersurf: curve
+        :returns: Whether or not the selected edges match
+        :rtype: bool
+        '''
+
+        assert type(edge1) is int and (edge1 == 1 or edge1 == 3), "edge1 out of range"
+        assert type(edge2) is int and (edge2 == 1 or edge2 == 3), "edge2 out of range"
+        assert type(othersurf) is curve3d, "other object is not a curve3d"
+        
+        if (edge1 == 1):
+            edge1index = 0
+        else:
+            edge1index = self.get_n1()-1
+        if (edge2 == 1):
+            edge2index = 0
+        else:
+            edge2index = othersurf.get_n1()-1
+        return (np.allclose(self.get_x()[edge1index], othersurf.get_x()[edge2index])
+            and np.allclose(self.get_y()[edge1index], othersurf.get_y()[edge2index]))
+
 class curve(surface):
     '''
     The curve class represents a curve for defining interfaces and block boundaries in 2D problems
@@ -419,3 +497,93 @@ class curve(surface):
         f.write(self.get_y().astype(endian+'f8').tobytes())
 
         f.close()
+
+def curves_to_surf(direction, c1, c2, c3, c4):
+    """
+    Use transfinite interpolation to convert 4 curves into a surface
+
+    This function takes four 3d curves into a surface object. Its main use is to simplify defining
+    surfaces for 3d rupture dynamic problems with complex geometries. The method takes four
+    ``curve3d`` objects and uses transfinite interpolation to combine them into a ``surface`` object
+
+    ``c1`` and ``c2`` are ``curve3d`` objects that define one opposite pair of edges on the surface.
+    They must have the same length, which will be the length of the first index on the surface.
+    They must have the same normal direction in computational space whose value depends on
+    the overall orientation of the final surface. If the final surface is in the ``'x'`` direction, then
+    ``c1`` and ``c2`` must be oriented in the ``'y'`` direction. Similarly, for a ``'y'`` or ``'z'`` surface,
+    ``c1`` and ``c2`` must be oriented in the ``'x'`` direction.
+    
+    ``c3`` and ``c4`` are ``curve3d`` objects with the same length, and this will define the length of the
+    second index on the final surface. The orientation of each curve must correspond to the final
+    orientation of the surface. If the final surface is in the ``'x'`` or ``'y'`` direction, then ``c3`` and ``c4``
+    must be oriented in the ``'z'`` direction, while a final surface in the ``'z'`` direction requires curves
+    be oriented in the ``'y'`` direction.
+
+    All four curves must have edges that meet. Specifically, the lower end of ``c1`` must meet with
+    the left edge of ``c3``, the upper end of ``c1`` must meet with the left edge of ``c4``, the
+    lower end of ``c2`` must meet with the right edge of ``c3``, and the upper end of ``c2`` must
+    meet the right edge of ``c4``.
+
+    Returns a ``surface`` object with boundaries defined by the input curves, and an orientation
+    set by the ``direction`` parameter.
+
+    :param direction: Normal direction of final surface in computational space. Must be ``'x'``, ``'y'``,
+                                or ``'z'``
+    :type direction: str
+    :param c1: Left edge of surface. Must be a ``curve3d`` object with the same length as ``c2``
+    :type c1: curve3d
+    :param c2: Right edge of surface. Must be a ``curve3d`` object with the same length as ``c1``
+    :type c2: curve3d
+    :param c3: Front edge of surface. Must be a ``curve3d`` object with the same length as ``c4``
+    :type c3: curve3d
+    :param c4: Back edge of surface. Must be a ``curve3d`` object with the same length as ``c3``
+    :type c4: curve3d
+    :returns: surface defined by the edges and direction
+    :rtype: surface
+    """
+
+    assert type(c1) is curve3d, "c1 must be a curve3d"
+    assert type(c2) is curve3d, "c2 must be a curve3d"
+    assert type(c3) is curve3d, "c3 must be a curve3d"
+    assert type(c4) is curve3d, "c4 must be a curve3d"
+    assert c1.get_n1() == c2.get_n1(), "c1 and c2 must have same length"
+    assert c3.get_n1() == c4.get_n1(), "c3 and c4 must have same length"
+    assert (direction == 'x' or direction == 'y' or direction == 'z'), "direction must be 'x', 'y', or 'z'"
+    assert c1.has_same_edge(1, 1, c3)
+    assert c1.has_same_edge(3, 1, c4)
+    assert c2.has_same_edge(1, 3, c3)
+    assert c2.has_same_edge(3, 3, c4)
+
+    if direction == 'x':
+        assert c1.get_direction() == 'y' and c2.get_direction() == 'y'
+        assert c3.get_direction() == 'z' and c4.get_direction() == 'z'
+    elif direction == 'y':
+        assert c1.get_direction() == 'x' and c2.get_direction() == 'x'
+        assert c3.get_direction() == 'z' and c4.get_direction() == 'z'
+    else:
+        assert c1.get_direction() == 'x' and c2.get_direction() == 'x'
+        assert c3.get_direction() == 'y' and c4.get_direction() == 'y'
+
+    n1 = c3.get_n1()
+    n2 = c1.get_n1()
+    x = np.zeros((n1,n2))
+    y = np.zeros((n1,n2))
+    z = np.zeros((n1,n2))
+
+    p, q = np.meshgrid(np.linspace(0., 1., n1), np.linspace(0., 1., n2), indexing='ij')
+
+    x = ((1.-p)*np.reshape(c1.get_x(),(n2,))+p*np.reshape(c2.get_x(),(n2,))+
+                        (1.-q)*np.reshape(c3.get_x(), (n1,1))+q*np.reshape(c4.get_x(), (n1,1))-
+                        (1.-p)*(1.-q)*c1.get_x(0)-(1.-q)*p*c2.get_x(0)-
+                        q*(1.-p)*c1.get_x(-1)-q*p*c2.get_x(-1))
+    y = ((1.-p)*np.reshape(c1.get_y(),(n2,))+p*np.reshape(c2.get_y(),(n2,))+
+                        (1.-q)*np.reshape(c3.get_y(), (n1,1))+q*np.reshape(c4.get_y(), (n1,1))-
+                        (1.-p)*(1.-q)*c1.get_y(0)-(1.-q)*p*c2.get_y(0)-
+                        q*(1.-p)*c1.get_y(-1)-q*p*c2.get_y(-1))
+    z = ((1.-p)*np.reshape(c1.get_z(),(n2,))+p*np.reshape(c2.get_z(),(n2,))+
+                        (1.-q)*np.reshape(c3.get_z(), (n1,1))+q*np.reshape(c4.get_z(), (n1,1))-
+                        (1.-p)*(1.-q)*c1.get_z(0)-(1.-q)*p*c2.get_z(0)-
+                        q*(1.-p)*c1.get_z(-1)-q*p*c2.get_z(-1))
+
+    return surface(n1, n2, direction, x, y, z)
+
