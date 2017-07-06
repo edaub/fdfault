@@ -4,8 +4,10 @@ simulation to the text file format used by the SCEC Rupture Code Verification gr
 written for on fault, off fault, and front data types, and there are versions for both 2D and 3D
 problems. The functions take several common optional arguments, including ``depthsign`` (indicates
 whether depth is positive or negative), ``author`` (the person who is submitting the results),
-``version`` (the code version used to run the simulation), and ``grid_spacing`` (the resolution
-of the simulation, in the event you are submitting data for multiple grid spacings).
+``version`` (the code version used to run the simulation), ``grid_spacing`` (the resolution
+of the simulation, in the event you are submitting data for multiple grid spacings), ``datadir``
+(directory where simulation files are written), and ``savepath`` (path where output text files will
+be written).
 
 Each function writes a text file in the current directory following the file naming convention used
 by the server for the Code Verification group. More information on the file outputs are given
@@ -45,6 +47,10 @@ def write_off_fault(problem, station, depthsign = 1., author = "", version = "",
     :type version: str
     :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
     :type grid_spacing: str
+    :param datadir: Directory where data is stored (optional, default is current directory)
+    :type datadir: str
+    :param savepath: Path where files will be saved (optional, default is current directory)
+    :type savepath: str
     :returns: None
     """
 
@@ -123,6 +129,10 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
     :type version: str
     :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
     :type grid_spacing: str
+    :param datadir: Directory where data is stored (optional, default is current directory)
+    :type datadir: str
+    :param savepath: Path where files will be saved (optional, default is current directory)
+    :type savepath: str
     :returns: None
     """
 
@@ -171,7 +181,7 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
 
     f.close()
 
-def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
+def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = True, author = "",
                    version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
@@ -191,12 +201,18 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     :type station: tuple
     :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type depthsign: float
+    :param vertsign: Sign of vertical component output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type vertsign: float
     :param author: Person who ran the simulation (optional, default is ``""``)
     :type author: str
     :param version: Code version used in simulation (optional, default is ``""``)
     :type version: str
     :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
     :type grid_spacing: str
+    :param datadir: Directory where data is stored (optional, default is current directory)
+    :type datadir: str
+    :param savepath: Path where files will be saved (optional, default is current directory)
+    :type savepath: str
     :returns: None
     """
 
@@ -221,6 +237,7 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     assert(h_slip.nt == v_slip_rate.nt)
     assert(h_slip.nt == v_shear_stress.nt)
     assert(depthsign == 1. or depthsign == -1.)
+    assert(vertsign == 1. or vertsign == -1.)
 
     if normal:
         n_stress = fdfault.analysis.output(problem,stationstr+'-n-stress', datadir)
@@ -260,16 +277,16 @@ def write_on_fault(problem, station, depthsign = 1., normal = True, author = "",
     for i in range(h_slip.nt):
         if normal:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
-                                                               h_shear_stress.Sx[i], v_slip.Uz[i], v_slip_rate.Vz[i],
-                                                                     v_shear_stress.Sz[i], n_stress.Sn[i]))
+                                                               h_shear_stress.Sx[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
+                                                                     vertsign*v_shear_stress.Sz[i], n_stress.Sn[i]))
         else:
             f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
-                                                               h_shear_stress.Sx[i], v_slip.Uz[i], v_slip_rate.Vz[i],
-                                                                     v_shear_stress.Sz[i]))
+                                                               h_shear_stress.Sx[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
+                                                                     vertsign*v_shear_stress.Sz[i]))
 
     f.close()
 
-def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = "",
+def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = True, author = "",
                    version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
@@ -290,12 +307,18 @@ def write_on_fault_2d(problem, station, depthsign = 1., normal = True, author = 
     :type station: tuple
     :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type depthsign: float
+    :param vertsign: Sign of vertical component output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
+    :type vertsign: float
     :param author: Person who ran the simulation (optional, default is ``""``)
     :type author: str
     :param version: Code version used in simulation (optional, default is ``""``)
     :type version: str
     :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
     :type grid_spacing: str
+    :param datadir: Directory where data is stored (optional, default is current directory)
+    :type datadir: str
+    :param savepath: Path where files will be saved (optional, default is current directory)
+    :type savepath: str
     :returns: None
     """
 
@@ -375,8 +398,8 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
 
     :param problem: Problem name to write to file
     :type problem: str
-    :param iface: Interface to be written to file (default is ``0``)
-    :type station: int
+    :param iface: Interface to be written to file (default is ``0``). Can be an integer or a list of integers
+    :type iface: int or list
     :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type depthsign: float
     :param author: Person who ran the simulation (optional, default is ``""``)
@@ -385,13 +408,14 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     :type version: str
     :param grid_spacing: Grid spacing used in simulation (optional, default is ``""``)
     :type grid_spacing: str
+    :param datadir: Directory where data is stored (optional, default is current directory)
+    :type datadir: str
+    :param savepath: Path where files will be saved (optional, default is current directory)
+    :type savepath: str
     :returns: None
     """
 
     assert(depthsign == 1. or depthsign == -1.)
-
-    frt = fdfault.analysis.front(problem, iface, datadir)
-    frt.load()
 
     if savepath is None:
         savepath = ''
@@ -411,12 +435,22 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     f.write('j k t\n')
     f.write('#\n')
 
-    for i in range(frt.nx):
-        for j in range(frt.ny):
-            if (frt.t[i,j] < 0.):
-                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., 1.e9))
-            else:
-                f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., frt.t[i,j])) 
+    try:
+        iface = list(iface)
+    except:
+        iface = [int(iface)]
+
+    for ifaceitem in iface:
+
+        frt = fdfault.analysis.front(problem, ifaceitem, datadir)
+        frt.load()
+
+        for i in range(frt.nx):
+            for j in range(frt.ny):
+                if (frt.t[i,j] < 0.):
+                    f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., 1.e9))
+                else:
+                    f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., frt.t[i,j])) 
 
     f.close()
 
