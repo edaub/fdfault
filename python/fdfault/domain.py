@@ -810,46 +810,32 @@ class domain(object):
         :returns: None
         """
 
-        # first set all edge blocks to line up with lower left corner
+        # first set all (i,0,0) blocks to line up with lower left corner
 
         xm000 = self.blocks[0][0][0].get_xm()
         cum = xm000[0]
         for i in range(1,self.nblocks[0]):
             cum += self.blocks[i-1][0][0].get_lx()[0]
             self.blocks[i][0][0].set_xm((cum, xm000[1], xm000[2]))
-        cum = xm000[1]
-        for j in range(1,self.nblocks[1]):
-            cum += self.blocks[0][j-1][0].get_lx()[1]
-            self.blocks[0][j][0].set_xm((xm000[0], cum, xm000[2]))
-        cum = xm000[2]
-        for k in range(1, self.nblocks[2]):
-            cum += self.blocks[0][0][k-1].get_lx()[2]
-            self.blocks[0][0][k].set_xm((xm000[0], xm000[1], cum))
+
+        # now can set all (i,j,0) blocks to line up with (i,0,0) blocks
         
-        # set remaining blocks to match up with edge blocks
+        for i in range(self.nblocks[0]):
+            xm000 = self.blocks[i][0][0].get_xm()
+            cum = xm000[1]
+            for j in range(1,self.nblocks[1]):
+                cum += self.blocks[i][j-1][0].get_lx()[1]
+                self.blocks[i][j][0].set_xm((xm000[0], cum, xm000[2]))
+
+        # finally set all (i,j,k) blocks to line up with (i,j,0) blocks
 
         for i in range(self.nblocks[0]):
             for j in range(self.nblocks[1]):
-                for k in range(self.nblocks[2]):
-                    if (i == 0):
-                        x0 = self.blocks[i][j][k].get_xm()[0]
-                    else:
-                        x = self.blocks[i-1][j][k].get_xm()[0]
-                        l = self.blocks[i-1][j][k].get_lx()[0]
-                        x0 = x+l
-                    if (j == 0):
-                        x1 = self.blocks[i][j][k].get_xm()[1]
-                    else:
-                        x = self.blocks[i][j-1][k].get_xm()[1]
-                        l = self.blocks[i][j-1][k].get_lx()[1]
-                        x1 = x+l
-                    if (k == 0):
-                        x2 = self.blocks[i][j][k].get_xm()[2]
-                    else:
-                        x = self.blocks[i][j][k-1].get_xm()[2]
-                        l = self.blocks[i][j][k-1].get_lx()[2]
-                        x2 = x+l                  
-                    self.blocks[i][j][k].set_xm((x0,x1,x2))
+                xm000 = self.blocks[i][j][0].get_xm()
+                cum = xm000[2]
+                for k in range(1, self.nblocks[2]):
+                    cum += self.blocks[i][j][k-1].get_lx()[2]
+                    self.blocks[i][j][k].set_xm((xm000[0], xm000[1], cum))
 
     def get_x(self, coord):
         """

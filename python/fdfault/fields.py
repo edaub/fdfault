@@ -283,14 +283,16 @@ class fields(object):
         else:
             f.write(join(inputfiledir, probname)+".load\n")
             loadfile = open(join(directory, probname+".load"),"wb")
-            loadfile.write(self.s.astype(endian+'f8').tobytes())
+            for i in range(self.s.shape[0]):
+                loadfile.write(self.s[i].astype(endian+'f8').tobytes())
             loadfile.close()
         if self.mat is None:
             f.write("none\n")
         else:
             f.write(join(inputfiledir, probname)+".mat\n")
             matfile = open(join(directory, probname)+".mat","wb")
-            matfile.write(self.mat.astype(endian+'f8').tobytes())
+            for i in range(3):
+                matfile.write(self.mat[i].astype(endian+'f8').tobytes())
             matfile.close()
         f.write(str(int(self.plastic_tensor))+"\n")
         f.write("\n")
