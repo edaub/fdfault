@@ -181,7 +181,7 @@ def write_off_fault_2d(problem, station, depthsign = 1., author = "", version = 
 
     f.close()
 
-def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = True, author = "",
+def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = True, branch = False, author = "",
                    version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
@@ -192,8 +192,8 @@ def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = Tru
     (1. by default, changes sign on depth coordinate if -1.), and author, verision, and grid spacing
     strings which will be inserted into the header of the output file.
     
-    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` in the selected
-    directory.
+    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` or
+    ``{problem}_branchst{strike}dp{depth}.txt``in the selected directory.
 
     :param problem: Problem name to write to file
     :type problem: str
@@ -203,6 +203,10 @@ def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = Tru
     :type depthsign: float
     :param vertsign: Sign of vertical component output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type vertsign: float
+    :param normal: Boolean indicating if normal stress is to be written to file (default = ``True``)
+    :type normal: bool
+    :param branch: Boolean indicating if the station is on the branch fault or not (default = ``False``)
+    :type branch: bool
     :param author: Person who ran the simulation (optional, default is ``""``)
     :type author: str
     :param version: Code version used in simulation (optional, default is ``""``)
@@ -216,7 +220,11 @@ def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = Tru
     :returns: None
     """
 
-    stationstr = 'faultst'+station[0]+'dp'+station[1]
+    if branch:
+        locstr = 'branch'
+    else:
+        locstr = 'fault'
+    stationstr = locstr+'st'+station[0]+'dp'+station[1]
 
     h_slip = fdfault.analysis.output(problem,stationstr+'-h-slip', datadir)
     h_slip.load()
@@ -276,17 +284,27 @@ def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = Tru
 
     for i in range(h_slip.nt):
         if normal:
-            f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
+            if branch:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Uy[i], h_slip_rate.Vy[i],
+                                                               h_shear_stress.Sy[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
+                                                                     vertsign*v_shear_stress.Sz[i], n_stress.Sn[i]))
+            else:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
                                                                h_shear_stress.Sx[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
                                                                      vertsign*v_shear_stress.Sz[i], n_stress.Sn[i]))
         else:
-            f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
+            if branch:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Uy[i], h_slip_rate.Vy[i],
+                                                               h_shear_stress.Sy[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
+                                                                     vertsign*v_shear_stress.Sz[i]))
+            else:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(h_slip.t[i], h_slip.Ux[i], h_slip_rate.Vx[i],
                                                                h_shear_stress.Sx[i], vertsign*v_slip.Uz[i], vertsign*v_slip_rate.Vz[i],
                                                                      vertsign*v_shear_stress.Sz[i]))
 
     f.close()
 
-def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = True, author = "",
+def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = True, branch = False, author = "",
                    version = "", grid_spacing = "", datadir = None, savepath=None):
     """
     Converts code output units for on-fault station into a formatted text file for SCEC website
@@ -298,8 +316,8 @@ def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = 
     coordinate if -1.), and author, verision, and grid spacing strings which will be inserted into the
     header of the output file.
     
-    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` in the current
-    directory.
+    The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` or
+    ``{problem}_branchst{strike}dp{depth}.txt``in the selected directory.
 
     :param problem: Problem name to write to file
     :type problem: str
@@ -309,6 +327,10 @@ def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = 
     :type depthsign: float
     :param vertsign: Sign of vertical component output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type vertsign: float
+    :param normal: Boolean indicating if normal stress is to be written to file (default = ``True``)
+    :type normal: bool
+    :param branch: Boolean indicating if the station is on the branch fault or not (default = ``False``)
+    :type branch: bool
     :param author: Person who ran the simulation (optional, default is ``""``)
     :type author: str
     :param version: Code version used in simulation (optional, default is ``""``)
@@ -322,7 +344,11 @@ def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = 
     :returns: None
     """
 
-    stationstr = 'faultst'+station[0]+'dp'+station[1]
+    if branch:
+        locstr = 'branch'
+    else:
+        locstr = 'fault'
+    stationstr = locstr+'st'+station[0]+'dp'+station[1]
 
     v_slip = fdfault.analysis.output(problem,stationstr+'-v-slip', datadir)
     v_slip.load()
@@ -373,17 +399,27 @@ def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = 
 
     for i in range(v_slip.nt):
         if normal:
-            f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
+            if branch:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
+                                                               0., depthsign*v_slip.Ux[i], depthsign*v_slip_rate.Vx[i],
+                                                                     depthsign*v_shear_stress.Sx[i], n_stress.Sn[i]))
+            else:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
                                                                0., depthsign*v_slip.Uy[i], depthsign*v_slip_rate.Vy[i],
                                                                      depthsign*v_shear_stress.Sy[i], n_stress.Sn[i]))
         else:
-            f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
+            if branch:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
+                                                               0., depthsign*v_slip.Ux[i], depthsign*v_slip_rate.Vx[i],
+                                                                     depthsign*v_shear_stress.Sx[i]))
+            else:
+                f.write("{:.12E} {:E} {:E} {:E} {:E} {:E} {:E}\n".format(v_slip.t[i], 0., 0.,
                                                                0., depthsign*v_slip.Uy[i], depthsign*v_slip_rate.Vy[i],
                                                                      depthsign*v_shear_stress.Sy[i]))
 
     f.close()
 
-def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", grid_spacing = "",
+def write_front(problem, iface = 0, depthsign = 1., branch = False, hscale = 1., vscale=1., author = "", version = "", grid_spacing = "",
                 datadir = None, savepath=None):
     """
     Converts code output units for rupture front times into a formatted text file for SCEC website
@@ -394,7 +430,7 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     sign on depth coordinate if -1.), and author, verision, and grid spacing strings which will be
     inserted into the header of the output file.
     
-    The text file is written to ``{problem}_cplot.txt`` in the current
+    The text file is written to ``{problem}_cplot.txt`` or ``{problem}_cplot_branch.txt``in the current
     directory.
 
     :param problem: Problem name to write to file
@@ -403,6 +439,12 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     :type iface: int or list
     :param depthsign: Sign of depth output, must be ``1.`` or ``-1.`` (optional, default is ``1.``)
     :type depthsign: float
+    :param branch: Boolean indicating if the fault is a branch fault (default is ``False``)
+    :type branch: bool
+    :param hscale: Scale factor for transforming horizontal coordinates (default is ``1.``)
+    :type hscale: float
+    :param vscale: Scale factor for transforming vertical coordinates (default is ``1.``)
+    :type vscale: float
     :param author: Person who ran the simulation (optional, default is ``""``)
     :type author: str
     :param version: Code version used in simulation (optional, default is ``""``)
@@ -421,7 +463,12 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
     if savepath is None:
         savepath = ''
 
-    f = open(join(savepath,problem+'_cplot.txt'),'w')
+    if branch:
+        locstr = '_branch'
+    else:
+        locstr = ''
+
+    f = open(join(savepath,problem+'_cplot'+locstr+'.txt'),'w')
 
     f.write('# problem='+problem+'\n')
     f.write('# author='+author+'\n')
@@ -449,9 +496,16 @@ def write_front(problem, iface = 0, depthsign = 1., author = "", version = "", g
         for i in range(frt.nx):
             for j in range(frt.ny):
                 if (frt.t[i,j] < 0.):
-                    f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., 1.e9))
+                    if branch:
+                        f.write("{:E} {:E} {:E}\n".format(frt.y[i,j]*1000.*hscale, depthsign*frt.z[i,j]*1000.*vscale, 1.e9))
+                    else:
+                        f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000.*hscale, depthsign*frt.z[i,j]*1000.*vscale, 1.e9))
                 else:
-                    f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000., depthsign*frt.z[i,j]*1000., frt.t[i,j])) 
+                    if branch:
+                        f.write("{:E} {:E} {:E}\n".format(frt.y[i,j]*1000.*hscale, depthsign*frt.z[i,j]*1000.*vscale, frt.t[i,j]))
+                    else:
+                        f.write("{:E} {:E} {:E}\n".format(frt.x[i,j]*1000.*hscale, depthsign*frt.z[i,j]*1000.*vscale, frt.t[i,j])) 
+
 
     f.close()
 
