@@ -313,9 +313,9 @@ class domain(object):
         if self.ndim == 2:
             if (nblocks[2] > 1):
                 print("Warning: number of z blocks set to 1 as ndim = 2")
-            self.nblocks = (nblocks[0], nblocks[1], 1)
+            self.nblocks = (int(nblocks[0]), int(nblocks[1]), 1)
         else:
-            self.nblocks = nblocks
+            self.nblocks = (int(nblocks[0]), int(nblocks[1]), int(nblocks[2]))
 
         for i in range(3):
             oldlen = len(self.nx_block[i])
@@ -452,11 +452,12 @@ class domain(object):
             for j in nx_block[i]:
                 assert j > 0, "Number of grid points per block must be greater than zero"
 
-        self.nx_block = (nx_block[0], nx_block[1], nx_block[2])
+        self.nx_block = (list(int(x) for x in nx_block[0]), list(int(y) for y in nx_block[1]),
+                         list(int(z) for z in nx_block[2]))
         if self.ndim == 2:
             if nx_block[2][0] > 1:
                 print("Warning: number of z grid points set to 1 as ndim = 2")
-            self.nx_block = (nx_block[0], nx_block[1], [1])
+            self.nx_block = (self.nx_block[0], self.nx_block[1], [1])
         
         for i in range(3):
             for j in range(self.nblocks[i]):
