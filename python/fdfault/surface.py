@@ -104,6 +104,8 @@ class surface(object):
         assert(direction == 'x' or direction == 'y' or direction == 'z')
         assert(n1 > 0)
         assert(n2 > 0)
+        n1 = int(n1)
+        n2 = int(n2)
         self.n1 = n1
         self.n2 = n2
         self.direction = direction
@@ -342,6 +344,7 @@ class curve3d(surface):
         :returns: New surface with specified properties
         :rtype: surface
         '''
+        n1 = int(n1)
 
         x = np.reshape(np.array(x), (n1,1))
         y = np.reshape(np.array(y), (n1,1))
@@ -430,7 +433,7 @@ class curve(surface):
         '''
 
         assert(direction == 'x' or direction == 'y'), "direction must be 'x' or 'y'"
-        self.n1 = n
+        self.n1 = int(n)
         self.n2 = 1
         self.direction = direction
         self.x = np.array(x)
@@ -517,11 +520,11 @@ def points_to_curve(n, direction, p1, p2):
     :param n: Number of grid points in curve (must be an integer)
     :type n: int
     :param direction: Normal direction of the curve in computational space. Must be ``'x'``, ``'y'``,
-                                or ``'z'`` (``'z'`` is only allowed if the end points have a length of 3.
+                                or ``'z'`` (``'z'`` is only allowed if the end points have a length of 3.)
     :type direction: str
     :param p1: First point in curve. Must have length 2 or 3, and the length must match that of ``p2``
     :type p1: tuple or list or ndarray
-    :param p1: End point in curve. Must have length 2 or 3, and the length must match that of ``p1``
+    :param p2: End point in curve. Must have length 2 or 3, and the length must match that of ``p1``
     :type p2: tuple or list or ndarray
     :returns: curve connecting two points
     :rtype: curve or curve3d
@@ -535,6 +538,8 @@ def points_to_curve(n, direction, p1, p2):
         assert (direction == 'x' or direction == 'y'), "Final curve must be oriented in x or y direction"
     else:
         assert (direction == 'x' or direction == 'y' or direction == 'z'), "Final curve must be oriented in x, y, or z direction"
+
+    n = int(n)
 
     x = np.linspace(float(p1[0]), float(p2[0]), n)
     y = np.linspace(float(p1[1]), float(p2[1]), n)
@@ -635,3 +640,69 @@ def curves_to_surf(direction, c1, c2, c3, c4):
 
     return surface(n1, n2, direction, x, y, z)
 
+def points_to_surf(n1, n2, direction, p1, p2, p3, p4):
+    """
+    Creates a surface from 4 points defining the corners
+
+    Function takes 4 corner points and creates a surface with straight lines connecting the corners.
+    Grid spacing is assumed to be uniform along each edge. ``n1`` is the number of points along
+    the first spatial index and ``n2`` is the number of points along the second spatial index.
+
+    ``direction`` specifies the orientation of the resulting surface in computational space,
+    which must be ``'x'``, ``'y'``, or ``'z'``. If ``'x'``, then ``n1`` is the number of points along the
+    y direction and ``n2`` is the number of points along the z direction. If ``'y'``, then ``n1`` is the
+    number of points along the x direction and ``n2`` is the number of points along the z direction.
+    If ``'z'``, then ``n1`` is the number of points along the x direction and ``n2`` is the number of
+    points along the z direction. While this function does not check values of the end point
+    coordinates, any rupture problem will verify that the edges of the appropriate surfaces match
+    before writing a problem to file.
+
+    ``p1``, ``p2``, ``p3``, and ``p4`` designate the corners of the surface, and must each have
+    a length of 3. Each point contains three floats designating the (x, y, z) coordinates of the
+    point. ``p1`` is the lower left corner (where both indices are zero), ``p2`` is the lower right
+    corner (where the first index is ``n1-1`` and the second index is zero), ``p3`` is the upper left corner
+    (where the first index is zero and the second index is ``n2-1``), and ``p4`` is the upper right corner
+    (where the first index is ``n1-1`` and the second index is ``n2-1``).
+
+    The function works by calling ``points_to_curve`` and ``curves_to_surf`` as needed.
+
+    :param n1: Number of grid points in surface along the first index (must be an integer)
+    :type n1: int
+    :param n2: Number of grid points in surface along the second index (must be an integer)
+    :type n2: int
+    :param direction: Normal direction of the curve in computational space. Must be ``'x'``, ``'y'``,
+                                or ``'z'``
+    :type direction: str
+    :param p1: Lower left corner of surface. Must have length 3
+    :type p1: tuple or list or ndarray
+    :param p2: Lower right corner of surface. Must have length 3
+    :type p2: tuple or list or ndarray
+    :param p3: Upper left corner of surface. Must have length 3
+    :type p3: tuple or list or ndarray
+    :param p4: Upper right corner of surface. Must have length 3
+    :type p4: tuple or list or ndarray
+    :returns: surface with corners defined by points with direction and number of grid points specified
+    :rtype: surface
+    """
+
+    assert n1 > 0, "Number of grid points must be a positive integer"
+    assert n2 > 0, "Number of grid points must be a positive integer"
+    assert (direction == 'x' or direction == 'y' or direction == 'z'), "Final surface must be oriented in x, y, or z direction"
+    assert (len(p1) == 3 and len(p2) == 3 and len(p4) == 3 and len(p4) == 3), "End points must have length 3"
+
+    if direction == 'x':
+        d1 = 'y'
+        d2 = 'z'
+    elif direction == 'y':
+        d1 = 'x'
+        d2 = 'z'
+    else:
+        d1 = 'x'
+        d2 = 'y'
+        
+    c1 = points_to_curve(n2, d1, p1, p3)
+    c2 = points_to_curve(n2, d1, p2, p4)
+    c3 = points_to_curve(n1, d2, p1, p2)
+    c4 = points_to_curve(n1, d2, p3, p4)
+
+    return curves_to_surf(direction, c1, c2, c3, c4)

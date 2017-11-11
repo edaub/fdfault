@@ -43,4 +43,4 @@ from .pert import load, swparam, stzparam, loadfile, swparamfile, stzparamfile, 
 from .problem import problem
 from .material import material
 from .output import output
-from .surface import surface, curve, curve3d, points_to_curve, curves_to_surf
+from .surface import surface, curve, curve3d, points_to_curve, curves_to_surf, points_to_surf
