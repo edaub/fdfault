@@ -43,6 +43,11 @@ Once the surfaces or curves are created, you can use the ``set_block_surf`` meth
 to set the bounding surfaces or curves of a given block. The necessary binary files holding
 the coordinates will be automatically written to file when the ``write_input``method of the problem
 is called.
+
+In addition to these basic classes, the code also has several functions designed to generate
+surfaces and curves from more basic information. These include ``points_to_curve``, which
+generates a curve connecting two points with a uniform grid spacing, and ``curves_to_surf``,
+which generates a surface bounded by four 3D curves using transfinite interpolation.
 """
 
 from __future__ import division, print_function
@@ -498,11 +503,54 @@ class curve(surface):
 
         f.close()
 
+def points_to_curve(n, direction, p1, p2):
+    """
+    Generate a curve in 2D or 3D connecting two points
+
+    This function takes two end points and creates a curve object connecting the points with a
+    straight line. ``direction`` is the normal direction to the curve in computational space, which
+    is needed for properly defining the curve object (it does not affect how the coordinates are
+    generated). ``n`` is the number of grid points in the curve. ``p1`` and ``p2`` are the end points.
+    If the length of ``p1`` and ``p2`` is 2, then a ``curve`` object is returned. If the length of ``p1``
+    and ``p2`` is 3, then a ``curve3d`` object is returned.
+
+    :param n: Number of grid points in curve (must be an integer)
+    :type n: int
+    :param direction: Normal direction of the curve in computational space. Must be ``'x'``, ``'y'``,
+                                or ``'z'`` (``'z'`` is only allowed if the end points have a length of 3.
+    :type direction: str
+    :param p1: First point in curve. Must have length 2 or 3, and the length must match that of ``p2``
+    :type p1: tuple or list or ndarray
+    :param p1: End point in curve. Must have length 2 or 3, and the length must match that of ``p1``
+    :type p2: tuple or list or ndarray
+    :returns: curve connecting two points
+    :rtype: curve or curve3d
+    """
+
+    assert n > 0, "Number of grid points must be a positive integer"
+    assert (len(p1) == 2 or len(p1) == 3), "First point must have length 2 or 3"
+    assert (len(p2) == 2 or len(p2) == 3), "End point must have length 2 or 3"
+    assert len(p1) == len(p2), "End points must have the same dimensionality"
+    if len(p1) == 2:
+        assert (direction == 'x' or direction == 'y'), "Final curve must be oriented in x or y direction"
+    else:
+        assert (direction == 'x' or direction == 'y' or direction == 'z'), "Final curve must be oriented in x, y, or z direction"
+
+    x = np.linspace(float(p1[0]), float(p2[0]), n)
+    y = np.linspace(float(p1[1]), float(p2[1]), n)
+    if len(p1) == 3:
+        z = np.linspace(float(p1[2]), float(p2[2]), n)
+
+    if len(p1) == 2:
+        return curve(n, direction, x, y)
+    else:
+        return curve3d(n, direction, x, y, z)
+
 def curves_to_surf(direction, c1, c2, c3, c4):
     """
     Use transfinite interpolation to convert 4 curves into a surface
 
-    This function takes four 3d curves into a surface object. Its main use is to simplify defining
+    This function takes four 3d curves and creates a surface object. Its main use is to simplify defining
     surfaces for 3d rupture dynamic problems with complex geometries. The method takes four
     ``curve3d`` objects and uses transfinite interpolation to combine them into a ``surface`` object
 
