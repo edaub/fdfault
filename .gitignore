@@ -7,9 +7,13 @@
 *.stz
 *.surf
 *.csv
+*.png
+*.pdf
+*.aux
+*.log
 *~
 /problems/*.in
-!/problems/test1d.in
+!/problems/test2d.in
 /problems/*.py
 !/problems/input_example.py
 /problems/*.tar.gz
