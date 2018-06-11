@@ -20,6 +20,8 @@ GSOPTIONS = -q -dNOPAUSE -dSAFER
 IMAGESTEX := $(wildcard examples/*.tex)
 IMAGESPDF := $(IMAGESTEX:.tex=.pdf)
 IMAGESPNG := $(IMAGESTEX:.tex=.png)
+IMAGESAUX := $(IMAGESTEX:.tex=.aux)
+IMAGESLOG := $(IMAGESTEX:.tex=.log)
 
 GSDEVICE = -sDEVICE=pnggray
 GSRES = -r200
@@ -236,6 +238,8 @@ dummy:
 
 %.pdf: %.tex
 	pdflatex -output-directory examples $<
+	rm -f $(IMAGESLOG)
+	rm -f $(IMAGESAUX)
 
 %.png: %.pdf
 	gs $(GSOPTIONS) $(GSDEVICE) $(ANTIALIAS) $(GSRES) -o $@ $<
