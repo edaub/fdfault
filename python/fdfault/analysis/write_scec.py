@@ -193,7 +193,7 @@ def write_on_fault(problem, station, depthsign = 1., vertsign = 1., normal = Tru
     strings which will be inserted into the header of the output file.
     
     The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` or
-    ``{problem}_branchst{strike}dp{depth}.txt``in the selected directory.
+    ``{problem}_branchst{strike}dp{depth}.txt`` in the selected directory.
 
     :param problem: Problem name to write to file
     :type problem: str
@@ -317,7 +317,7 @@ def write_on_fault_2d(problem, station, depthsign = 1., vertsign = 1., normal = 
     header of the output file.
     
     The text file is written to ``{problem}_faultst{strike}dp{depth}.txt`` or
-    ``{problem}_branchst{strike}dp{depth}.txt``in the selected directory.
+    ``{problem}_branchst{strike}dp{depth}.txt`` in the selected directory.
 
     :param problem: Problem name to write to file
     :type problem: str
@@ -430,7 +430,7 @@ def write_front(problem, iface = 0, depthsign = 1., branch = False, hscale = 1.,
     sign on depth coordinate if -1.), and author, verision, and grid spacing strings which will be
     inserted into the header of the output file.
     
-    The text file is written to ``{problem}_cplot.txt`` or ``{problem}_cplot_branch.txt``in the current
+    The text file is written to ``{problem}_cplot.txt`` or ``{problem}_cplot_branch.txt`` in the current
     directory.
 
     :param problem: Problem name to write to file
