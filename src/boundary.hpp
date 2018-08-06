@@ -48,6 +48,8 @@ private:
     double*** nx;
     double** dl;
     double r;
+    double alpha;
+    double theta;
     void allocate_normals(const double dx[3], fields& f, const fd_type& fd);
     void deallocate_normals();
     boundchar calc_hat(const boundchar b, const double z);

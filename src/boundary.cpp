@@ -144,10 +144,16 @@ boundary::boundary(const int ndim_in, const int mode_in, const string material_i
         
     if (boundtype == "absorbing") {
         r = 0.;
+        alpha = 2.;
+        theta = 0.;
     } else if (boundtype == "free") {
         r = -1.;
+        alpha = 1.;
+        theta = 0.;
     } else { // rigid
         r = 1.;
+        alpha = 0.;
+        theta = 1.;
     }
     
     // allocate memory for arrays for normal vectors and grid spacing
@@ -409,15 +415,15 @@ void boundary::apply_bcs(const double dt, fields& f) {
                 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+index] -= cp*h*b.v1;
-                        f.df[1*nxd[0]+index] -= cp*h*b.v2;
-                        f.df[2*nxd[0]+index] -= cp*h*b.v3;
-                        f.df[3*nxd[0]+index] -= cp*h*b.s11;
-                        f.df[4*nxd[0]+index] -= cp*h*b.s12;
-                        f.df[5*nxd[0]+index] -= cp*h*b.s13;
-                        f.df[6*nxd[0]+index] -= cp*h*b.s22;
-                        f.df[7*nxd[0]+index] -= cp*h*b.s23;
-                        f.df[8*nxd[0]+index] -= cp*h*b.s33;
+                        f.df[0*nxd[0]+index] -= alpha*cp*h*b.v1;
+                        f.df[1*nxd[0]+index] -= alpha*cp*h*b.v2;
+                        f.df[2*nxd[0]+index] -= alpha*cp*h*b.v3;
+                        f.df[3*nxd[0]+index] -= theta*cp*h*b.s11;
+                        f.df[4*nxd[0]+index] -= theta*cp*h*b.s12;
+                        f.df[5*nxd[0]+index] -= theta*cp*h*b.s13;
+                        f.df[6*nxd[0]+index] -= theta*cp*h*b.s22;
+                        f.df[7*nxd[0]+index] -= theta*cp*h*b.s23;
+                        f.df[8*nxd[0]+index] -= theta*cp*h*b.s33;
                         break;
                     case 2:
                         switch (mode) {
@@ -451,15 +457,15 @@ void boundary::apply_bcs(const double dt, fields& f) {
 
                 switch (ndim) {
                     case 3:
-                        f.df[0*nxd[0]+index] -= cs*h*b.v1;
-                        f.df[1*nxd[0]+index] -= cs*h*b.v2;
-                        f.df[2*nxd[0]+index] -= cs*h*b.v3;
-                        f.df[3*nxd[0]+index] -= cs*h*b.s11;
-                        f.df[4*nxd[0]+index] -= cs*h*b.s12;
-                        f.df[5*nxd[0]+index] -= cs*h*b.s13;
-                        f.df[6*nxd[0]+index] -= cs*h*b.s22;
-                        f.df[7*nxd[0]+index] -= cs*h*b.s23;
-                        f.df[8*nxd[0]+index] -= cs*h*b.s33;
+                        f.df[0*nxd[0]+index] -= alpha*cs*h*b.v1;
+                        f.df[1*nxd[0]+index] -= alpha*cs*h*b.v2;
+                        f.df[2*nxd[0]+index] -= alpha*cs*h*b.v3;
+                        f.df[3*nxd[0]+index] -= theta*cs*h*b.s11;
+                        f.df[4*nxd[0]+index] -= theta*cs*h*b.s12;
+                        f.df[5*nxd[0]+index] -= theta*cs*h*b.s13;
+                        f.df[6*nxd[0]+index] -= theta*cs*h*b.s22;
+                        f.df[7*nxd[0]+index] -= theta*cs*h*b.s23;
+                        f.df[8*nxd[0]+index] -= theta*cs*h*b.s33;
                         break;
                     case 2:
                         switch (mode) {
