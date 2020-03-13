@@ -945,6 +945,28 @@ class problem(object):
         """
         self.d.set_het_material(mat)
 
+    def get_plastic_tensor(self):
+        """
+        Returns boolean indicating if simulation will compute full plastic strain tensor
+
+        :returns: Whether or not simulation will compute the full plastic strain tensur
+        :rtype: bool
+        """
+        return self.d.get_plastic_tensor()
+
+    def set_plastic_tensor(self, plastic_tensor):
+        """
+        Sets value of plastic strain tensor indicator
+
+        Method sets whether or not plastic strain will be computed as a tensor (must be boolean).
+        ``True`` means full tensor will be calculated, ``False`` means not (not saves substantial memory)
+
+        :param plastic_tensor: New value of plastic strain tensor variable (must be boolean)
+        :type plastic_tensor: bool
+        :returns: None
+        """
+        self.d.set_plastic_tensor(plastic_tensor)
+
     def get_nifaces(self):
         """
         Returns number of interfaces
@@ -1334,7 +1356,7 @@ class problem(object):
                                is given the entire list of output units is returned
         :type index: int
         :returns: output item or list of output items
-        :rtype: output or list
+        :rtype: fdfault.output or list
         """
         if index is None:
             return self.outputlist

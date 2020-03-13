@@ -30,6 +30,7 @@ private:
     std::string material;
     bool hetstress;
     bool hetmat;
+    bool plastic_tensor;
     int nv;
     int ns;
     int nmat;

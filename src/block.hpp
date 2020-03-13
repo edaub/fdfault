@@ -10,7 +10,7 @@
 #include "material.hpp"
 
 struct plastp {
-    double sxx, sxy, sxz, syy, syz, szz, gammap, lambda;
+    double sxx, sxy, sxz, syy, syz, szz, gammap, lambda, epxx, epxy, epxz, epyy, epyz, epzz;
 };
 
 class block
@@ -52,6 +52,7 @@ private:
     double l_block[3];
     bool no_data;
     bool is_plastic;
+    bool plastic_tensor;
 	coord c;
 	int nbound;
 	boundary** bound;

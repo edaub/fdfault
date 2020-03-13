@@ -45,6 +45,7 @@ block::block(const char* filename, const int ndim_in, const int mode_in, const s
         is_plastic = false;
     } else {
         is_plastic = true;
+        plastic_tensor = f.plastic_tensor;
     }
     
     string line;
@@ -441,7 +442,7 @@ void block::set_boundaries(const double dt, fields& f) {
 void block::calc_plastic(const double dt, fields& f) {
     // calculates plastic deformation
     
-    if (no_data) { return; }
+    if (no_data || !is_plastic) { return; }
     
     plastp s_out, s_in;
     int index;
@@ -465,6 +466,14 @@ void block::calc_plastic(const double dt, fields& f) {
                         s_in.szz = f.f[8*nxd[0]+index];
                         s_in.lambda = f.f[9*nxd[0]+index];
                         s_in.gammap = f.f[10*nxd[0]+index];
+                        if (plastic_tensor) {
+                            s_in.epxx = f.f[11*nxd[0]+index];
+                            s_in.epxy = f.f[12*nxd[0]+index];
+                            s_in.epxz = f.f[13*nxd[0]+index];
+                            s_in.epyy = f.f[14*nxd[0]+index];
+                            s_in.epyz = f.f[15*nxd[0]+index];
+                            s_in.epzz = f.f[16*nxd[0]+index];
+                        }
                         break;
                     case 2:
                         switch (mode) {
@@ -477,6 +486,14 @@ void block::calc_plastic(const double dt, fields& f) {
                                 s_in.szz = f.f[5*nxd[0]+index];
                                 s_in.lambda = f.f[6*nxd[0]+index];
                                 s_in.gammap = f.f[7*nxd[0]+index];
+                                if (plastic_tensor) {
+                                    s_in.epxx = f.f[8*nxd[0]+index];
+                                    s_in.epxy = f.f[9*nxd[0]+index];
+                                    s_in.epxz = f.f[10*nxd[0]+index];
+                                    s_in.epyy = f.f[11*nxd[0]+index];
+                                    s_in.epyz = f.f[12*nxd[0]+index];
+                                    s_in.epzz = f.f[13*nxd[0]+index];
+                                }
                                 break;
                             case 3:
                                 s_in.sxx = f.s0[0];
@@ -487,6 +504,14 @@ void block::calc_plastic(const double dt, fields& f) {
                                 s_in.szz = f.s0[5];
                                 s_in.lambda = f.f[3*nxd[0]+index];
                                 s_in.gammap = f.f[4*nxd[0]+index];
+                                if (plastic_tensor) {
+                                    s_in.epxx = f.f[5*nxd[0]+index];
+                                    s_in.epxy = f.f[6*nxd[0]+index];
+                                    s_in.epxz = f.f[7*nxd[0]+index];
+                                    s_in.epyy = f.f[8*nxd[0]+index];
+                                    s_in.epyz = f.f[9*nxd[0]+index];
+                                    s_in.epzz = f.f[10*nxd[0]+index];
+                                }
                                 break;
                         }
                 }
@@ -515,6 +540,14 @@ void block::calc_plastic(const double dt, fields& f) {
                         f.f[8*nxd[0]+index] = s_out.szz;
                         f.f[9*nxd[0]+index] = s_out.lambda;
                         f.f[10*nxd[0]+index] = s_out.gammap;
+                        if (plastic_tensor) {
+                            f.f[11*nxd[0]+index] = s_out.epxx;
+                            f.f[12*nxd[0]+index] = s_out.epxy;
+                            f.f[13*nxd[0]+index] = s_out.epxz;
+                            f.f[14*nxd[0]+index] = s_out.epyy;
+                            f.f[15*nxd[0]+index] = s_out.epyz;
+                            f.f[16*nxd[0]+index] = s_out.epzz;
+                        }
                         break;
                     case 2:
                         switch (mode) {
@@ -525,12 +558,28 @@ void block::calc_plastic(const double dt, fields& f) {
                                 f.f[5*nxd[0]+index] = s_out.szz;
                                 f.f[6*nxd[0]+index] = s_out.lambda;
                                 f.f[7*nxd[0]+index] = s_out.gammap;
+                                if (plastic_tensor) {
+                                    f.f[8*nxd[0]+index] = s_out.epxx;
+                                    f.f[9*nxd[0]+index] = s_out.epxy;
+                                    f.f[10*nxd[0]+index] = s_out.epxz;
+                                    f.f[11*nxd[0]+index] = s_out.epyy;
+                                    f.f[12*nxd[0]+index] = s_out.epyz;
+                                    f.f[13*nxd[0]+index] = s_out.epzz;
+                                }
                                 break;
                             case 3:
                                 f.f[1*nxd[0]+index] = s_out.sxz;
                                 f.f[2*nxd[0]+index] = s_out.syz;
                                 f.f[3*nxd[0]+index] = s_out.lambda;
                                 f.f[4*nxd[0]+index] = s_out.gammap;
+                                if (plastic_tensor) {
+                                    f.f[5*nxd[0]+index] = s_out.epxx;
+                                    f.f[6*nxd[0]+index] = s_out.epxy;
+                                    f.f[7*nxd[0]+index] = s_out.epxz;
+                                    f.f[8*nxd[0]+index] = s_out.epyy;
+                                    f.f[9*nxd[0]+index] = s_out.epyz;
+                                    f.f[10*nxd[0]+index] = s_out.epzz;
+                                }
                                 break;
                         }
                 }
@@ -606,6 +655,13 @@ plastp block::plastic_flow(const double dt, const plastp s_in, const double k, c
         s_out.syy = sd[3]+sigma;
         s_out.syz = sd[4];
         s_out.szz = sd[5]+sigma;
+        
+        s_out.epxx = s_in.epxx+dt*s_out.lambda*(sd[0]/(2.*tau)+(mat.get_beta()/3.));
+        s_out.epxy = s_in.epxy+dt*s_out.lambda*(sd[1]/(2.*tau));
+        s_out.epxz = s_in.epxz+dt*s_out.lambda*(sd[2]/(2.*tau));
+        s_out.epyy = s_in.epyy+dt*s_out.lambda*(sd[3]/(2.*tau)+(mat.get_beta()/3.));
+        s_out.epyz = s_in.epyz+dt*s_out.lambda*(sd[4]/(2.*tau));
+        s_out.epzz = s_in.epzz+dt*s_out.lambda*(sd[5]/(2.*tau)+(mat.get_beta()/3.));
     
     }
     

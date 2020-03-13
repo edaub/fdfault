@@ -38,7 +38,8 @@ For most users, building the source code should simply require
 
 assuming you have Make and an appropriate C++ compiler with an MPI Library. You may 
 need to change some of the compiler flags -- I have mostly tested the code using the 
-GNU Compilers and OpenMPI on both Linux and Mac OS X. This will create the fdfault executable in the main fdfault directory.
+GNU Compilers and OpenMPI on both Linux and Mac OS X. This will create the fdfault
+executable in the main fdfault directory.
 
 You will also need to configure the python module. There are several ways to do this:
 
@@ -85,7 +86,7 @@ analysis tools at your disposal.
 
 Finally you will need to build the User's Guide. The user's guide requires Sphinx and
 MathJax (or an internet connection to access MathJax online) for the HTML version and
-a LaTeX distribution for the PDF version).
+a LaTeX distribution for the PDF version.
 
 > cd fdfault/docs/
 > make html && make latexpdf
@@ -93,7 +94,7 @@ a LaTeX distribution for the PDF version).
 This should build the notes in the fdfault/docs/_build/html or fdfault/docs/_build/latex
 directories. If you wish to build only the html or pdf version, use the appropriate 
 command. If you do not have Sphinx or LaTeX on your machine, both versions of the 
-documentation are available on the web:
+documentation are available on the web, though these are only periodially updated:
 
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/html/index.html (html)
 http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf (pdf)

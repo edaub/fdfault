@@ -313,9 +313,9 @@ class domain(object):
         if self.ndim == 2:
             if (nblocks[2] > 1):
                 print("Warning: number of z blocks set to 1 as ndim = 2")
-            self.nblocks = (nblocks[0], nblocks[1], 1)
+            self.nblocks = (int(nblocks[0]), int(nblocks[1]), 1)
         else:
-            self.nblocks = nblocks
+            self.nblocks = (int(nblocks[0]), int(nblocks[1]), int(nblocks[2]))
 
         for i in range(3):
             oldlen = len(self.nx_block[i])
@@ -452,11 +452,12 @@ class domain(object):
             for j in nx_block[i]:
                 assert j > 0, "Number of grid points per block must be greater than zero"
 
-        self.nx_block = (nx_block[0], nx_block[1], nx_block[2])
+        self.nx_block = (list(int(x) for x in nx_block[0]), list(int(y) for y in nx_block[1]),
+                         list(int(z) for z in nx_block[2]))
         if self.ndim == 2:
             if nx_block[2][0] > 1:
                 print("Warning: number of z grid points set to 1 as ndim = 2")
-            self.nx_block = (nx_block[0], nx_block[1], [1])
+            self.nx_block = (self.nx_block[0], self.nx_block[1], [1])
         
         for i in range(3):
             for j in range(self.nblocks[i]):
@@ -810,46 +811,32 @@ class domain(object):
         :returns: None
         """
 
-        # first set all edge blocks to line up with lower left corner
+        # first set all (i,0,0) blocks to line up with lower left corner
 
         xm000 = self.blocks[0][0][0].get_xm()
         cum = xm000[0]
         for i in range(1,self.nblocks[0]):
             cum += self.blocks[i-1][0][0].get_lx()[0]
             self.blocks[i][0][0].set_xm((cum, xm000[1], xm000[2]))
-        cum = xm000[1]
-        for j in range(1,self.nblocks[1]):
-            cum += self.blocks[0][j-1][0].get_lx()[1]
-            self.blocks[0][j][0].set_xm((xm000[0], cum, xm000[2]))
-        cum = xm000[2]
-        for k in range(1, self.nblocks[2]):
-            cum += self.blocks[0][0][k-1].get_lx()[2]
-            self.blocks[0][0][k].set_xm((xm000[0], xm000[1], cum))
+
+        # now can set all (i,j,0) blocks to line up with (i,0,0) blocks
         
-        # set remaining blocks to match up with edge blocks
+        for i in range(self.nblocks[0]):
+            xm000 = self.blocks[i][0][0].get_xm()
+            cum = xm000[1]
+            for j in range(1,self.nblocks[1]):
+                cum += self.blocks[i][j-1][0].get_lx()[1]
+                self.blocks[i][j][0].set_xm((xm000[0], cum, xm000[2]))
+
+        # finally set all (i,j,k) blocks to line up with (i,j,0) blocks
 
         for i in range(self.nblocks[0]):
             for j in range(self.nblocks[1]):
-                for k in range(self.nblocks[2]):
-                    if (i == 0):
-                        x0 = self.blocks[i][j][k].get_xm()[0]
-                    else:
-                        x = self.blocks[i-1][j][k].get_xm()[0]
-                        l = self.blocks[i-1][j][k].get_lx()[0]
-                        x0 = x+l
-                    if (j == 0):
-                        x1 = self.blocks[i][j][k].get_xm()[1]
-                    else:
-                        x = self.blocks[i][j-1][k].get_xm()[1]
-                        l = self.blocks[i][j-1][k].get_lx()[1]
-                        x1 = x+l
-                    if (k == 0):
-                        x2 = self.blocks[i][j][k].get_xm()[2]
-                    else:
-                        x = self.blocks[i][j][k-1].get_xm()[2]
-                        l = self.blocks[i][j][k-1].get_lx()[2]
-                        x2 = x+l                  
-                    self.blocks[i][j][k].set_xm((x0,x1,x2))
+                xm000 = self.blocks[i][j][0].get_xm()
+                cum = xm000[2]
+                for k in range(1, self.nblocks[2]):
+                    cum += self.blocks[i][j][k-1].get_lx()[2]
+                    self.blocks[i][j][k].set_xm((xm000[0], xm000[1], cum))
 
     def get_x(self, coord):
         """
@@ -1136,6 +1123,28 @@ class domain(object):
         else:
             assert (mat.shape[1:] == self.nx[0:2]), "heterogeneous material properties shape must match grid sizes"
         self.f.set_het_material(mat)
+
+    def get_plastic_tensor(self):
+        """
+        Returns boolean indicating if simulation will compute full plastic strain tensor
+
+        :returns: Whether or not simulation will compute the full plastic strain tensur
+        :rtype: bool
+        """
+        return self.f.get_plastic_tensor()
+
+    def set_plastic_tensor(self, plastic_tensor):
+        """
+        Sets value of plastic strain tensor indicator
+
+        Method sets whether or not plastic strain will be computed as a tensor (must be boolean).
+        ``True`` means full tensor will be calculated, ``False`` means not (not saves substantial memory)
+
+        :param plastic_tensor: New value of plastic strain tensor variable (must be boolean)
+        :type plastic_tensor: bool
+        :returns: None
+        """
+        self.f.set_plastic_tensor(plastic_tensor)
 
     def get_nifaces(self):
         """

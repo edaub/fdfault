@@ -1,7 +1,7 @@
 [fdfault.problem]
-test1d
+test2d
 data/
-500
+1000
 0
 0
 0.3
@@ -11,10 +11,10 @@ data/
 [fdfault.domain]
 2
 2
-401 402 1
+801 802 1
 1 2 1
-401
-201 201
+801
+401 401
 1
 1
 slipweak
@@ -24,6 +24,8 @@ elastic
 [fdfault.fields]
 0. 0. 0. 0. 0. 0.
 none
+none
+0
 
 [fdfault.block000]
 2.67 32.04 32.04
@@ -51,6 +53,9 @@ none
 none
 none
 
+[fdfault.operator]
+0.
+
 [fdfault.interface0]
 y
 0 0 0
@@ -70,17 +75,23 @@ boxcar 0. 37.5 2.5 0. 0. 0. 10000. 0. 0. 0. 0.
 none
 
 [fdfault.outputlist]
-vfault
-V
-0 500 10
-0 400 1
-201 201 1
+vx
+vx
+0 1000 100
+0 800 1
+0 801 1
 0 0 1
-sxyfault
+V
+V
+0 1000 10
+0 800 1
+401 401 1
+0 0 1
 sxy
-0 500 10
-0 400 1
-201 201 1
+sxy
+0 1000 1
+600 600 1
+501 501 1
 0 0 1
 
 

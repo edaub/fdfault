@@ -38,6 +38,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
             }
             paramfile >> loadfile;
             paramfile >> matfile;
+            paramfile >> plastic_tensor;
         }
     } else {
         cerr << "Error opening input file in fields.cpp\n";
@@ -63,7 +64,11 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
 	if (material == "elastic") {
 		nfieldsp = 0;
 	} else {
-        nfieldsp = 2;
+        if (plastic_tensor) {
+            nfieldsp = 8;
+        } else {
+            nfieldsp = 2;
+        }
         if (ndim == 2 && mode == 2) {
             nfields = 6;
         }

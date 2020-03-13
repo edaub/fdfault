@@ -14,6 +14,18 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
+ANTIALIAS = -dGraphicsAlphaBits=4 -dTextAlphaBits=4
+GSOPTIONS = -q -dNOPAUSE -dSAFER
+
+IMAGESTEX := $(wildcard examples/*.tex)
+IMAGESPDF := $(IMAGESTEX:.tex=.pdf)
+IMAGESPNG := $(IMAGESTEX:.tex=.png)
+IMAGESAUX := $(IMAGESTEX:.tex=.aux)
+IMAGESLOG := $(IMAGESTEX:.tex=.log)
+
+GSDEVICE = -sDEVICE=pnggray
+GSRES = -r200
+
 .PHONY: help
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -49,7 +61,7 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 .PHONY: html
-html:
+html: $(IMAGESPNG)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
@@ -61,7 +73,7 @@ dirhtml:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
 .PHONY: singlehtml
-singlehtml:
+singlehtml: $(IMAGESPNG)
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
@@ -127,7 +139,7 @@ epub3:
 	@echo "Build finished. The epub3 file is in $(BUILDDIR)/epub3."
 
 .PHONY: latex
-latex:
+latex: $(IMAGESPDF)
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
@@ -135,14 +147,14 @@ latex:
 	      "(use \`make latexpdf' here to do that automatically)."
 
 .PHONY: latexpdf
-latexpdf:
+latexpdf: $(IMAGESPDF)
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
 
 .PHONY: latexpdfja
-latexpdfja:
+latexpdfja: $(IMAGESPDF)
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through platex and dvipdfmx..."
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
@@ -223,3 +235,11 @@ dummy:
 	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy
 	@echo
 	@echo "Build finished. Dummy builder generates no files."
+
+%.pdf: %.tex
+	pdflatex -output-directory examples $<
+	rm -f $(IMAGESLOG)
+	rm -f $(IMAGESAUX)
+
+%.png: %.pdf
+	gs $(GSOPTIONS) $(GSDEVICE) $(ANTIALIAS) $(GSRES) -o $@ $<

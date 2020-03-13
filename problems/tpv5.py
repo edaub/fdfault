@@ -94,17 +94,17 @@ for station in onfault:
 
 # off fault stations
 
-offfault = [('-120', '030', '000'), ('120', '030', '000'), ('-120', '030', '075'), ('120', '030', '075')]
+offfault = [('030', '-120', '000'), ('030', '120', '000'), ('030', '-120', '075'), ('030', '120', '075')]
 fields = ['h-vel', 'v-vel', 'n-vel']
 fname = ['vx', 'vz', 'vy']
 
 for station in offfault:
-    xcoord = float(station[0])/10.
-    ycoord = float(station[1])/10.
+    xcoord = float(station[1])/10.
+    ycoord = float(station[0])/10.
     zcoord = -float(station[2])/10.
     xpt, ypt, zpt = p.find_nearest_point((xcoord, ycoord, zcoord))
     for fld, fn in zip(fields, fname):
-        p.add_output(fdfault.output('body'+station[1]+'st'+station[0]+'dp'+station[2]+'-'+fld, fn, 0, nt, 1, xpt, xpt, 1,
+        p.add_output(fdfault.output('body'+station[0]+'st'+station[1]+'dp'+station[2]+'-'+fld, fn, 0, nt, 1, xpt, xpt, 1,
                                     ypt, ypt, 1, zpt, zpt, 1))
 
 p.set_front_output(True)

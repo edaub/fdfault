@@ -35,6 +35,12 @@ class fields(object):
                   be used to determine the normal stress on any faults in the simulation, even
                   though the normal stresses do not change during the simulation.
     :vartype s0: list
+    :ivar plastic_tensor: If true, calculate full plastic strain tensor (default is ``False``)
+    :vartype plastic_tensor: bool
+    :ivar s: Numpy array holding heterogeneous stress field (or ``None`` if no heterogeneous stress)
+    :vartype s: ndarray or None
+    :ivar mat: Numpy array holding heterogeneous material properties (or ``None`` if none)
+    :vartype mat: ndarray or None
     """
     def __init__(self, ndim, mode):
         """
@@ -58,6 +64,7 @@ class fields(object):
         self.mode = mode
         self.material = "elastic"
         self.s0 = [0., 0., 0., 0., 0., 0.]
+        self.plastic_tensor = False
         self.s = None
         self.mat = None
         
@@ -211,6 +218,28 @@ class fields(object):
             assert(mat.shape[0] == 3), "for 3D or mode 2 problems, heterogeneous material properties must have 3 components"
         self.mat = np.array(mat)
 
+    def get_plastic_tensor(self):
+        """
+        Returns boolean indicating if simulation will compute full plastic strain tensor
+
+        :returns: Whether or not simulation will compute the full plastic strain tensur
+        :rtype: bool
+        """
+        return self.plastic_tensor
+
+    def set_plastic_tensor(self, plastic_tensor):
+        """
+        Sets value of plastic strain tensor indicator
+
+        Method sets whether or not plastic strain will be computed as a tensor (must be boolean).
+        ``True`` means full tensor will be calculated, ``False`` means not (not saves substantial memory)
+
+        :param plastic_tensor: New value of plastic strain tensor variable (must be boolean)
+        :type plastic_tensor: bool
+        :returns: None
+        """
+        self.plastic_tensor = bool(plastic_tensor)
+        
     def write_input(self,f, probname, directory, endian = '='):
         """
         Writes field information to input file
@@ -254,15 +283,18 @@ class fields(object):
         else:
             f.write(join(inputfiledir, probname)+".load\n")
             loadfile = open(join(directory, probname+".load"),"wb")
-            loadfile.write(self.s.astype(endian+'f8').tobytes())
+            for i in range(self.s.shape[0]):
+                loadfile.write(self.s[i].astype(endian+'f8').tobytes())
             loadfile.close()
         if self.mat is None:
             f.write("none\n")
         else:
             f.write(join(inputfiledir, probname)+".mat\n")
             matfile = open(join(directory, probname)+".mat","wb")
-            matfile.write(self.mat.astype(endian+'f8').tobytes())
+            for i in range(3):
+                matfile.write(self.mat[i].astype(endian+'f8').tobytes())
             matfile.close()
+        f.write(str(int(self.plastic_tensor))+"\n")
         f.write("\n")
 
     def __str__(self):
