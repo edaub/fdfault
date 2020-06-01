@@ -447,6 +447,7 @@ void block::calc_plastic(const double dt, fields& f) {
     plastp s_out, s_in;
     int index;
     double k, g;
+    double mat_mu, mat_c, mat_beta, mat_eta;  //added by khurram for heterogeneous plastic material  
     
     for (int i=mlb[0]; i<prb[0]; i++) {
         for (int j=mlb[1]; j<prb[1]; j++) {
@@ -515,18 +516,29 @@ void block::calc_plastic(const double dt, fields& f) {
                                 break;
                         }
                 }
-                
+                // Block added by khurram to take care of the het plastic material properties
                 if (f.hetmat) {
                     k = f.mat[nxd[0]+index]+2./3.*f.mat[2*nxd[0]+index];
                     g = f.mat[2*nxd[0]+index];
+                    mat_mu = f.mat[3*nxd[0]+index];
+                    mat_c  = f.mat[4*nxd[0]+index];
+                    mat_beta = f.mat[5*nxd[0]+index];
+                    mat_eta  = f.mat[6*nxd[0]+index];     
+
                 } else {
                     k = mat.get_lambda()+2./3.*mat.get_g();
                     g = mat.get_g();
+                    mat_mu = mat.get_mu();
+                    mat_c = mat.get_c();
+                    mat_beta = mat.get_beta();
+                    mat_eta  = mat.get_eta();
+                    
                 }
                 
+
                 // solve plasticity equations
                 
-                s_out = plastic_flow(dt, s_in, k, g);
+                s_out = plastic_flow(dt, s_in, k, g, mat_mu, mat_c, mat_beta, mat_eta);
                 
                 // adjust stress values
                 
@@ -588,7 +600,7 @@ void block::calc_plastic(const double dt, fields& f) {
     }
 }
 
-plastp block::plastic_flow(const double dt, const plastp s_in, const double k, const double g) const {
+plastp block::plastic_flow(const double dt, const plastp s_in, const double k, const double g, const double mat_mu, const double mat_c, const double mat_beta, const double mat_eta) const {
     // solves for stresses and plastic strain
     
     // calculate shear and normal stresses
@@ -597,9 +609,9 @@ plastp block::plastic_flow(const double dt, const plastp s_in, const double k, c
     double tau = calc_tau(s_in);
     
     // determine if stress exceeds yield stress
-    
-    double y = yield(tau, sigma);
-    
+     double y = yield(tau, sigma, mat_mu, mat_c);
+
+
     plastp s_out;
     
     double sd[6];
@@ -615,13 +627,21 @@ plastp block::plastic_flow(const double dt, const plastp s_in, const double k, c
         
         // yields, must solve for stresses, lambda, and gammap
         
-        // solve for lambda
-        
-        if (tau*mat.get_mu()*mat.get_beta()*k > (mat.get_mu()*sigma-mat.get_c())*g) {
-            s_out.lambda = (tau+mat.get_mu()*sigma-mat.get_c())/(mat.get_eta()+dt*(g+mat.get_mu()*mat.get_beta()*k));
+        // solve for lambda     ! Note this block added by khurram. The block-wise properties are not applicable anymore       
+        if (tau*mat_mu*mat_beta*k > (mat_mu*sigma-mat_c)*g) {
+            s_out.lambda = (tau+mat_mu*sigma-mat_c)/(mat_eta+dt*(g+mat_mu*mat_beta*k));
         } else { // special case
-            s_out.lambda = tau/(mat.get_eta()+dt*g);
-        }
+            s_out.lambda = tau/(mat_eta+dt*g);
+        }        
+        
+        // if (tau*mat.get_mu()*mat.get_beta()*k > (mat.get_mu()*sigma-mat.get_c())*g) {
+        //     s_out.lambda = (tau+mat.get_mu()*sigma-mat.get_c())/(mat.get_eta()+dt*(g+mat.get_mu()*mat.get_beta()*k));
+        // } else { // special case
+        //     s_out.lambda = tau/(mat.get_eta()+dt*g);
+        // }
+
+
+
         
         // update gammap
         
@@ -639,7 +659,8 @@ plastp block::plastic_flow(const double dt, const plastp s_in, const double k, c
         // correct tau and sigma
         
         tau -= dt*s_out.lambda*g;
-        sigma -= dt*s_out.lambda*mat.get_beta()*k;
+        sigma -= dt*s_out.lambda*mat_beta*k;   //added by khurram
+        //sigma -= dt*s_out.lambda*mat.get_beta()*k;
         
         // correct deviatoric stress
         
@@ -656,12 +677,15 @@ plastp block::plastic_flow(const double dt, const plastp s_in, const double k, c
         s_out.syz = sd[4];
         s_out.szz = sd[5]+sigma;
         
-        s_out.epxx = s_in.epxx+dt*s_out.lambda*(sd[0]/(2.*tau)+(mat.get_beta()/3.));
+        s_out.epxx = s_in.epxx+dt*s_out.lambda*(sd[0]/(2.*tau)+(mat_beta/3.));    //added by khurram
+        //s_out.epxx = s_in.epxx+dt*s_out.lambda*(sd[0]/(2.*tau)+(mat.get_beta()/3.));
         s_out.epxy = s_in.epxy+dt*s_out.lambda*(sd[1]/(2.*tau));
         s_out.epxz = s_in.epxz+dt*s_out.lambda*(sd[2]/(2.*tau));
-        s_out.epyy = s_in.epyy+dt*s_out.lambda*(sd[3]/(2.*tau)+(mat.get_beta()/3.));
+        s_out.epyy = s_in.epyy+dt*s_out.lambda*(sd[3]/(2.*tau)+(mat_beta/3.));   //added by khurram
+        //s_out.epyy = s_in.epyy+dt*s_out.lambda*(sd[3]/(2.*tau)+(mat.get_beta()/3.));
         s_out.epyz = s_in.epyz+dt*s_out.lambda*(sd[4]/(2.*tau));
-        s_out.epzz = s_in.epzz+dt*s_out.lambda*(sd[5]/(2.*tau)+(mat.get_beta()/3.));
+        s_out.epzz = s_in.epzz+dt*s_out.lambda*(sd[5]/(2.*tau)+(mat_beta/3.));   //added by khurram
+        //s_out.epzz = s_in.epzz+dt*s_out.lambda*(sd[5]/(2.*tau)+(mat.get_beta()/3.));
     
     }
     
@@ -683,11 +707,11 @@ double block::calc_sigma(const plastp s) const {
 
 }
 
-double block::yield(const double tau, const double sigma) const {
+double block::yield(const double tau, const double sigma, const double mat_mu, const double mat_c ) const {
     // returns yield function given stresses
-    
-    double yf = mat.get_c()-mat.get_mu()*sigma;
-    
+
+    double yf = mat_c - mat_mu*sigma;
+
     if (yf < 0.) {
         yf = 0.;
     }
