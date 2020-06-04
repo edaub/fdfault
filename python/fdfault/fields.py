@@ -189,9 +189,11 @@ class fields(object):
         """
         Returns heterogeneous material properties for simulation
         
-        Returns a numpy array with shape ``(3, nx, ny, nz)``. First index indicates parameter value
-        (0 = density, 1 = Lame parameter, 2 = Shear modulus). The other three indicate grid
-        coordinates. If no heterogeneous material parameters are specified, returns ``None``
+        Returns a numpy array with shape ``(3, nx, ny, nz)`` for elastic material properties, while 
+        ``(7, nx, ny, nz)`` for plastic material properties. First index indicates parameter value
+        (0 = density, 1 = Lame parameter, 2 = Shear modulus). The other three indicate grid coordinates. 
+        Incase of plastic properties, additional index indicates (3 = DP_mu , 4 = DP_cohesion, 5 = DP_beta, 6 = DP_eta)
+        If no heterogeneous material parameters are specified, returns ``None``
 
         :returns: ndarray
         """
@@ -202,20 +204,27 @@ class fields(object):
         Sets heterogeneous material properties for simulation
         
         New heterogeneous material properties must be a numpy array with shape
-        ``(3, nx, ny, nz)``. First index indicates parameter value
+        ``(3, nx, ny, nz)`` for elastic material properties, while 
+        ``(7, nx, ny, nz)`` for plastic material properties. First index indicates parameter value
         (0 = density, 1 = Lame parameter, 2 = Shear modulus). The other three indicate grid
-        coordinates
-
+        coordinates.
+        Incase of plastic properties, additional index indicates (3 = DP_mu , 4 = DP_cohesion, 5 = DP_beta, 6 = DP_eta)
         An array with the wrong shape will result in an error.
 
         :param mat: New material properties array (numpy array with shape ``(3, nx, ny, nz)``)
         :type mat: ndarray
         :returns: None
         """
-        if self.ndim == 2 and self.mode == 3:
-            assert(mat.shape[0] == 2), "for mode 3 problems, heterogeneous material properties must have 2 components"
-        else:
-            assert(mat.shape[0] == 3), "for 3D or mode 2 problems, heterogeneous material properties must have 3 components"
+        if self.material== "elastic":
+            if self.ndim == 2 and self.mode == 3:
+                assert(mat.shape[0] == 2), "for mode 3 problems, Elastic heterogeneous material properties must have 2 components"
+            else:
+                assert(mat.shape[0] == 3), "for 3D or mode 2 problems, Elastic heterogeneous material properties must have 3 components"
+
+        if self.material== "plastic":   # added by khurram to account for het plastic properties
+            assert(mat.shape[0] == 7), "for Plastic problems, plastic heterogeneous material properties must have 7 components"
+
+
         self.mat = np.array(mat)
 
     def get_plastic_tensor(self):
@@ -291,7 +300,11 @@ class fields(object):
         else:
             f.write(join(inputfiledir, probname)+".mat\n")
             matfile = open(join(directory, probname)+".mat","wb")
-            for i in range(3):
+            if self.material == 'plastic':
+                nmat_new=7   #added by khurram for plastic het properties
+            else:
+                nmat_new=3
+            for i in range(nmat_new):
                 matfile.write(self.mat[i].astype(endian+'f8').tobytes())
             matfile.close()
         f.write(str(int(self.plastic_tensor))+"\n")
