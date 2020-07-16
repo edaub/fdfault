@@ -39,6 +39,7 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
             paramfile >> loadfile;
             paramfile >> matfile;
             paramfile >> plastic_tensor;
+            paramfile >> het_plastic_mat;
         }
     } else {
         cerr << "Error opening input file in fields.cpp\n";
@@ -159,13 +160,18 @@ fields::fields(const char* filename, const int ndim_in, const int mode_in, const
     } else {
         hetmat = true;
         // added by khurram to get heterogeneous properties
-        if (material == "plastic") { 
-        cout << "heterogeneous plastic properties\n";    
-        nmat = 7; }    //end of addition
-        read_mat(matfile);
-    }
-	
+        if (material == "plastic" and het_plastic_mat == true)
+        {cout << "Heterogeneous plastic properties \n";
+        nmat = 7; } 
+        if (material == "plastic" and het_plastic_mat == false)
+        {cout << "Heterogeneous elastic properties only \n";
+         } 
+            
+                     //end of addition
+        read_mat(matfile); }
+    
 }
+	
 
 fields::~fields() {
     
@@ -644,12 +650,12 @@ void fields::read_mat(const string matfile) {
     
     // copy to appropriate place in array (avoid ghost cells)
     
-    for (int i=0; i<nmat; i++) {  
+    for (int i=0; i<nmat; i++) {
         for (int j=0; j<nx_loc[0]; j++) {   
             for (int k=0; k<nx_loc[1]; k++) {
                 for (int l=0; l<nx_loc[2]; l++) {
                     mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] = mat_temp[i*nx_loc[0]*nx_loc[1]*nx_loc[2]+j*nx_loc[1]*nx_loc[2]+k*nx_loc[2]+l];
-                    assert(mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] > 0.); // check that material properties are positive
+                    assert(mat[i*nxyz+(j+c.get_xm_ghost(0))*c.get_nx_tot(1)*c.get_nx_tot(2)+(k+c.get_xm_ghost(1))*c.get_nx_tot(2)+l+c.get_xm_ghost(2)] >= 0.); // check that material properties are positive
                 }
             }
         }

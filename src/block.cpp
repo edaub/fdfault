@@ -517,15 +517,25 @@ void block::calc_plastic(const double dt, fields& f) {
                         }
                 }
                 // Block added by khurram to take care of the het plastic material properties
-                if (f.hetmat) {
+                if (f.hetmat == true and f.het_plastic_mat == true) {
                     k = f.mat[nxd[0]+index]+2./3.*f.mat[2*nxd[0]+index];
                     g = f.mat[2*nxd[0]+index];
                     mat_mu = f.mat[3*nxd[0]+index];
                     mat_c  = f.mat[4*nxd[0]+index];
                     mat_beta = f.mat[5*nxd[0]+index];
-                    mat_eta  = f.mat[6*nxd[0]+index];     
+                    mat_eta  = f.mat[6*nxd[0]+index];
+
+                } else if (f.hetmat == true and f.het_plastic_mat == false) {
+                    
+                    k = f.mat[nxd[0]+index]+2./3.*f.mat[2*nxd[0]+index];
+                    g = f.mat[2*nxd[0]+index];
+                    mat_mu = mat.get_mu();
+                    mat_c  = mat.get_c();
+                    mat_beta = mat.get_beta();
+                    mat_eta  = mat.get_eta();
 
                 } else {
+                    
                     k = mat.get_lambda()+2./3.*mat.get_g();
                     g = mat.get_g();
                     mat_mu = mat.get_mu();
