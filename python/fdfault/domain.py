@@ -1124,6 +1124,30 @@ class domain(object):
             assert (mat.shape[1:] == self.nx[0:2]), "heterogeneous material properties shape must match grid sizes"
         self.f.set_het_material(mat)
 
+
+    def get_het_plastic_mat(self):
+        """
+        Returns heterogeneous plastic material properties
+
+        :returns: heterogeneous plastic material properties
+        :rtype: int
+        """
+        return self.f.get_het_plastic_mat()
+
+    def set_het_plastic_mat(self, het_plastic):
+        """
+        Sets heterogeneous plastic material properties
+        The value must be Boolian 
+
+        :param het_plastic: if plastic properties are heterogeneous
+        :type het_plastic: Bool 
+        :returns: None
+        """
+        
+        self.f.set_het_plastic_mat(het_plastic)
+   
+
+
     def get_plastic_tensor(self):
         """
         Returns boolean indicating if simulation will compute full plastic strain tensor

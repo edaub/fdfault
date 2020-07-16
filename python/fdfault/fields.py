@@ -67,6 +67,7 @@ class fields(object):
         self.plastic_tensor = False
         self.s = None
         self.mat = None
+        self.het_plastic_mat = False
         
     def get_material(self):
         """
@@ -227,6 +228,28 @@ class fields(object):
 
         self.mat = np.array(mat)
 
+
+    def get_het_plastic_mat(self):
+        """
+        Returns heterogeneous plastic material properties
+
+        :returns: heterogeneous plastic material properties
+        :rtype: Bool
+        """
+        return self.het_plastic
+
+    def set_het_plastic_mat(self, het_plastic):
+        """
+        Sets heterogeneous plastic material properties
+        The value must be True or False (Boolian) 
+
+        :param het_plastic: if plastic properties are heterogeneous
+        :type het_plastic: Boolian    
+        :returns: None
+        """
+
+        self.het_plastic_mat = het_plastic 
+
     def get_plastic_tensor(self):
         """
         Returns boolean indicating if simulation will compute full plastic strain tensor
@@ -300,7 +323,8 @@ class fields(object):
         else:
             f.write(join(inputfiledir, probname)+".mat\n")
             matfile = open(join(directory, probname)+".mat","wb")
-            if self.material == 'plastic':
+            if self.material == 'plastic' and self.het_plastic_mat == True:
+                print ('heterogeneous plastic properties')
                 nmat_new=7   #added by khurram for plastic het properties
             else:
                 nmat_new=3
@@ -308,6 +332,7 @@ class fields(object):
                 matfile.write(self.mat[i].astype(endian+'f8').tobytes())
             matfile.close()
         f.write(str(int(self.plastic_tensor))+"\n")
+        f.write(str(int(self.het_plastic_mat))+"\n")
         f.write("\n")
 
     def __str__(self):
