@@ -1002,8 +1002,8 @@ class problem(object):
         Sets heterogeneous plastic material properties
         The value must be 0 or 1 
 
-        :param het_plastic: if plastic properties are heterogeneous
-        :type het_plastic: int  (0 or 1)  
+        :param het_plastic: Set 'True' if plastic properties are heterogeneous
+        :type het_plastic: bool  (True or False)  
         :returns: None
         """
         assert type(het_plastic) is bool, "index must be an Boolian"

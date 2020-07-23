@@ -1129,7 +1129,7 @@ class domain(object):
         """
         Returns heterogeneous plastic material properties
 
-        :returns: heterogeneous plastic material properties
+        :returns: Boolean to tell if plastic material is heterogeneous(1) or not (0)
         :rtype: int
         """
         return self.f.get_het_plastic_mat()
@@ -1139,7 +1139,7 @@ class domain(object):
         Sets heterogeneous plastic material properties
         The value must be Boolian 
 
-        :param het_plastic: if plastic properties are heterogeneous
+        :param het_plastic: Boolean to specify if plastic material is heterogeneous(1) or not (0)
         :type het_plastic: Bool 
         :returns: None
         """

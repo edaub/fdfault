@@ -222,9 +222,6 @@ class fields(object):
             else:
                 assert(mat.shape[0] == 3), "for 3D or mode 2 problems, Elastic heterogeneous material properties must have 3 components"
 
-        if self.material== "plastic":   # added by khurram to account for het plastic properties
-            assert(mat.shape[0] == 7), "for Plastic problems, plastic heterogeneous material properties must have 7 components"
-
 
         self.mat = np.array(mat)
 
@@ -326,8 +323,10 @@ class fields(object):
             if self.material == 'plastic' and self.het_plastic_mat == True:
                 print ('heterogeneous plastic properties')
                 nmat_new=7   #added by khurram for plastic het properties
+                assert(self.mat.shape[0] == 7 ), "for plastic problems with heterogeneous plastic, mat properties must have 7 components"
             else:
                 nmat_new=3
+                assert(self.mat.shape[0] == 3 ), "for plastic problems with heterogeneous elastic only, mat properties must have 3 components"
             for i in range(nmat_new):
                 matfile.write(self.mat[i].astype(endian+'f8').tobytes())
             matfile.close()
