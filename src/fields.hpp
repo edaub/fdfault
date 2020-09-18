@@ -31,6 +31,7 @@ private:
     bool hetstress;
     bool hetmat;
     bool plastic_tensor;
+    bool het_plastic_mat;
     int nv;
     int ns;
     int nmat;

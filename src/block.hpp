@@ -66,10 +66,10 @@ private:
     void calc_df_mode3(const double dt, fields& f, const fd_type& fd);
     void calc_df_3d(const double dt, fields& f, const fd_type& fd);
     void calc_df_szz(const double dt, fields&f, const fd_type& fd);
-    plastp plastic_flow(const double dt, const plastp s_in, const double k, const double g) const;
+    plastp plastic_flow(const double dt, const plastp s_in, const double k, const double g, const double mat_mu, const double mat_c, const double mat_beta, const double mat_eta) const;
     double calc_tau(const plastp s) const;
     double calc_sigma(const plastp s) const;
-    double yield(const double tau, const double sigma) const;
+    double yield(const double tau, const double sigma, const double mat_mu, const double mat_c) const;
     void calc_mms_mode3(const double dt, const double t, fields& f);
     void calc_mms_mode2(const double dt, const double t, fields& f);
     void calc_mms_3d(const double dt, const double t, fields& f);

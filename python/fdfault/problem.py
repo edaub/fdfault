@@ -636,7 +636,7 @@ class problem(object):
         :returns: Material class with properties for this block
         :rtype: material
         """
-        self.d.get_material(coords)
+        return self.d.get_material(coords)
         
     def set_material(self, newmaterial, coords = None):
         """
@@ -660,6 +660,48 @@ class problem(object):
         :returns: None
         """
         self.d.set_material(newmaterial,coords)
+
+    def get_plastic_material_only(self, coords):
+        """
+        Returns plastic material properties for a given block
+
+        Returns the plastic material class associated with block with coordinates ``coords``. ``coords``
+        must be a tuple or list of valid block indices
+
+        :param coords: Coordinates of the target block (tuple or list of 3 nonnegative integers)
+        :type coords: tuple or list
+        :returns: Plastic Material properties for this block
+        :rtype: float
+        """
+        material = self.d.get_material(coords)
+        return (material.get_mu(), material.get_c(), material.get_beta(), material.get_eta() )
+
+    def set_plastic_material_only(self, mu_pls, c_pls, beta_pls, eta_pls, coords):
+        """
+        Sets block plastic material properties for the block with indices given by ``coords``
+
+        `mu_pls`` is mu of DP plasticity and its type is float.
+        `c_pls`` is c of DP plasticity and its type is float.
+        `beta_pls`` is beta of DP plasticity and its type is float.
+        `eta_pls`` is eta of DP plasticity and its type is float. 
+        coords be a tuple or list of three integers that match the coordinates of a block.
+        
+        :param mu_pls, c_pls, beta_pls, eta_pls: DP plasticity material properties
+        :type mu_pls, c_pls, beta_pls, eta_pls: float
+        :param coords: Coordinates of block to be changed (optional, omitting changes all blocks).
+                                 ``coords`` must be a tuple or list of three integers that match the coordinates
+                                 of a block.
+        :type coords: tuple or list
+        :returns: None
+        """
+        material = self.d.get_material(coords)
+        material.set_mu(mu_pls)
+        material.set_c (c_pls)
+        material.set_beta(beta_pls)
+        material.set_eta (eta_pls)
+        self.d.set_material(material,coords)    
+
+
 
     def get_bounds(self, coords, loc = None):
         """
@@ -944,6 +986,28 @@ class problem(object):
         :returns: None
         """
         self.d.set_het_material(mat)
+
+
+    def get_het_plastic_mat(self):
+        """
+        Returns heterogeneous plastic material properties
+
+        :returns: heterogeneous plastic material properties
+        :rtype: Boolian
+        """
+        return  self.d.get_het_plastic_mat()  
+
+    def set_het_plastic_mat(self, het_plastic):
+        """
+        Sets heterogeneous plastic material properties
+        The value must be 0 or 1 
+
+        :param het_plastic: Set 'True' if plastic properties are heterogeneous
+        :type het_plastic: bool  (True or False)  
+        :returns: None
+        """
+        assert type(het_plastic) is bool, "index must be an Boolian"
+        self.d.set_het_plastic_mat(het_plastic)   
 
     def get_plastic_tensor(self):
         """
