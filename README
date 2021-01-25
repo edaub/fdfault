@@ -94,7 +94,6 @@ a LaTeX distribution for the PDF version.
 This should build the notes in the fdfault/docs/_build/html or fdfault/docs/_build/latex
 directories. If you wish to build only the html or pdf version, use the appropriate 
 command. If you do not have Sphinx or LaTeX on your machine, both versions of the 
-documentation are available on the web, though these are only periodially updated:
+documentation are available on the web:
 
-http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/html/index.html (html)
-http://www.ceri.memphis.edu/people/egdaub/fdfault/_build/latex/fdfault_docs.pdf (pdf)
+http://fdfault.readthedocs.io
